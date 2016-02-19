@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/pygments.min.css">
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/font-awesome.min.css">
+
+
+    <link href="https://okelet.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Mis notas Atom">
+
+
+    <link rel="shortcut icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+
+<meta name="author" content="Juan Asensio Sánchez" />
+<meta name="description" content="Trasteando con Openstack, con ganas desde hace tiempo, y después de la Mini-Conf del grupo MAD for OpenStack, me animé a probarlo usando PackStack, que te lo configura todo en una única máquina (no tengo claro si se puede considerar una instalación productiva o sólo para pruebas), aunque luego puedes ir añadiendo nodos adicionales. Dado que no tengo acceso a ningún host físico, instalé un RH 7.2 (también vale Fedora o CentOS) en una máquina virtual de VMware (el rendimiento dependerá en gran medida si se tiene habilitado o no la nested virtualization). Empecé con una máquina con 2 procesadores y 2 GB de RAM, pero enseguida me di cuenta que se quedaba muy corta, incluso sin ninguna instancia arrancada. La versión final tiene 8 procesadores y 8 GB de RAM." />
+<meta name="keywords" content="">
+<meta property="og:site_name" content="Mis notas"/>
+<meta property="og:title" content="Instalar OpenStack PackStack detrás de un proxy"/>
+<meta property="og:description" content="Trasteando con Openstack, con ganas desde hace tiempo, y después de la Mini-Conf del grupo MAD for OpenStack, me animé a probarlo usando PackStack, que te lo configura todo en una única máquina (no tengo claro si se puede considerar una instalación productiva o sólo para pruebas), aunque luego puedes ir añadiendo nodos adicionales. Dado que no tengo acceso a ningún host físico, instalé un RH 7.2 (también vale Fedora o CentOS) en una máquina virtual de VMware (el rendimiento dependerá en gran medida si se tiene habilitado o no la nested virtualization). Empecé con una máquina con 2 procesadores y 2 GB de RAM, pero enseguida me di cuenta que se quedaba muy corta, incluso sin ninguna instancia arrancada. La versión final tiene 8 procesadores y 8 GB de RAM."/>
+<meta property="og:locale" content="es_ES"/>
+<meta property="og:url" content="https://okelet.github.io/posts/2016/02/instalar-openstack-packstack-detras-de-un-proxy/"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2016-02-18 00:00:00+01:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://okelet.github.io/author/juan-asensio-sanchez.html">
+<meta property="article:section" content="OpenStack"/>
+<meta property="og:image" content="">
+  <title>Mis notas &ndash; Instalar OpenStack PackStack detrás de un proxy</title>
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://okelet.github.io/">
+        <img src="https://okelet.github.io/theme/img/profile.png" alt="Mis Notas" title="Mis Notas">
+      </a>
+      <h1><a href="https://okelet.github.io/">Mis Notas</a></h1>
+      <p>Notas para no olvidarme...</p>
+      <nav>
+        <ul class="list">
+          <li><a href="https://okelet.github.io/pages/acerca-de-mi.html#acerca-de-mi">Acerca de mi...</a></li>
+          <li><a href="https://okelet.github.io/pages/proyectos.html#proyectos">Proyectos</a></li>
+          <li><a href="http://getpelican.com/" target="_blank">Pelican</a></li>
+        </ul>
+      </nav>
+      <ul class="social">
+        <li><a class="sc-linkedin" href="https://www.linkedin.com/in/okelet" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-github" href="https://github.com/okelet" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+  </aside>
+  <main>
+    <nav>
+      <a href="https://okelet.github.io">Home</a>
+      <a href="/archives.html">Archivos</a>
+      <a href="/categories.html">Categorías</a>
+      <a href="/tags.html">Tags</a>
+      <a href="https://okelet.github.io/feeds/all.atom.xml">Atom</a>
+    </nav>
+
+<article>
+  <header>
+    <h1 id="instalar-openstack-packstack-detras-de-un-proxy">Instalar OpenStack PackStack detrás de un proxy</h1>
+    <p>Posted on jue 18 febrero 2016 in <a href="https://okelet.github.io/category/openstack/">OpenStack</a></p>
+  </header>
+  <div>
+    <p>Trasteando con Openstack, con ganas desde hace tiempo, y después de la <a href="http://www.meetup.com/es-ES/MAD-for-OpenStack/events/227554166/">Mini-Conf</a> del grupo <a href="http://www.meetup.com/es-ES/MAD-for-OpenStack/">MAD for OpenStack</a>, me animé a probarlo usando <a href="https://wiki.openstack.org/wiki/Packstack">PackStack</a>, que te lo configura todo en una única máquina (no tengo claro si se puede considerar una instalación productiva o sólo para pruebas), aunque luego puedes ir añadiendo nodos adicionales. Dado que no tengo acceso a ningún host físico, instalé un RH 7.2 (también vale <a href="https://getfedora.org">Fedora</a> o <a href="https://www.centos.org">CentOS</a>) en una máquina virtual de VMware (el rendimiento dependerá en gran medida si se tiene habilitado o no la <em><a href="http://www.josemariagonzalez.es/2012/10/01/como-virtualizar-un-vmware-esxi-en-modo-nested.html">nested virtualization</a></em>). Empecé con una máquina con 2 procesadores y 2 GB de RAM, pero enseguida me di cuenta que se quedaba muy corta, incluso sin ninguna instancia arrancada. La versión final tiene 8 procesadores y 8 GB de RAM.</p>
+
+
+<p>El siguiente problema que me surgió es que me daba un error al instalar el paquete de Cinder, ya que le faltaba una dependencia. Y no me lo explicaba, porque esa dependencia está en el repositorio de EPEL, que lo tenía configurado y habilitado. Después de varias pruebas, me di cuenta que el instalador deshabilita ese repositorio, y hay que forzar a que lo utilice con un parámetro adicional (<code>--use-epel=y</code>).</p>
+<p>Después, me daba fallo al descargar la imagen de <a href="https://launchpad.net/cirros">CirrOS</a> para ponerla como disponible para nuevas instancias, y es que esta imagen se la descarga de Internet, así que tenía que utilizar el proxy, por lo que me creé un <code>/etc/profile.d/proxy.sh</code> donde se establecía, pero el proxy hacía que fallaran las peticiones REST que se realizan durante la instalación para registrar componentes, configuración, etc. Así que encontré una opción que lo que hace es utilizar una imagen descargada localmente, en lugar de descargársela de Internet. Por tanto, borré el profile.d del proxy, y me bajé la imagen a mano:</p>
+<div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">https_proxy</span><span class="o">=</span>http://mi.proxy:8080
+wget --no-check-certificate https://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+</pre></div>
+
+
+<p>Una vez hecho esto, hay que tener configurado el proxy en Yum, ya que se descarga bastantes paquetes de Internet. Una vez hechas todas estas comprobaciones, se puede lanzar la instalación de PackStack:</p>
+<div class="highlight"><pre><span></span>packstack --use-epel<span class="o">=</span>y --provision-image-url<span class="o">=</span>/root/cirros-0.3.4-x86_64-disk.img --allinone
+</pre></div>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
+  </div>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'okeletgithubio';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</article>
+
+    <footer>
+<p>
+  &copy; Juan Asensio Sánchez 2016 - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>
+</p>
+<p>Built using <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a></p><p>
+  <a rel="license"
+     href="http://creativecommons.org/licenses/by-sa/4.0/"
+     target="_blank">
+    <img alt="Creative Commons License"
+         title="Creative Commons License"
+         style="border-width:0"
+         src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png"
+         width="80"
+         height="15"/>
+  </a>
+<!-- StatusCake -->
+<a href="https://www.statuscake.com" title="Mis notas Uptime">
+  <img src="https://www.statuscake.com/App/button/index.php?Track=dti6bV95mD&amp;Days=7&amp;Design=6" alt="Mis notas Uptime" width="96" height="15"/>
+</a>
+<!-- End StatusCake --></p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "Instalar OpenStack PackStack detrás de un proxy",
+  "headline": "Instalar OpenStack PackStack detrás de un proxy",
+  "datePublished": "2016-02-18 00:00:00+01:00",
+  "dateModified": "",
+  "author": {
+    "@type": "Person",
+    "name": "Juan Asensio Sánchez",
+    "url": "https://okelet.github.io/author/juan-asensio-sanchez.html"
+  },
+  "image": "{{ SITEURL }}/{{ THEME_STATIC_DIR }}/img/profile.png",
+  "url": "https://okelet.github.io/posts/2016/02/instalar-openstack-packstack-detras-de-un-proxy/",
+  "description": "Trasteando con Openstack, con ganas desde hace tiempo, y después de la Mini-Conf del grupo MAD for OpenStack, me animé a probarlo usando PackStack, que te lo configura todo en una única máquina (no tengo claro si se puede considerar una instalación productiva o sólo para pruebas), aunque luego puedes ir añadiendo nodos adicionales. Dado que no tengo acceso a ningún host físico, instalé un RH 7.2 (también vale Fedora o CentOS) en una máquina virtual de VMware (el rendimiento dependerá en gran medida si se tiene habilitado o no la nested virtualization). Empecé con una máquina con 2 procesadores y 2 GB de RAM, pero enseguida me di cuenta que se quedaba muy corta, incluso sin ninguna instancia arrancada. La versión final tiene 8 procesadores y 8 GB de RAM."
+}
+</script></body>
+</html>

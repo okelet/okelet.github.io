@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/pygments.min.css">
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/font-awesome.min.css">
+
+
+    <link href="https://okelet.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Mis notas Atom">
+
+
+    <link rel="shortcut icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+
+<meta name="author" content="Juan Asensio Sánchez" />
+<meta name="description" content="La página de IBM developerWorks no para de sorprenderme. Muchas de las veces que busco documentación técnica, cursos, tutoriales, etc. allí están ellos, y con un material gratuito y de muy alta calidad. La última, fue con la instalación de este blog. Tengo un VPS contratado con Ubuntu, que he ido actualizando poco a poco, y que lo tengo bastante pelado. Me decidí por instalar en él WordPress (tras mucho analizar otros sistemas para publicar artículos tipo Dokuwiki, Octopress, Jekyll, Pelican, etc.). Lo primero que me sorprendió es que no soporta PostgreSQL de forma oficial (que sería mi primera opción), por mis reticencias con MySQL, pero más tarde de acordé del fork que se creó hace un tiempo, llamado MariaDB. Leyendo un poco, parece ser que MariaDB es "binariamente" (si es que eso existe en castellano) compatible con MySQL (es decir, que el protocolo de comunicación, los ficheros de base de datos, etc. son totalmente compatibles, si no iguales)." />
+<meta name="keywords" content="">
+<meta property="og:site_name" content="Mis notas"/>
+<meta property="og:title" content="Instalar, configurar y securizar MariaDB"/>
+<meta property="og:description" content="La página de IBM developerWorks no para de sorprenderme. Muchas de las veces que busco documentación técnica, cursos, tutoriales, etc. allí están ellos, y con un material gratuito y de muy alta calidad. La última, fue con la instalación de este blog. Tengo un VPS contratado con Ubuntu, que he ido actualizando poco a poco, y que lo tengo bastante pelado. Me decidí por instalar en él WordPress (tras mucho analizar otros sistemas para publicar artículos tipo Dokuwiki, Octopress, Jekyll, Pelican, etc.). Lo primero que me sorprendió es que no soporta PostgreSQL de forma oficial (que sería mi primera opción), por mis reticencias con MySQL, pero más tarde de acordé del fork que se creó hace un tiempo, llamado MariaDB. Leyendo un poco, parece ser que MariaDB es "binariamente" (si es que eso existe en castellano) compatible con MySQL (es decir, que el protocolo de comunicación, los ficheros de base de datos, etc. son totalmente compatibles, si no iguales)."/>
+<meta property="og:locale" content="es_ES"/>
+<meta property="og:url" content="https://okelet.github.io/posts/2014/08/instalar-configurar-y-securizar-mariadb/"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2014-08-07 13:49:42+02:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://okelet.github.io/author/juan-asensio-sanchez.html">
+<meta property="article:section" content="MySQL"/>
+<meta property="og:image" content="">
+  <title>Mis notas &ndash; Instalar, configurar y securizar MariaDB</title>
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://okelet.github.io/">
+        <img src="https://okelet.github.io/theme/img/profile.png" alt="Mis Notas" title="Mis Notas">
+      </a>
+      <h1><a href="https://okelet.github.io/">Mis Notas</a></h1>
+      <p>Notas para no olvidarme...</p>
+      <nav>
+        <ul class="list">
+          <li><a href="https://okelet.github.io/pages/acerca-de-mi.html#acerca-de-mi">Acerca de mi...</a></li>
+          <li><a href="https://okelet.github.io/pages/proyectos.html#proyectos">Proyectos</a></li>
+          <li><a href="http://getpelican.com/" target="_blank">Pelican</a></li>
+        </ul>
+      </nav>
+      <ul class="social">
+        <li><a class="sc-linkedin" href="https://www.linkedin.com/in/okelet" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-github" href="https://github.com/okelet" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+  </aside>
+  <main>
+    <nav>
+      <a href="https://okelet.github.io">Home</a>
+      <a href="/archives.html">Archivos</a>
+      <a href="/categories.html">Categorías</a>
+      <a href="/tags.html">Tags</a>
+      <a href="https://okelet.github.io/feeds/all.atom.xml">Atom</a>
+    </nav>
+
+<article>
+  <header>
+    <h1 id="instalar-configurar-y-securizar-mariadb">Instalar, configurar y securizar MariaDB</h1>
+    <p>Posted on jue 07 agosto 2014 in <a href="https://okelet.github.io/category/mysql/">MySQL</a></p>
+  </header>
+  <div>
+    <p>La página de <a href="http://www.ibm.com/developerworks">IBM developerWorks</a> no para de sorprenderme. Muchas de las veces que busco documentación técnica, cursos, tutoriales, etc. allí están ellos, y con un material gratuito y de muy alta calidad. La última, fue con la instalación de este blog. Tengo un VPS contratado con Ubuntu, que he ido actualizando poco a poco, y que lo tengo bastante pelado. Me decidí por instalar en él WordPress (tras mucho analizar otros sistemas para publicar artículos tipo <a href="http://dokuwiki.org">Dokuwiki</a>, <a href="http://octopress.org">Octopress</a>, <a href="http://jekyllrb.com">Jekyll</a>, <a href="http://getpelican.com">Pelican</a>, etc.). Lo primero que me sorprendió es que no soporta <a href="http://www.postgresql.org">PostgreSQL</a> de forma oficial (que sería mi primera opción), por mis <a href="http://techcrunch.com/2012/08/18/oracle-makes-more-moves-to-kill-open-source-mysql">reticencias con MySQL</a>, pero más tarde de acordé del fork que se creó hace un tiempo, llamado <a href="http://mariadb.org">MariaDB</a>. Leyendo un poco, parece ser que MariaDB es "binariamente" (si es que eso existe en castellano) <a href="https://mariadb.com/kb/en/mariadb/mariadb-vs-mysql-compatibility">compatible con MySQL</a> (es decir, que el protocolo de comunicación, los ficheros de base de datos, etc. son totalmente compatibles, si no iguales).</p>
+
+
+<p>Bueno, a lo que iba. Ya que con PostgreSQL no se puede (o por lo menos, no está oficialmente soportado), opté por instalar MariaDB. Desde su web tienen un <a href="https://downloads.mariadb.org/mariadb/repositories">asistente muy sencillo</a> para configurar los repositorios de las distribuciones Linux más comunes (openSUSE, Debian, Ubuntu, Red Hat, CentOS, etc.). Tienen paquetes precompilados para prácticamente todas las versiones y arquitecturas (la única que echo en falta es Red Hat 7, aunque se lo perdono porque acaba de salir hace nada...).</p>
+<p>Una vez configurados los repositorios, toca la parte de la instalación; sencillísima como siempre:</p>
+<div class="highlight"><pre><span></span>sudo apt-get update
+sudo apt-get install mariadb-server php5-mysql
+</pre></div>
+
+
+<p>Lo que más miedo me da de estas instalaciones tan "sencillísimas" es que muchas veces dejan el servidor o el servicio instalado bastante desprotegido. Durante la instalación, se nos pregunta que si queremos ponerle una contraseña al usuario root de MariaDB/MySQL.... Pero qué cosas, nos permite dejarlo en blanco. MAL MAL MAL. Como decía, gracias a los tutoriales de developerWorks, descubrí que hay un comando muy sencillo que te "quita" todas esas inseguridades; a saber:</p>
+<ul>
+<li>Ponerle una contraseña al usuario root de MariaDB/MySQL en condiciones.</li>
+<li>Eliminar el usuario anonymous</li>
+<li>Deshabilitar el acceso remoto de root</li>
+<li>Eliminar la base de datos test</li>
+<li>Recargar los privilegios</li>
+</ul>
+<p>El comando mágico es <code>mysql_secure_installation</code>, aunque parece que no está muy afinado, ya que nada más lanzarlo da un error:</p>
+<div class="highlight"><pre><span></span>/usr/bin/mysql_secure_installation: 379: /usr/bin/mysql_secure_installation: find_mysql_client: not found
+</pre></div>
+
+
+<p>También da un error al intentar borrar la base de datos test:</p>
+<div class="highlight"><pre><span></span>Remove test database and access to it? [Y/n] 
+ - Dropping test database...
+ERROR 1008 (HY000) at line 1: Can&#39;t drop database &#39;test&#39;; database doesn&#39;t exist
+ ... Failed!  Not critical, keep moving...
+ - Removing privileges on test database...
+ ... Success!
+</pre></div>
+
+
+<p>Puedes ver la salida completa del comando en este <a href="https://gist.github.com/okelet/b416b13f85831afb98fe">Gist</a>.</p>
+<p>Una vez hecho esto, ya podemos decir que nuestra instalación está bastante adecentada. Lo que nos quedaría, si usamos un cortafuegos (que deberíamos), sería limitar el acceso. Si la regla por defecto es denegar las conexiones entrantes, no deberíamos tener problema; si no, deberíamos añadir una regla para denegar las conexiones remotas entrantes al puerto 3306.  El siguiente listado muestra los comandos necesarios para configurar el cortafuegos de manera rápida con <a href="https://help.ubuntu.com/community/UFW">UFW</a>, permitiendo el acceso desde fuera por SSH, HTTP y HTTPS, denegando todo el resto de tráfico entrante, y permitiendo por defecto el tráfico saliente:</p>
+<div class="highlight"><pre><span></span>sudo apt-get install ufw
+sudo ufw <span class="nb">enable</span>
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh/tcp
+sudo ufw allow http/tcp
+sudo ufw allow https/tcp
+sudo ufw status
+</pre></div>
+
+
+<p>Por último, y como algo particular para WordPress, crearemos una base de datos, un usuario y le daremos permisos al usuario sobre esa base de datos, para lo que ejecutaremos el comando <code>mysql -uroot -p</code>, introduciendo después la contraseña asignada antes al usuario root, y ejecutando los siguientes comandos desde el shell de MariaDB:</p>
+<div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">wordpress</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;wpuser&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">&#39;pickApassword&#39;</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="k">ALL</span> <span class="k">PRIVILEGES</span> <span class="k">ON</span> <span class="n">wordpress</span> <span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;wpuser&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+<span class="n">FLUSH</span> <span class="k">PRIVILEGES</span><span class="p">;</span>
+<span class="n">exit</span>
+</pre></div>
+
+
+<h3>Referencias</h3>
+<ul>
+<li><a href="http://www.ibm.com/developerworks/cloud/library/cl-softlayer-secure-wordpressblog-trs">IBM developerWorks: Create a secure WordPress blog using SoftLayer</a></li>
+</ul>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
+  </div>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'okeletgithubio';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</article>
+
+    <footer>
+<p>
+  &copy; Juan Asensio Sánchez 2016 - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>
+</p>
+<p>Built using <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a></p><p>
+  <a rel="license"
+     href="http://creativecommons.org/licenses/by-sa/4.0/"
+     target="_blank">
+    <img alt="Creative Commons License"
+         title="Creative Commons License"
+         style="border-width:0"
+         src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png"
+         width="80"
+         height="15"/>
+  </a>
+<!-- StatusCake -->
+<a href="https://www.statuscake.com" title="Mis notas Uptime">
+  <img src="https://www.statuscake.com/App/button/index.php?Track=dti6bV95mD&amp;Days=7&amp;Design=6" alt="Mis notas Uptime" width="96" height="15"/>
+</a>
+<!-- End StatusCake --></p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "Instalar, configurar y securizar MariaDB",
+  "headline": "Instalar, configurar y securizar MariaDB",
+  "datePublished": "2014-08-07 13:49:42+02:00",
+  "dateModified": "",
+  "author": {
+    "@type": "Person",
+    "name": "Juan Asensio Sánchez",
+    "url": "https://okelet.github.io/author/juan-asensio-sanchez.html"
+  },
+  "image": "{{ SITEURL }}/{{ THEME_STATIC_DIR }}/img/profile.png",
+  "url": "https://okelet.github.io/posts/2014/08/instalar-configurar-y-securizar-mariadb/",
+  "description": "La página de IBM developerWorks no para de sorprenderme. Muchas de las veces que busco documentación técnica, cursos, tutoriales, etc. allí están ellos, y con un material gratuito y de muy alta calidad. La última, fue con la instalación de este blog. Tengo un VPS contratado con Ubuntu, que he ido actualizando poco a poco, y que lo tengo bastante pelado. Me decidí por instalar en él WordPress (tras mucho analizar otros sistemas para publicar artículos tipo Dokuwiki, Octopress, Jekyll, Pelican, etc.). Lo primero que me sorprendió es que no soporta PostgreSQL de forma oficial (que sería mi primera opción), por mis reticencias con MySQL, pero más tarde de acordé del fork que se creó hace un tiempo, llamado MariaDB. Leyendo un poco, parece ser que MariaDB es "binariamente" (si es que eso existe en castellano) compatible con MySQL (es decir, que el protocolo de comunicación, los ficheros de base de datos, etc. son totalmente compatibles, si no iguales)."
+}
+</script></body>
+</html>

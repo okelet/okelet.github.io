@@ -28,7 +28,7 @@
 <meta property="og:locale" content="es_ES"/>
 <meta property="og:url" content="https://okelet.github.io"/>
 
-  <title>Mis notas &ndash; Authors</title>
+  <title>Mis notas &ndash; Category: KVM</title>
 </head>
 <body>
   <aside>
@@ -63,14 +63,31 @@
 
 <article>
   <header>
-    <h1>Authors</h1>
+    <h2><a href="https://okelet.github.io/posts/2014/08/guia-rapida-de-kvm/#guia-rapida-de-kvm">Guía rápida de KVM</a></h2>
+    <p>
+      Publicado el mar 12 agosto 2014 en <a href="https://okelet.github.io/category/kvm/">KVM</a>
+      &#8226; <a href="https://okelet.github.io/posts/2014/08/guia-rapida-de-kvm/#disqus_thread">Comentarios</a>
+    </p>
   </header>
   <div>
-    <ul class="list">
-      <li><a href="https://okelet.github.io/author/juan-asensio-sanchez.html">Juan Asensio Sánchez</a> (6)</li>
-    </ul>
+      <p>De la <a href="http://es.wikipedia.org/wiki/Kernel-based_Virtual_Machine">Wikipedia</a>:</p>
+<blockquote>
+<p>Kernel-based Virtual Machine o KVM, (en español, Máquina virtual basada en el núcleo) es una solución para implementar virtualización completa con Linux. Está formada por un módulo del núcleo (con el nombre kvm.ko) y herramientas en el espacio de usuario, siendo en su totalidad software libre. El componente KVM para el núcleo está incluido en Linux desde la versión 2.6.20.</p>
+<p>KVM permite ejecutar máquinas virtuales utilizando imágenes de disco que contienen sistemas operativos sin modificar. Cada máquina virtual tiene su propio hardware virtualizado: una tarjeta de red, discos duros, tarjeta gráfica, etc.</p>
+</blockquote>
+<p>En primer lugar, debemos comprobar si nuestro equipo es compatible con KVM:</p>
+<div class="highlight"><pre><span></span>egrep --color <span class="s1">&#39;(svm|vmx)&#39;</span> /proc/cpuinfo
+</pre></div>
+
+
+<p>Si la salida anterior muestra algo, podremos seguir adelante. Si no muestra nada, también podremos seguir, pero no se aprovecharán las capacidades de virtualización del equipo (se hará un <a href="http://blog.vmsplice.net/2011/03/should-i-use-qemu-or-kvm.html"><em>fallback</em></a> a emulación en lugar de virtualización).</p>
+
+      <a class="btn" href="https://okelet.github.io/posts/2014/08/guia-rapida-de-kvm/#guia-rapida-de-kvm">Leer más...</a>
   </div>
 </article>
+
+  <div class="pagination">
+  </div>
 
     <footer>
 <p>
@@ -98,5 +115,23 @@
 
 
 
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " Mis notas ",
+  "url" : "https://okelet.github.io",
+  "image": "",
+  "description": "Notas de un devop, administrador de sistemas, aprendiz de desarrollador, etc."
+}
+</script><script type="text/javascript">
+    var disqus_shortname = 'okeletgithubio';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
 </body>
 </html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/pygments.min.css">
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/font-awesome.min.css">
+
+
+    <link href="https://okelet.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Mis notas Atom">
+
+
+    <link rel="shortcut icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+
+<meta name="author" content="Juan Asensio Sánchez" />
+<meta name="description" content="NXLOG es un sustituto revitalizado para Syslog. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión." />
+<meta name="keywords" content="">
+<meta property="og:site_name" content="Mis notas"/>
+<meta property="og:title" content="Compilar NXLOG en Red Hat/CentOS 5"/>
+<meta property="og:description" content="NXLOG es un sustituto revitalizado para Syslog. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión."/>
+<meta property="og:locale" content="es_ES"/>
+<meta property="og:url" content="https://okelet.github.io/posts/2014/09/compilar-nxlog-en-red-hatcentos-5/"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2014-09-15 14:24:26+02:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://okelet.github.io/author/juan-asensio-sanchez.html">
+<meta property="article:section" content="nxlog"/>
+<meta property="og:image" content="">
+  <title>Mis notas &ndash; Compilar NXLOG en Red Hat/CentOS 5</title>
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://okelet.github.io/">
+        <img src="https://okelet.github.io/theme/img/profile.png" alt="Mis Notas" title="Mis Notas">
+      </a>
+      <h1><a href="https://okelet.github.io/">Mis Notas</a></h1>
+      <p>Notas para no olvidarme...</p>
+      <nav>
+        <ul class="list">
+          <li><a href="https://okelet.github.io/pages/acerca-de-mi.html#acerca-de-mi">Acerca de mi...</a></li>
+          <li><a href="https://okelet.github.io/pages/proyectos.html#proyectos">Proyectos</a></li>
+          <li><a href="http://getpelican.com/" target="_blank">Pelican</a></li>
+        </ul>
+      </nav>
+      <ul class="social">
+        <li><a class="sc-linkedin" href="https://www.linkedin.com/in/okelet" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-github" href="https://github.com/okelet" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+  </aside>
+  <main>
+    <nav>
+      <a href="https://okelet.github.io">Home</a>
+      <a href="/archives.html">Archivos</a>
+      <a href="/categories.html">Categorías</a>
+      <a href="/tags.html">Tags</a>
+      <a href="https://okelet.github.io/feeds/all.atom.xml">Atom</a>
+    </nav>
+
+<article>
+  <header>
+    <h1 id="compilar-nxlog-en-red-hatcentos-5">Compilar NXLOG en Red Hat/CentOS 5</h1>
+    <p>Posted on lun 15 septiembre 2014 in <a href="https://okelet.github.io/category/nxlog/">nxlog</a></p>
+  </header>
+  <div>
+    <p><a href="http://nxlog-ce.sourceforge.net">NXLOG</a> es un sustituto revitalizado para <a href="http://es.wikipedia.org/wiki/Syslog">Syslog</a>. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión.</p>
+
+
+<p>Tras leer la documentación, indicaban que lo único que hay que hacer es bajarse el código fuente y ejecutar el comando <code>./make_rpm.sh</code>. El caso es que esto tampoco funcionaba, pero después de dar 20000 vueltas, y de pura casulalidad, vi que había 2 ficheros <a href="http://www.rpm.org/max-rpm/ch-rpm-inside.html">SPEC</a>: uno llamado <code>nxlog.spec</code> y otro llamado <code>nxlog.spec.RHEL5</code>. Mirando el código del script <code>make_rpm.sh</code> he visto que si no se especifica ningún fichero mediante entorno de variable, automáticamente coge el <code>nxlog.spec</code>, así que lo único que hay que hacer es indicarle mediante una variable de entorno el otro fichero SPEC. Fácil y sencillo (después de darle muchas vueltas)...</p>
+<p>Aquí el <a href="http://es.wikipedia.org/wiki/Cortar,_copiar_y_pegar">copy-paste</a>:</p>
+<div class="highlight"><pre><span></span><span class="nv">NXLOG_VERSION</span><span class="o">=</span>2.8.1248
+yum install rpm-build apr-devel pcre-devel openssl-devel libdbi-devel libcap-devel expat-devel libtool
+wget http://sourceforge.net/projects/nxlog-ce/files/nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>.tar.gz
+tar zxvf nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>.tar.gz
+<span class="nb">cd</span> nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>/packaging/redhat
+<span class="nv">SPEC_FILE</span><span class="o">=</span>nxlog.spec.RHEL5 ./make_rpm.sh
+rpm -Uvh rpmbuild/RPMS/x86_64/nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>-1.x86_64.rpm
+</pre></div>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
+  </div>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'okeletgithubio';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</article>
+
+    <footer>
+<p>
+  &copy; Juan Asensio Sánchez 2016 - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>
+</p>
+<p>Built using <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a></p><p>
+  <a rel="license"
+     href="http://creativecommons.org/licenses/by-sa/4.0/"
+     target="_blank">
+    <img alt="Creative Commons License"
+         title="Creative Commons License"
+         style="border-width:0"
+         src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png"
+         width="80"
+         height="15"/>
+  </a>
+<!-- StatusCake -->
+<a href="https://www.statuscake.com" title="Mis notas Uptime">
+  <img src="https://www.statuscake.com/App/button/index.php?Track=dti6bV95mD&amp;Days=7&amp;Design=6" alt="Mis notas Uptime" width="96" height="15"/>
+</a>
+<!-- End StatusCake --></p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "Compilar NXLOG en Red Hat/CentOS 5",
+  "headline": "Compilar NXLOG en Red Hat/CentOS 5",
+  "datePublished": "2014-09-15 14:24:26+02:00",
+  "dateModified": "",
+  "author": {
+    "@type": "Person",
+    "name": "Juan Asensio Sánchez",
+    "url": "https://okelet.github.io/author/juan-asensio-sanchez.html"
+  },
+  "image": "{{ SITEURL }}/{{ THEME_STATIC_DIR }}/img/profile.png",
+  "url": "https://okelet.github.io/posts/2014/09/compilar-nxlog-en-red-hatcentos-5/",
+  "description": "NXLOG es un sustituto revitalizado para Syslog. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión."
+}
+</script></body>
+</html>

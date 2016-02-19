@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/pygments.min.css">
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/font-awesome.min.css">
+
+
+    <link href="https://okelet.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Mis notas Atom">
+
+
+    <link rel="shortcut icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+
+<meta name="author" content="Juan Asensio Sánchez" />
+<meta name="description" content="Una de las cosas que más echo en falta en VirtualBox con respecto a cuando trabajaba con VMware Workstation o Player, al trabajar una máquina local para hacer pruebas, es que estas últimas te creaban varios tipos de redes por defecto que VirtualBox no hace. La más útil para mi, sobre todo cuando estás en un cliente en el que es difícil solicitar IPs o cuando quieres crear una red interna de pruebas, es crear una red privada de la que formen parte tanto las máquinas virtuales como la propia máquina anfitriona, y que tenga salida al exterior mediante NAT." />
+<meta name="keywords" content="">
+<meta property="og:site_name" content="Mis notas"/>
+<meta property="og:title" content="Red NAT privada con salida al exterior en VirtualBox"/>
+<meta property="og:description" content="Una de las cosas que más echo en falta en VirtualBox con respecto a cuando trabajaba con VMware Workstation o Player, al trabajar una máquina local para hacer pruebas, es que estas últimas te creaban varios tipos de redes por defecto que VirtualBox no hace. La más útil para mi, sobre todo cuando estás en un cliente en el que es difícil solicitar IPs o cuando quieres crear una red interna de pruebas, es crear una red privada de la que formen parte tanto las máquinas virtuales como la propia máquina anfitriona, y que tenga salida al exterior mediante NAT."/>
+<meta property="og:locale" content="es_ES"/>
+<meta property="og:url" content="https://okelet.github.io/posts/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2014-08-07 13:49:59+02:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://okelet.github.io/author/juan-asensio-sanchez.html">
+<meta property="article:section" content="VirtualBox"/>
+<meta property="og:image" content="">
+  <title>Mis notas &ndash; Red NAT privada con salida al exterior en VirtualBox</title>
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://okelet.github.io/">
+        <img src="https://okelet.github.io/theme/img/profile.png" alt="Mis Notas" title="Mis Notas">
+      </a>
+      <h1><a href="https://okelet.github.io/">Mis Notas</a></h1>
+      <p>Notas para no olvidarme...</p>
+      <nav>
+        <ul class="list">
+          <li><a href="https://okelet.github.io/pages/acerca-de-mi.html#acerca-de-mi">Acerca de mi...</a></li>
+          <li><a href="https://okelet.github.io/pages/proyectos.html#proyectos">Proyectos</a></li>
+          <li><a href="http://getpelican.com/" target="_blank">Pelican</a></li>
+        </ul>
+      </nav>
+      <ul class="social">
+        <li><a class="sc-linkedin" href="https://www.linkedin.com/in/okelet" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-github" href="https://github.com/okelet" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+  </aside>
+  <main>
+    <nav>
+      <a href="https://okelet.github.io">Home</a>
+      <a href="/archives.html">Archivos</a>
+      <a href="/categories.html">Categorías</a>
+      <a href="/tags.html">Tags</a>
+      <a href="https://okelet.github.io/feeds/all.atom.xml">Atom</a>
+    </nav>
+
+<article>
+  <header>
+    <h1 id="red-nat-privada-con-salida-al-exterior-en-virtualbox">Red NAT privada con salida al exterior en VirtualBox</h1>
+    <p>Posted on jue 07 agosto 2014 in <a href="https://okelet.github.io/category/virtualbox/">VirtualBox</a></p>
+  </header>
+  <div>
+    <p>Una de las cosas que más echo en falta en <a href="https://www.virtualbox.org">VirtualBox</a> con respecto a cuando trabajaba con <a href="http://www.vmware.com/es/products/workstation">VMware Workstation</a> o <a href="http://www.vmware.com/es/products/player">Player</a>, al trabajar una máquina local para hacer pruebas, es que estas últimas te creaban varios tipos de redes por defecto que VirtualBox no hace. La más útil para mi, sobre todo cuando estás en un cliente en el que es difícil solicitar IPs o cuando quieres crear una red interna de pruebas, es crear una <a href="https://www.vmware.com/support/ws3/doc/ws32_network21.html">red privada de la que formen parte tanto las máquinas virtuales como la propia máquina anfitriona, y que tenga salida al exterior mediante NAT</a>. </p>
+
+
+<p>En las últimas versiones de VirtualBox (a partir de la 4.3, en modo experimental) existe el llamado <a href="https://www.virtualbox.org/manual/ch06.html#network_nat_service">NAT Service</a>, que simula el comportamiento anterior de VMware, pero que no permite la conexión desde la máquina anfitriona (ya que, al contrario que VMware, VirtualBox no crea una interfaz virtual para esta red) hacia las máquinas virtuales o a la inversa. Esto es muy cómodo cuando quieres hacer SSH hacia las máquinas virtuales, ya que no tienes que estar redirigiendo puertos, que es la única forma de hacerlo con VirtualBox en el modo NAT Service (y no digamos si tienes varias máquinas virtuales, el lío de redirección de puertos y parámetros al SSH para conectar a las diferentes máquinas virtuales).</p>
+<p>Buscando una solución alternativa y lo más transparente y sencilla de gestionar, hace tiempo descubrí <a href="http://www.tolaris.com/2012/05/16/using-host-networking-and-nat-with-virtualbox-v2-0">esta página</a> que lo que hace es crear una interfaz virtual en la máquina anfitrión, configurando el reenvío TCP y un servidor <a href="http://www.thekelleys.org.uk/dnsmasq/doc.html">Dnsmasq</a> para servir direcciones por DHCP y la resolución DNS de esa red. De esta forma, si la red de las máquinas virtuales se configura en modo bridge, usando la interfaz creada, todas podrán comunicarse entre sí y con la máquina anfitrión, aparte de tener un servidor DHCP y DNS (por lo que podremos crear asignaciones de direcciones estáticas, entradas DNS para un dominio ficticio interno, etc.). Además, las máquinas virtuales tendrán salida al exterior, ya que la máquina anfitrión realizará NAT del tráfico saliente que se reciba desde esta red. Incluso podemos montar un servidor PXE para arrancar sistemas en red o la instalación automática mediante <a href="http://fedoraproject.org/wiki/Anaconda/Kickstart">Kickstart</a>, <a href="http://www.cobblerd.org">Clobber</a> o <a href="https://wiki.debian.org/DebianInstaller/Preseed">Preseed</a>.</p>
+<p>Para rizar aún más el rizo, decidí simplificar la configuración. La anterior está bien, pero es necesario tener bastantes cosas en cuenta (la interfaz, el paquete bridge-utils, el reenvío TCP, la configuración de Dnsmasq, etc.), y se complica a mayores cuando quieres tener varias redes virtuales separadas y que se comuniquen entre sí. Buscando un poco más, descubrí <a href="http://ballardini.com.ar/blog/red-portatil-v-interfaz-tap-en-anfitrion-y-en-huesped-kvm">esta página</a> en la que se combinan todos los pasos anteriores en un único punto. En resumen, lo que se hace es crear una interfaz virtual, y en los precomandos y postcomandos al levantar y apagar la interfaz, se ejecutan todos los pasos necesarios. Para poner en marcha esto, lo primero será instalar Dnsmasq y los paquetes necesarios para crear la interfaz virtual:</p>
+<div class="highlight"><pre><span></span>apt-get install dnsmasq vde2 bridge-utils
+update-rc.d dnsmasq disable
+</pre></div>
+
+
+<p>[su_box title="Nota"]
+Es necesario deshabilitar <code>dnsmasq</code> del arranque ya que la configuración por defecto escucha por todas las interfaces, y al levantar <code>dnsmasq</code> por cada interfaz virtual, da un error diciendo que la dirección ya está en uso.
+[/su_box]</p>
+<p>Para no tener que tocar mucho el archivo /etc/network/interfaces, y poder gestionar más fácilmente las interfaces virtuales que creemos, configuraremos el sistema para que <a href="http://askubuntu.com/questions/323566/separate-etc-network-interfaces-file">cargue dinámicamente todos los archivos de configuración desde el directorio /etc/network/interfaces.d</a>; para ello, tendremos que añadir, si no existe ya, esta línea:</p>
+<p>{% codeblock /etc/network/interfaces lang:text %}
+auto lo
+iface lo inet loopback</p>
+<p _="%" endcodeblock="endcodeblock">source /etc/network/interfaces.d/*.cfg</p>
+<p>Y por supuesto, crear dicho directorio:</p>
+<div class="highlight"><pre><span></span>mkdir -p /etc/network/interfaces.d
+</pre></div>
+
+
+<p>A continuación, ya podemos definir la interfaz:</p>
+<p>{% codeblock /etc/network/interfaces.d/vnet0.cfg lang:text %}
+auto vnet0
+iface vnet0 inet static</p>
+<p>address 192.168.77.253
+  netmask 255.255.255.0</p>
+<p>############################################################################################################
+  # Arranque de la interfaz
+  ############################################################################################################</p>
+<p># Crear la interfaz virtual
+  pre-up /usr/bin/vde_switch --tap ${IFACE} --daemon --group vde2-net --sock /var/run/${IFACE}.ctl \
+   --mod 775 --mgmtmode 770 --mgmt /var/run/${IFACE}-manage --pidfile /var/run/${IFACE}_vde.pid</p>
+<p># Comprobamos si existe un archivo de configuración de Dnsmasq, y si no existe, creamos uno vacío
+  # para que no se queje el proceso de Dnsmasq al levantarlo
+  up test -e /etc/dnsmasq_${IFACE}.conf || touch /etc/dnsmasq_${IFACE}.conf</p>
+<p># Levantar el proceso de Dnsmasq, pasando como interfaz a la que asociarse la propia interfaz y el
+  # rango DHCP para asignar direcciones (la dirección de la interfaz definida arriba debe estar en este
+  # rango); se pueden especificar más parámetros añadiéndolos aquí o creando/modificando un archivo
+  # de configuración según la instrucción anterior.
+  up /usr/sbin/dnsmasq --interface=${IFACE} --except-interface=lo --bind-interfaces --user=nobody \
+     --dhcp-range=${IFACE},192.168.77.101,192.168.77.199,8h \
+     --local=/pruebas.intra/ --domain=pruebas.intra \
+     --pid-file=/var/run/${IFACE}<em>dnsmasq.pid --conf-file=/etc/dnsmasq</em>${IFACE}.conf</p>
+<p># Añadir una regla a iptables para natear el tráfico saliente de esta red
+  post-up iptables -t nat -I POSTROUTING -s 192.168.77.0/24 -j MASQUERADE</p>
+<p>############################################################################################################
+  # Parada de la interfaz
+  ############################################################################################################</p>
+<p># Eliminar el nateo del tráfico saliente asociada a la red
+  pre-down iptables -t nat -D POSTROUTING -s 192.168.77.0/24 -j MASQUERADE</p>
+<p># Parar el proceso de Dnsmasq
+  down kill $(cat /var/run/${IFACE}_dnsmasq.pid) &amp;&amp; rm -f /var/run/${IFACE}_dnsmasq.pid</p>
+<p># Borrar el archivo de configuración de Dnsmasq si está vacío (para mantener limpio el sistema)
+  down test -s /etc/dnsmasq_${IFACE}.conf || rm -f /etc/dnsmasq_${IFACE}.conf</p>
+<p _="%" endcodeblock="endcodeblock"># Eliminar la interfaz virtual
+  post-down kill $(cat /var/run/${IFACE}_vde.pid) || kill -9 $(cat /var/run/${IFACE}_vde.pid)</p>
+<p>[su_box title="Nota"]
+En el post original de donde saqué esta configuración (el segundo referenciado), la regla de <span class="lang:default highlight:0 decode:true crayon-inline ">iptables</span> hacía referencia a la interfaz de salida, y no a la red de origen como he puesto yo. Esto lo he tenido que hacer ya que Ubuntu usa NetworkManager, y parece que levanta esta interfaz antes que las demás (por ejemplo, con la que tengamos configurada como principal como <span class="lang:default highlight:0 decode:true crayon-inline ">eth0</span> o <span class="lang:default highlight:0 decode:true crayon-inline ">wlan0</span>), por lo que no es posible la interfaz de salida de la ruta por defecto (y que además esta interfaz puede cambiarse desde el escritorio). Por tanto, lo que he hecho, es que en la regla de <span class="lang:default highlight:0 decode:true crayon-inline ">iptables</span>, en lugar de hacer NAT a todo lo que salga por la interfaz por defecto tras el enrutado, es hacer NAT a todo lo que venga de la red de la interfaz virtual tras el enrutado.</p>
+<p>Esto tiene un problema, que no creo que sea difícil de solucionar, pero que no lo he hecho, y es que si hay varias interfaces virtuales y queremos comunicar máquinas de distintas redes, siempre se hará NAT, aunque no salgan del propio host anfitrión.
+[/su_box]</p>
+<p>El único paso que he dejado fuera es la configuración del reenvío TCP, ya que no está ligado a una interfaz en concreto, sino que va a nivel de sistema.</p>
+<div class="highlight"><pre><span></span>net.ipv4.ip_forward=1
+</pre></div>
+
+
+<p>Recargamos la configuración para que se aplique el cambio anterior:</p>
+<div class="highlight"><pre><span></span>sysctl -p
+</pre></div>
+
+
+<p>Las ventajas de esta configuración sobre la primera es que:</p>
+<ul>
+<li>Se levanta un proceso Dnsmasq distinto para cada interfaz, con un archivo de configuración específico, por lo que se pueden agregar en el fichero datos que no se pasan directamente al programa por parámetros, como asignaciones de IPs estáticas, registros DNS, etc.</li>
+<li>Se pueden tener varias interfaces virtuales, cada una con su propia configuración DNS, simplemente creando una nueva interfaz copiando y pegando tantas veces el bloque anterior y modificando los datos mínimos (sobre todo la dirección IP, el rango DHCP y las reglas de iptables), o creando un archivo distinto por cada interfaz en el directorio <code>/etc/network/interfaces.d</code>.</li>
+</ul>
+<p>Para finalizar, se puede modificar la configuración de Dnsmasq para personalizar las asignaciones DHCP, la resolución DNS, así como hacer que los sistemas arranquen desde la red con PXE; hay configuraciones de ejemplo en esta página.</p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
+  </div>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'okeletgithubio';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</article>
+
+    <footer>
+<p>
+  &copy; Juan Asensio Sánchez 2016 - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>
+</p>
+<p>Built using <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a></p><p>
+  <a rel="license"
+     href="http://creativecommons.org/licenses/by-sa/4.0/"
+     target="_blank">
+    <img alt="Creative Commons License"
+         title="Creative Commons License"
+         style="border-width:0"
+         src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png"
+         width="80"
+         height="15"/>
+  </a>
+<!-- StatusCake -->
+<a href="https://www.statuscake.com" title="Mis notas Uptime">
+  <img src="https://www.statuscake.com/App/button/index.php?Track=dti6bV95mD&amp;Days=7&amp;Design=6" alt="Mis notas Uptime" width="96" height="15"/>
+</a>
+<!-- End StatusCake --></p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "Red NAT privada con salida al exterior en VirtualBox",
+  "headline": "Red NAT privada con salida al exterior en VirtualBox",
+  "datePublished": "2014-08-07 13:49:59+02:00",
+  "dateModified": "",
+  "author": {
+    "@type": "Person",
+    "name": "Juan Asensio Sánchez",
+    "url": "https://okelet.github.io/author/juan-asensio-sanchez.html"
+  },
+  "image": "{{ SITEURL }}/{{ THEME_STATIC_DIR }}/img/profile.png",
+  "url": "https://okelet.github.io/posts/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/",
+  "description": "Una de las cosas que más echo en falta en VirtualBox con respecto a cuando trabajaba con VMware Workstation o Player, al trabajar una máquina local para hacer pruebas, es que estas últimas te creaban varios tipos de redes por defecto que VirtualBox no hace. La más útil para mi, sobre todo cuando estás en un cliente en el que es difícil solicitar IPs o cuando quieres crear una red interna de pruebas, es crear una red privada de la que formen parte tanto las máquinas virtuales como la propia máquina anfitriona, y que tenga salida al exterior mediante NAT."
+}
+</script></body>
+</html>

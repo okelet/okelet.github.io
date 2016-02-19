@@ -1,115 +1,218 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-        <meta charset="utf-8" />
-        <title>Mis notas</title>
-        <link rel="stylesheet" href="/theme/css/main.css" />
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
 
-        <!--[if IE]>
-            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-        <![endif]-->
+    <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/pygments.min.css">
+  <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/font-awesome.min.css">
+
+
+    <link href="https://okelet.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Mis notas Atom">
+
+
+    <link rel="shortcut icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="https://okelet.github.io/images/favicon.ico" type="image/x-icon">
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+
+    <meta name="author" content="Juan Asensio Sánchez" />
+    <meta name="description" content="Notas de un devop, administrador de sistemas, aprendiz de desarrollador, etc." />
+<meta property="og:site_name" content="Mis notas"/>
+<meta property="og:type" content="blog"/>
+<meta property="og:title" content="Mis notas"/>
+<meta property="og:description" content="Notas de un devop, administrador de sistemas, aprendiz de desarrollador, etc."/>
+<meta property="og:locale" content="es_ES"/>
+<meta property="og:url" content="https://okelet.github.io"/>
+
+  <title>Mis notas</title>
 </head>
+<body>
+  <aside>
+    <div>
+      <a href="https://okelet.github.io/">
+        <img src="https://okelet.github.io/theme/img/profile.png" alt="Mis Notas" title="Mis Notas">
+      </a>
+      <h1><a href="https://okelet.github.io/">Mis Notas</a></h1>
+      <p>Notas para no olvidarme...</p>
+      <nav>
+        <ul class="list">
+          <li><a href="https://okelet.github.io/pages/acerca-de-mi.html#acerca-de-mi">Acerca de mi...</a></li>
+          <li><a href="https://okelet.github.io/pages/proyectos.html#proyectos">Proyectos</a></li>
+          <li><a href="http://getpelican.com/" target="_blank">Pelican</a></li>
+        </ul>
+      </nav>
+      <ul class="social">
+        <li><a class="sc-linkedin" href="https://www.linkedin.com/in/okelet" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-github" href="https://github.com/okelet" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+  </aside>
+  <main>
+    <nav>
+      <a href="https://okelet.github.io">Home</a>
+      <a href="/archives.html">Archivos</a>
+      <a href="/categories.html">Categorías</a>
+      <a href="/tags.html">Tags</a>
+      <a href="https://okelet.github.io/feeds/all.atom.xml">Atom</a>
+    </nav>
 
-<body id="index" class="home">
-        <header id="banner" class="body">
-                <h1><a href="/">Mis notas </a></h1>
-                <nav><ul>
-                    <li><a href="/category/mysql.html">MySQL</a></li>
-                </ul></nav>
-        </header><!-- /#banner -->
+<article>
+  <header>
+    <h2><a href="https://okelet.github.io/posts/2016/02/instalar-openstack-packstack-detras-de-un-proxy/#instalar-openstack-packstack-detras-de-un-proxy">Instalar OpenStack PackStack detrás de un proxy</a></h2>
+    <p>
+      Publicado el jue 18 febrero 2016 en <a href="https://okelet.github.io/category/openstack/">OpenStack</a>
+      &#8226; <a href="https://okelet.github.io/posts/2016/02/instalar-openstack-packstack-detras-de-un-proxy/#disqus_thread">Comentarios</a>
+    </p>
+  </header>
+  <div>
+      <p>Trasteando con Openstack, con ganas desde hace tiempo, y después de la <a href="http://www.meetup.com/es-ES/MAD-for-OpenStack/events/227554166/">Mini-Conf</a> del grupo <a href="http://www.meetup.com/es-ES/MAD-for-OpenStack/">MAD for OpenStack</a>, me animé a probarlo usando <a href="https://wiki.openstack.org/wiki/Packstack">PackStack</a>, que te lo configura todo en una única máquina (no tengo claro si se puede considerar una instalación productiva o sólo para pruebas), aunque luego puedes ir añadiendo nodos adicionales. Dado que no tengo acceso a ningún host físico, instalé un RH 7.2 (también vale <a href="https://getfedora.org">Fedora</a> o <a href="https://www.centos.org">CentOS</a>) en una máquina virtual de VMware (el rendimiento dependerá en gran medida si se tiene habilitado o no la <em><a href="http://www.josemariagonzalez.es/2012/10/01/como-virtualizar-un-vmware-esxi-en-modo-nested.html">nested virtualization</a></em>). Empecé con una máquina con 2 procesadores y 2 GB de RAM, pero enseguida me di cuenta que se quedaba muy corta, incluso sin ninguna instancia arrancada. La versión final tiene 8 procesadores y 8 GB de RAM.</p>
 
-            <aside id="featured" class="body">
-                <article>
-                    <h1 class="entry-title"><a href="/instalar-configurar-y-securizar-mariadb.html">Instalar, configurar y securizar MariaDB</a></h1>
-<footer class="post-info">
-        <abbr class="published" title="2016-02-19T10:30:00+01:00">
-                Published: vie 19 febrero 2016
-        </abbr>
-
-        <address class="vcard author">
-                By                         <a class="url fn" href="/author/juan-asensio-sanchez.html">Juan Asensio Sánchez</a>
-        </address>
-<p>In <a href="/category/mysql.html">MySQL</a>.</p>
-
-</footer><!-- /.post-info --><p>La página de <a href="http://www.ibm.com/developerworks">IBM developerWorks</a> no para de sorprenderme. Muchas de las veces que busco documentación técnica, cursos, tutoriales, etc. allí están ellos, y con un material gratuito y de muy alta calidad. La última, fue con la instalación de este blog. Tengo un VPS contratado con Ubuntu, que he ido actualizando poco a poco, y que lo tengo bastante pelado. Me decidí por instalar en él WordPress (tras mucho analizar otros sistemas para publicar artículos tipo <a href="http://dokuwiki.org">Dokuwiki</a>, <a href="http://octopress.org">Octopress</a>, <a href="http://jekyllrb.com">Jekyll</a>, <a href="http://getpelican.com">Pelican</a>, etc.). Lo primero que me sorprendió es que no soporta <a href="http://www.postgresql.org">PostgreSQL</a> de forma oficial (que sería mi primera opción), por mis <a href="http://techcrunch.com/2012/08/18/oracle-makes-more-moves-to-kill-open-source-mysql">reticencias con MySQL</a>, pero más tarde de acordé del fork que se creó hace un tiempo, llamado <a href="http://mariadb.org">MariaDB</a>. Leyendo un poco, parece ser que MariaDB es "binariamente" (si es que eso existe en castellano) <a href="https://mariadb.com/kb/en/mariadb/mariadb-vs-mysql-compatibility">compatible con MySQL</a> (es decir, que el protocolo de comunicación, los ficheros de base de datos, etc. son totalmente compatibles, si no iguales).</p>
-<!-- more -->
-
-<p>Bueno, a lo que iba. Ya que con PostgreSQL no se puede (o por lo menos, no está oficialmente soportado), opté por instalar MariaDB. Desde su web tienen un <a href="https://downloads.mariadb.org/mariadb/repositories">asistente muy sencillo</a> para configurar los repositorios de las distribuciones Linux más comunes (openSUSE, Debian, Ubuntu, Red Hat, CentOS, etc.). Tienen paquetes precompilados para prácticamente todas las versiones y arquitecturas (la única que echo en falta es Red Hat 7, aunque se lo perdono porque acaba de salir hace nada...).</p>
-<p>Una vez configurados los repositorios, toca la parte de la instalación; sencillísima como siempre:</p>
-<p _="%" endcodeblock="endcodeblock">{% codeblock lang:bash %}
-sudo apt-get update
-sudo apt-get install mariadb-server php5-mysql</p>
-<p>Lo que más miedo me da de estas instalaciones tan "sencillísimas" es que muchas veces dejan el servidor o el servicio instalado bastante desprotegido. Durante la instalación, se nos pregunta que si queremos ponerle una contraseña al usuario root de MariaDB/MySQL.... Pero qué cosas, nos permite dejarlo en blanco. MAL MAL MAL. Como decía, gracias a los tutoriales de developerWorks, descubrí que hay un comando muy sencillo que te "quita" todas esas inseguridades; a saber:</p>
+      <a class="btn" href="https://okelet.github.io/posts/2016/02/instalar-openstack-packstack-detras-de-un-proxy/#instalar-openstack-packstack-detras-de-un-proxy">Leer más...</a>
+  </div>
+  <hr />
+</article>
+<article>
+  <header>
+    <h2><a href="https://okelet.github.io/posts/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/#red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre">Red Hat, licencias y suscripciones (y una pequeña reflexión sobre el software libre)</a></h2>
+    <p>
+      Publicado el mar 23 septiembre 2014 en <a href="https://okelet.github.io/category/misc/">misc</a>
+      &#8226; Etiquetado en
+      <a href="https://okelet.github.io/tag/redhat/">redhat</a>,      <a href="https://okelet.github.io/tag/licencias/">licencias</a>      &#8226; <a href="https://okelet.github.io/posts/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/#disqus_thread">Comentarios</a>
+    </p>
+  </header>
+  <div>
+      <p><em>Nota</em>: No soy un experto en licencias o suscripciones, así que todo lo que diga en este post, no se debe tomar al pie de la letra. Si algún concepto está mal, comentádmelo y lo corrijo.</p>
+<p>En un anterior cliente (de cuyo nombre no quiero acordarme), supongo que al igual que en muchos otros que os habréis encontrado, tienen la mala costumbre de instalar software sin licencia o suscripción. En este caso, voy a hablar de Red Hat, y su distribución Linux (Red Hat Enterprise Linux o RHEL). Aunque GNU/Linux siempre se ha caracterizado por sus licencias abiertas, quien modifique dicho software está obligado a publicar dicho fuente modificado (realmente depende de la licencia de cada pieza software que compone la distribución, pero aunque no se deba en general, en este post generalizaremos...). Éste es, en parte, el negocio de Red Hat. Ellos hace una recopilación de software, le hacen una serie de modificacionesy mejoras si procede, publican ese código fuente (<a href="http://ftp.redhat.com/pub/redhat/linux/enterprise/">SRPMs</a>), y finalmente generar unos binarios que los meten en un CD, además de dar actualizaciones y soporte de ese software. ¿Y qué es lo que pasa? Pues esos CDs "no te los puedes bajar gratis" (dependiendo de la licencia se puede permitir cobrar por el trabajo realizado, o incluso no liberar las modificaciones hechas). Esos CDs sólo los puedes conseguir si tienes una suscripción con Red Hat (previo pago), o bien si te has registrado para una evaluación. Esta demo incluye lo siguiente:</p>
 <ul>
-<li>Ponerle una contraseña al usuario root de MariaDB/MySQL en condiciones.</li>
-<li>Eliminar el usuario anonymous</li>
-<li>Deshabilitar el acceso remoto de root</li>
-<li>Eliminar la base de datos test</li>
-<li>Recargar los privilegios</li>
+<li>Actualizaciones durante 30 días</li>
+<li>NO se incluye soporte técnico</li>
 </ul>
-<p>El comando mágico es <code>mysql_secure_installation</code>, aunque parece que no está muy afinado, ya que nada más lanzarlo da un error:</p>
-<div class="highlight"><pre><span></span>/usr/bin/mysql_secure_installation: 379: /usr/bin/mysql_secure_installation: find_mysql_client: not found
+
+      <a class="btn" href="https://okelet.github.io/posts/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/#red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre">Leer más...</a>
+  </div>
+  <hr />
+</article>
+<article>
+  <header>
+    <h2><a href="https://okelet.github.io/posts/2014/09/compilar-nxlog-en-red-hatcentos-5/#compilar-nxlog-en-red-hatcentos-5">Compilar NXLOG en Red Hat/CentOS 5</a></h2>
+    <p>
+      Publicado el lun 15 septiembre 2014 en <a href="https://okelet.github.io/category/nxlog/">nxlog</a>
+      &#8226; <a href="https://okelet.github.io/posts/2014/09/compilar-nxlog-en-red-hatcentos-5/#disqus_thread">Comentarios</a>
+    </p>
+  </header>
+  <div>
+      <p><a href="http://nxlog-ce.sourceforge.net">NXLOG</a> es un sustituto revitalizado para <a href="http://es.wikipedia.org/wiki/Syslog">Syslog</a>. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión.</p>
+
+      <a class="btn" href="https://okelet.github.io/posts/2014/09/compilar-nxlog-en-red-hatcentos-5/#compilar-nxlog-en-red-hatcentos-5">Leer más...</a>
+  </div>
+  <hr />
+</article>
+<article>
+  <header>
+    <h2><a href="https://okelet.github.io/posts/2014/08/guia-rapida-de-kvm/#guia-rapida-de-kvm">Guía rápida de KVM</a></h2>
+    <p>
+      Publicado el mar 12 agosto 2014 en <a href="https://okelet.github.io/category/kvm/">KVM</a>
+      &#8226; <a href="https://okelet.github.io/posts/2014/08/guia-rapida-de-kvm/#disqus_thread">Comentarios</a>
+    </p>
+  </header>
+  <div>
+      <p>De la <a href="http://es.wikipedia.org/wiki/Kernel-based_Virtual_Machine">Wikipedia</a>:</p>
+<blockquote>
+<p>Kernel-based Virtual Machine o KVM, (en español, Máquina virtual basada en el núcleo) es una solución para implementar virtualización completa con Linux. Está formada por un módulo del núcleo (con el nombre kvm.ko) y herramientas en el espacio de usuario, siendo en su totalidad software libre. El componente KVM para el núcleo está incluido en Linux desde la versión 2.6.20.</p>
+<p>KVM permite ejecutar máquinas virtuales utilizando imágenes de disco que contienen sistemas operativos sin modificar. Cada máquina virtual tiene su propio hardware virtualizado: una tarjeta de red, discos duros, tarjeta gráfica, etc.</p>
+</blockquote>
+<p>En primer lugar, debemos comprobar si nuestro equipo es compatible con KVM:</p>
+<div class="highlight"><pre><span></span>egrep --color <span class="s1">&#39;(svm|vmx)&#39;</span> /proc/cpuinfo
 </pre></div>
 
 
-<p>También da un error al intentar borrar la base de datos test:</p>
-<p _="%" endcodeblock="endcodeblock">{% codeblock %}
-Remove test database and access to it? [Y/n] 
- - Dropping test database...
-ERROR 1008 (HY000) at line 1: Can't drop database 'test'; database doesn't exist
- ... Failed!  Not critical, keep moving...
- - Removing privileges on test database...
- ... Success!</p>
-<p>Puedes ver la salida completa del comando en este <a href="https://gist.github.com/okelet/b416b13f85831afb98fe">Gist</a>.</p>
-<p>Una vez hecho esto, ya podemos decir que nuestra instalación está bastante adecentada. Lo que nos quedaría, si usamos un cortafuegos (que deberíamos), sería limitar el acceso. Si la regla por defecto es denegar las conexiones entrantes, no deberíamos tener problema; si no, deberíamos añadir una regla para denegar las conexiones remotas entrantes al puerto 3306.  El siguiente listado muestra los comandos necesarios para configurar el cortafuegos de manera rápida con <a href="https://help.ubuntu.com/community/UFW">UFW</a>, permitiendo el acceso desde fuera por SSH, HTTP y HTTPS, denegando todo el resto de tráfico entrante, y permitiendo por defecto el tráfico saliente:</p>
-<p _="%" endcodeblock="endcodeblock">{% codeblock lang:bash %}
-sudo apt-get install ufw
-sudo ufw enable
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow ssh/tcp
-sudo ufw allow http/tcp
-sudo ufw allow https/tcp
-sudo ufw status</p>
-<p>Por último, y como algo particular para WordPress, crearemos una base de datos, un usuario y le daremos permisos al usuario sobre esa base de datos, para lo que ejecutaremos el comando <code>mysql -uroot -p</code>, introduciendo después la contraseña asignada antes al usuario root, y ejecutando los siguientes comandos desde el shell de MariaDB:</p>
-<p _="%" endcodeblock="endcodeblock">{% codeblock lang:sql %}
-CREATE DATABASE wordpress;
-CREATE USER 'wpuser'@'localhost' IDENTIFIED BY 'pickApassword';
-GRANT ALL PRIVILEGES ON wordpress .* TO 'wpuser'@'localhost';
-FLUSH PRIVILEGES;
-exit</p>
-<h3>Referencias</h3>
-<ul>
-<li><a href="http://www.ibm.com/developerworks/cloud/library/cl-softlayer-secure-wordpressblog-trs">IBM developerWorks: Create a secure WordPress blog using SoftLayer</a></li>
-</ul>                </article>
-            </aside><!-- /#featured -->
-        <section id="extras" class="body">
-                <div class="blogroll">
-                        <h2>blogroll</h2>
-                        <ul>
-                            <li><a href="http://getpelican.com/">Pelican</a></li>
-                            <li><a href="http://python.org/">Python.org</a></li>
-                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
-                            <li><a href="#">You can modify those links in your config file</a></li>
-                        </ul>
-                </div><!-- /.blogroll -->
-                <div class="social">
-                        <h2>social</h2>
-                        <ul>
+<p>Si la salida anterior muestra algo, podremos seguir adelante. Si no muestra nada, también podremos seguir, pero no se aprovecharán las capacidades de virtualización del equipo (se hará un <a href="http://blog.vmsplice.net/2011/03/should-i-use-qemu-or-kvm.html"><em>fallback</em></a> a emulación en lugar de virtualización).</p>
 
-                            <li><a href="#">You can add links in your config file</a></li>
-                            <li><a href="#">Another social link</a></li>
-                        </ul>
-                </div><!-- /.social -->
-        </section><!-- /#extras -->
+      <a class="btn" href="https://okelet.github.io/posts/2014/08/guia-rapida-de-kvm/#guia-rapida-de-kvm">Leer más...</a>
+  </div>
+  <hr />
+</article>
+<article>
+  <header>
+    <h2><a href="https://okelet.github.io/posts/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/#red-nat-privada-con-salida-al-exterior-en-virtualbox">Red NAT privada con salida al exterior en VirtualBox</a></h2>
+    <p>
+      Publicado el jue 07 agosto 2014 en <a href="https://okelet.github.io/category/virtualbox/">VirtualBox</a>
+      &#8226; <a href="https://okelet.github.io/posts/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/#disqus_thread">Comentarios</a>
+    </p>
+  </header>
+  <div>
+      <p>Una de las cosas que más echo en falta en <a href="https://www.virtualbox.org">VirtualBox</a> con respecto a cuando trabajaba con <a href="http://www.vmware.com/es/products/workstation">VMware Workstation</a> o <a href="http://www.vmware.com/es/products/player">Player</a>, al trabajar una máquina local para hacer pruebas, es que estas últimas te creaban varios tipos de redes por defecto que VirtualBox no hace. La más útil para mi, sobre todo cuando estás en un cliente en el que es difícil solicitar IPs o cuando quieres crear una red interna de pruebas, es crear una <a href="https://www.vmware.com/support/ws3/doc/ws32_network21.html">red privada de la que formen parte tanto las máquinas virtuales como la propia máquina anfitriona, y que tenga salida al exterior mediante NAT</a>. </p>
 
-        <footer id="contentinfo" class="body">
-                <address id="about" class="vcard body">
-                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
-                </address><!-- /#about -->
+      <a class="btn" href="https://okelet.github.io/posts/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/#red-nat-privada-con-salida-al-exterior-en-virtualbox">Leer más...</a>
+  </div>
+  <hr />
+</article>
+<article>
+  <header>
+    <h2><a href="https://okelet.github.io/posts/2014/08/instalar-configurar-y-securizar-mariadb/#instalar-configurar-y-securizar-mariadb">Instalar, configurar y securizar MariaDB</a></h2>
+    <p>
+      Publicado el jue 07 agosto 2014 en <a href="https://okelet.github.io/category/mysql/">MySQL</a>
+      &#8226; <a href="https://okelet.github.io/posts/2014/08/instalar-configurar-y-securizar-mariadb/#disqus_thread">Comentarios</a>
+    </p>
+  </header>
+  <div>
+      <p>La página de <a href="http://www.ibm.com/developerworks">IBM developerWorks</a> no para de sorprenderme. Muchas de las veces que busco documentación técnica, cursos, tutoriales, etc. allí están ellos, y con un material gratuito y de muy alta calidad. La última, fue con la instalación de este blog. Tengo un VPS contratado con Ubuntu, que he ido actualizando poco a poco, y que lo tengo bastante pelado. Me decidí por instalar en él WordPress (tras mucho analizar otros sistemas para publicar artículos tipo <a href="http://dokuwiki.org">Dokuwiki</a>, <a href="http://octopress.org">Octopress</a>, <a href="http://jekyllrb.com">Jekyll</a>, <a href="http://getpelican.com">Pelican</a>, etc.). Lo primero que me sorprendió es que no soporta <a href="http://www.postgresql.org">PostgreSQL</a> de forma oficial (que sería mi primera opción), por mis <a href="http://techcrunch.com/2012/08/18/oracle-makes-more-moves-to-kill-open-source-mysql">reticencias con MySQL</a>, pero más tarde de acordé del fork que se creó hace un tiempo, llamado <a href="http://mariadb.org">MariaDB</a>. Leyendo un poco, parece ser que MariaDB es "binariamente" (si es que eso existe en castellano) <a href="https://mariadb.com/kb/en/mariadb/mariadb-vs-mysql-compatibility">compatible con MySQL</a> (es decir, que el protocolo de comunicación, los ficheros de base de datos, etc. son totalmente compatibles, si no iguales).</p>
 
-                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
-        </footer><!-- /#contentinfo -->
+      <a class="btn" href="https://okelet.github.io/posts/2014/08/instalar-configurar-y-securizar-mariadb/#instalar-configurar-y-securizar-mariadb">Leer más...</a>
+  </div>
+</article>
 
+  <div class="pagination">
+  </div>
+
+    <footer>
+<p>
+  &copy; Juan Asensio Sánchez 2016 - This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>
+</p>
+<p>Built using <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a></p><p>
+  <a rel="license"
+     href="http://creativecommons.org/licenses/by-sa/4.0/"
+     target="_blank">
+    <img alt="Creative Commons License"
+         title="Creative Commons License"
+         style="border-width:0"
+         src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png"
+         width="80"
+         height="15"/>
+  </a>
+<!-- StatusCake -->
+<a href="https://www.statuscake.com" title="Mis notas Uptime">
+  <img src="https://www.statuscake.com/App/button/index.php?Track=dti6bV95mD&amp;Days=7&amp;Design=6" alt="Mis notas Uptime" width="96" height="15"/>
+</a>
+<!-- End StatusCake --></p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " Mis notas ",
+  "url" : "https://okelet.github.io",
+  "image": "",
+  "description": "Notas de un devop, administrador de sistemas, aprendiz de desarrollador, etc."
+}
+</script><script type="text/javascript">
+    var disqus_shortname = 'okeletgithubio';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
 </body>
 </html>
