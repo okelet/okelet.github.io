@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+        <meta charset="utf-8" />
+        <title>Mis notas - Juan Asensio Sánchez</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Mis notas </a></h1>
+                <nav><ul>
+                    <li><a href="/category/mysql.html">MySQL</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/instalar-configurar-y-securizar-mariadb.html">Instalar, configurar y securizar MariaDB</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2016-02-19T10:30:00+01:00">
+                Published: vie 19 febrero 2016
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/juan-asensio-sanchez.html">Juan Asensio Sánchez</a>
+        </address>
+<p>In <a href="/category/mysql.html">MySQL</a>.</p>
+
+</footer><!-- /.post-info --><p>La página de <a href="http://www.ibm.com/developerworks">IBM developerWorks</a> no para de sorprenderme. Muchas de las veces que busco documentación técnica, cursos, tutoriales, etc. allí están ellos, y con un material gratuito y de muy alta calidad. La última, fue con la instalación de este blog. Tengo un VPS contratado con Ubuntu, que he ido actualizando poco a poco, y que lo tengo bastante pelado. Me decidí por instalar en él WordPress (tras mucho analizar otros sistemas para publicar artículos tipo <a href="http://dokuwiki.org">Dokuwiki</a>, <a href="http://octopress.org">Octopress</a>, <a href="http://jekyllrb.com">Jekyll</a>, <a href="http://getpelican.com">Pelican</a>, etc.). Lo primero que me sorprendió es que no soporta <a href="http://www.postgresql.org">PostgreSQL</a> de forma oficial (que sería mi primera opción), por mis <a href="http://techcrunch.com/2012/08/18/oracle-makes-more-moves-to-kill-open-source-mysql">reticencias con MySQL</a>, pero más tarde de acordé del fork que se creó hace un tiempo, llamado <a href="http://mariadb.org">MariaDB</a>. Leyendo un poco, parece ser que MariaDB es "binariamente" (si es que eso existe en castellano) <a href="https://mariadb.com/kb/en/mariadb/mariadb-vs-mysql-compatibility">compatible con MySQL</a> (es decir, que el protocolo de comunicación, los ficheros de base de datos, etc. son totalmente compatibles, si no iguales).</p>
+<!-- more -->
+
+<p>Bueno, a lo que iba. Ya que con PostgreSQL no se puede (o por lo menos, no está oficialmente soportado), opté por instalar MariaDB. Desde su web tienen un <a href="https://downloads.mariadb.org/mariadb/repositories">asistente muy sencillo</a> para configurar los repositorios de las distribuciones Linux más comunes (openSUSE, Debian, Ubuntu, Red Hat, CentOS, etc.). Tienen paquetes precompilados para prácticamente todas las versiones y arquitecturas (la única que echo en falta es Red Hat 7, aunque se lo perdono porque acaba de salir hace nada...).</p>
+<p>Una vez configurados los repositorios, toca la parte de la instalación; sencillísima como siempre:</p>
+<p _="%" endcodeblock="endcodeblock">{% codeblock lang:bash %}
+sudo apt-get update
+sudo apt-get install mariadb-server php5-mysql</p>
+<p>Lo que más miedo me da de estas instalaciones tan "sencillísimas" es que muchas veces dejan el servidor o el servicio instalado bastante desprotegido. Durante la instalación, se nos pregunta que si queremos ponerle una contraseña al usuario root de MariaDB/MySQL.... Pero qué cosas, nos permite dejarlo en blanco. MAL MAL MAL. Como decía, gracias a los tutoriales de developerWorks, descubrí que hay un comando muy sencillo que te "quita" todas esas inseguridades; a saber:</p>
+<ul>
+<li>Ponerle una contraseña al usuario root de MariaDB/MySQL en condiciones.</li>
+<li>Eliminar el usuario anonymous</li>
+<li>Deshabilitar el acceso remoto de root</li>
+<li>Eliminar la base de datos test</li>
+<li>Recargar los privilegios</li>
+</ul>
+<p>El comando mágico es <code>mysql_secure_installation</code>, aunque parece que no está muy afinado, ya que nada más lanzarlo da un error:</p>
+<div class="highlight"><pre><span></span>/usr/bin/mysql_secure_installation: 379: /usr/bin/mysql_secure_installation: find_mysql_client: not found
+</pre></div>
+
+
+<p>También da un error al intentar borrar la base de datos test:</p>
+<p _="%" endcodeblock="endcodeblock">{% codeblock %}
+Remove test database and access to it? [Y/n] 
+ - Dropping test database...
+ERROR 1008 (HY000) at line 1: Can't drop database 'test'; database doesn't exist
+ ... Failed!  Not critical, keep moving...
+ - Removing privileges on test database...
+ ... Success!</p>
+<p>Puedes ver la salida completa del comando en este <a href="https://gist.github.com/okelet/b416b13f85831afb98fe">Gist</a>.</p>
+<p>Una vez hecho esto, ya podemos decir que nuestra instalación está bastante adecentada. Lo que nos quedaría, si usamos un cortafuegos (que deberíamos), sería limitar el acceso. Si la regla por defecto es denegar las conexiones entrantes, no deberíamos tener problema; si no, deberíamos añadir una regla para denegar las conexiones remotas entrantes al puerto 3306.  El siguiente listado muestra los comandos necesarios para configurar el cortafuegos de manera rápida con <a href="https://help.ubuntu.com/community/UFW">UFW</a>, permitiendo el acceso desde fuera por SSH, HTTP y HTTPS, denegando todo el resto de tráfico entrante, y permitiendo por defecto el tráfico saliente:</p>
+<p _="%" endcodeblock="endcodeblock">{% codeblock lang:bash %}
+sudo apt-get install ufw
+sudo ufw enable
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh/tcp
+sudo ufw allow http/tcp
+sudo ufw allow https/tcp
+sudo ufw status</p>
+<p>Por último, y como algo particular para WordPress, crearemos una base de datos, un usuario y le daremos permisos al usuario sobre esa base de datos, para lo que ejecutaremos el comando <code>mysql -uroot -p</code>, introduciendo después la contraseña asignada antes al usuario root, y ejecutando los siguientes comandos desde el shell de MariaDB:</p>
+<p _="%" endcodeblock="endcodeblock">{% codeblock lang:sql %}
+CREATE DATABASE wordpress;
+CREATE USER 'wpuser'@'localhost' IDENTIFIED BY 'pickApassword';
+GRANT ALL PRIVILEGES ON wordpress .* TO 'wpuser'@'localhost';
+FLUSH PRIVILEGES;
+exit</p>
+<h3>Referencias</h3>
+<ul>
+<li><a href="http://www.ibm.com/developerworks/cloud/library/cl-softlayer-secure-wordpressblog-trs">IBM developerWorks: Create a secure WordPress blog using SoftLayer</a></li>
+</ul>                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://getpelican.com/">Pelican</a></li>
+                            <li><a href="http://python.org/">Python.org</a></li>
+                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
+                            <li><a href="#">You can modify those links in your config file</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="#">You can add links in your config file</a></li>
+                            <li><a href="#">Another social link</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
