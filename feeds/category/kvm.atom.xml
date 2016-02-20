@@ -10,4 +10,4 @@
 
 
 &lt;p&gt;Si la salida anterior muestra algo, podremos seguir adelante. Si no muestra nada, también podremos seguir, pero no se aprovecharán las capacidades de virtualización del equipo (se hará un &lt;a href="http://blog.vmsplice.net/2011/03/should-i-use-qemu-or-kvm.html"&gt;&lt;em&gt;fallback&lt;/em&gt;&lt;/a&gt; a emulación en lugar de virtualización).&lt;/p&gt;
-</summary></entry></feed>
+&lt;br/&gt;El artículo &lt;a href="https://okelet.github.io/posts/2014/08/guia-rapida-de-kvm/"&gt;Guía rápida de KVM&lt;/a&gt; fue publicado por primera vez en &lt;a href="https://okelet.github.io"&gt;Mis notas&lt;/a&gt; por Juan Asensio Sánchez.</summary></entry></feed>
