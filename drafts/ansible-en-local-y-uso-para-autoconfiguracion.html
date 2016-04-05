@@ -22,20 +22,20 @@
   <meta name="robots" content="index, follow" />
 
 <meta name="author" content="Juan Asensio Sánchez" />
-<meta name="description" content="NXLOG es un sustituto revitalizado para Syslog. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión." />
+<meta name="description" content="Ansible también puede utilizarse en local sin necesidad de conectarse por SSH a ningún equipo. Esto puede ser útil a la hora de configurar después de formatear para instalar repositorios, software, crear accesos directos, modificar configuración, etc. Por ejemplo, para comprobar que tenemos acceso y que funciona podemos ejecutar lo ..." />
 <meta name="keywords" content="">
 <meta property="og:site_name" content="Mis notas"/>
-<meta property="og:title" content="Compilar NXLOG en Red Hat/CentOS 5"/>
-<meta property="og:description" content="NXLOG es un sustituto revitalizado para Syslog. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión."/>
+<meta property="og:title" content="Ansible en local y uso para autoconfiguración"/>
+<meta property="og:description" content="Ansible también puede utilizarse en local sin necesidad de conectarse por SSH a ningún equipo. Esto puede ser útil a la hora de configurar después de formatear para instalar repositorios, software, crear accesos directos, modificar configuración, etc. Por ejemplo, para comprobar que tenemos acceso y que funciona podemos ejecutar lo ..."/>
 <meta property="og:locale" content="es_ES"/>
-<meta property="og:url" content="https://okelet.github.io/posts/2014/09/compilar-nxlog-en-red-hatcentos-5/"/>
+<meta property="og:url" content="https://okelet.github.io/drafts/ansible-en-local-y-uso-para-autoconfiguracion.html"/>
 <meta property="og:type" content="article"/>
-<meta property="article:published_time" content="2014-09-15 14:24:26+02:00"/>
+<meta property="article:published_time" content="2016-04-03 00:00:00+02:00"/>
 <meta property="article:modified_time" content=""/>
 <meta property="article:author" content="https://okelet.github.io/author/juan-asensio-sanchez.html">
-<meta property="article:section" content="nxlog"/>
+<meta property="article:section" content="Ansible"/>
 <meta property="og:image" content="">
-  <title>Mis notas &ndash; Compilar NXLOG en Red Hat/CentOS 5</title>
+  <title>Mis notas &ndash; Ansible en local y uso para autoconfiguración</title>
 </head>
 <body>
   <aside>
@@ -70,22 +70,53 @@
 
 <article>
   <header>
-    <h1 id="compilar-nxlog-en-red-hatcentos-5">Compilar NXLOG en Red Hat/CentOS 5</h1>
-    <p>Publicado el lun 15 septiembre 2014 en <a href="https://okelet.github.io/category/nxlog/">nxlog</a></p>
+    <h1 id="ansible-en-local-y-uso-para-autoconfiguracion">Ansible en local y uso para autoconfiguración</h1>
+    <p>Publicado el dom 03 abril 2016 en <a href="https://okelet.github.io/category/ansible/">Ansible</a></p>
   </header>
   <div>
-    <p><a href="http://nxlog-ce.sourceforge.net">NXLOG</a> es un sustituto revitalizado para <a href="http://es.wikipedia.org/wiki/Syslog">Syslog</a>. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión.</p>
+    <p>Ansible también puede utilizarse en local sin necesidad de conectarse por SSH a ningún equipo. Esto puede ser útil a la hora de configurar después de formatear para instalar repositorios, software, crear accesos directos, modificar configuración, etc.</p>
+<p>Por ejemplo, para comprobar que tenemos acceso y que funciona podemos ejecutar lo siguiente:</p>
+<div class="highlight"><pre><span></span>ansible all -i <span class="s1">&#39;localhost,&#39;</span> -c <span class="nb">local</span> -m setup -a <span class="s1">&#39;filter=ansible_eth[0-2]&#39;</span>
+</pre></div>
 
 
-<p>Tras leer la documentación, indicaban que lo único que hay que hacer es bajarse el código fuente y ejecutar el comando <code>./make_rpm.sh</code>. El caso es que esto tampoco funcionaba, pero después de dar 20000 vueltas, y de pura casulalidad, vi que había 2 ficheros <a href="http://www.rpm.org/max-rpm/ch-rpm-inside.html">SPEC</a>: uno llamado <code>nxlog.spec</code> y otro llamado <code>nxlog.spec.RHEL5</code>. Mirando el código del script <code>make_rpm.sh</code> he visto que si no se especifica ningún fichero mediante entorno de variable, automáticamente coge el <code>nxlog.spec</code>, así que lo único que hay que hacer es indicarle mediante una variable de entorno el otro fichero SPEC. Fácil y sencillo (después de darle muchas vueltas)...</p>
-<p>Aquí el <a href="http://es.wikipedia.org/wiki/Cortar,_copiar_y_pegar">copy-paste</a>:</p>
-<div class="highlight"><pre><span></span><span class="nv">NXLOG_VERSION</span><span class="o">=</span>2.8.1248
-yum install rpm-build apr-devel pcre-devel openssl-devel libdbi-devel libcap-devel expat-devel libtool
-wget http://sourceforge.net/projects/nxlog-ce/files/nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>.tar.gz
-tar zxvf nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>.tar.gz
-<span class="nb">cd</span> nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>/packaging/redhat
-<span class="nv">SPEC_FILE</span><span class="o">=</span>nxlog.spec.RHEL5 ./make_rpm.sh
-rpm -Uvh rpmbuild/RPMS/x86_64/nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>-1.x86_64.rpm
+<p>O si queremos ejecutar algo como root (con sudo):</p>
+<div class="highlight"><pre><span></span>ansible all -i <span class="s1">&#39;localhost,&#39;</span> -c <span class="nb">local</span> --become --ask-become-pass -m setup -a <span class="s1">&#39;filter=ansible_eth[0-2]&#39;</span>
+ansible all -i <span class="s1">&#39;localhost,&#39;</span> -c <span class="nb">local</span> --become --ask-become-pass -m apt -a <span class="s1">&#39;name=vlc state=latest&#39;</span>
+</pre></div>
+
+
+<p>Para acciones más complejas, podemos crear un <code>playbook</code> y añadir todas las tareas que queramos:</p>
+<!-- PELICAN_END_SUMMARY -->
+
+<div class="highlight"><pre><span></span>---
+
+- hosts: localhost
+  connection: local
+
+  environment:
+    http_proxy: http://miproxy.com:8080
+    https_proxy: http://miproxy.com:8080
+
+  tasks:
+
+  - name: Install virtualbox key
+    become: yes
+    apt_key:
+      url: https://www.virtualbox.org/download/oracle_vbox.asc
+      state: absent
+
+  - name: configure virtualbox repo
+    become: yes
+    apt_repository:
+      repo: deb http://download.virtualbox.org/virtualbox/debian vivid contrib
+      filename: virtualbox
+      mode: 644
+</pre></div>
+
+
+<p>Y ejecutarlo con:</p>
+<div class="highlight"><pre><span></span>ansible-playbook my_playbook.yml
 </pre></div>
   </div>
   <div class="tag-cloud">
@@ -144,9 +175,9 @@ rpm -Uvh rpmbuild/RPMS/x86_64/nxlog-ce-<span class="si">${</span><span class="nv
 {
   "@context": "http://schema.org",
   "@type": "BlogPosting",
-  "name": "Compilar NXLOG en Red Hat/CentOS 5",
-  "headline": "Compilar NXLOG en Red Hat/CentOS 5",
-  "datePublished": "2014-09-15 14:24:26+02:00",
+  "name": "Ansible en local y uso para autoconfiguración",
+  "headline": "Ansible en local y uso para autoconfiguración",
+  "datePublished": "2016-04-03 00:00:00+02:00",
   "dateModified": "",
   "author": {
     "@type": "Person",
@@ -154,8 +185,8 @@ rpm -Uvh rpmbuild/RPMS/x86_64/nxlog-ce-<span class="si">${</span><span class="nv
     "url": "https://okelet.github.io/author/juan-asensio-sanchez.html"
   },
   "image": "{{ SITEURL }}/{{ THEME_STATIC_DIR }}/img/profile.png",
-  "url": "https://okelet.github.io/posts/2014/09/compilar-nxlog-en-red-hatcentos-5/",
-  "description": "NXLOG es un sustituto revitalizado para Syslog. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión."
+  "url": "https://okelet.github.io/drafts/ansible-en-local-y-uso-para-autoconfiguracion.html",
+  "description": "Ansible también puede utilizarse en local sin necesidad de conectarse por SSH a ningún equipo. Esto puede ser útil a la hora de configurar después de formatear para instalar repositorios, software, crear accesos directos, modificar configuración, etc. Por ejemplo, para comprobar que tenemos acceso y que funciona podemos ejecutar lo ..."
 }
 </script></body>
 </html>

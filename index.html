@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <meta name="msvalidate.01" content="5A9195E6DB299D64266E96123C50E728" />
+  <meta name="google-site-verification" content="2eFjVpuxQCJEsXhSiVvIrd1dEYv38S_WTCCrdLRrB04" />
   <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
-<meta name="msvalidate.01" content="5A9195E6DB299D64266E96123C50E728" />
-<meta name="google-site-verification" content="2eFjVpuxQCJEsXhSiVvIrd1dEYv38S_WTCCrdLRrB04" />
+
     <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/style.min.css">
 
   <link rel="stylesheet" type="text/css" href="https://okelet.github.io/theme/stylesheet/pygments.min.css">
@@ -62,6 +63,37 @@
       <a href="https://okelet.github.io/feeds/all.atom.xml">Atom</a>
     </nav>
 
+<article>
+  <header>
+    <h2><a href="https://okelet.github.io/posts/2016/04/ansible-sin-root/#ansible-sin-root">Ansible sin root</a></h2>
+    <p>
+      Publicado el mar 05 abril 2016 en <a href="https://okelet.github.io/category/ansible/">Ansible</a>
+      &#8226; <a href="https://okelet.github.io/posts/2016/04/ansible-sin-root/#disqus_thread">Comentarios</a>
+    </p>
+  </header>
+  <div>
+      <p>Cuando se instala Ansible, por defecto va a usar la configuración y fichero de hosts del directorio <code>/etc/ansible</code>. Si queremos poder ejecutar Ansible sin necesidad de estar tocando continuamente ficheros de configuración con root, podemos crear un archivo de configuración y otro de hosts en nuestro directorio personal, que prevalecerán sobre los que hay en <code>/etc/ansible</code>.</p>
+<p>Para ello, crearemos el <a href="http://docs.ansible.com/ansible/intro_configuration.html#configuration-file">fichero de configuración</a> <code>~/.ansible.cfg</code> con el siguiente contenido:</p>
+<div class="highlight"><pre><span></span>[defaults]
+inventory = ~/.ansible_hosts
+</pre></div>
+
+
+<p>Y tras esto, crear el <a href="http://docs.ansible.com/ansible/intro_inventory.html">archivo de hosts</a> al que hacemos referencia:</p>
+<div class="highlight"><pre><span></span>localhost
+</pre></div>
+
+
+<p>Para probar que Ansible está cogiendo esta configuración, ejecutaremos el siguiente comando (muestra los <a href="http://docs.ansible.com/ansible/intro_inventory.html"><code>facts</code> del servidor</a> que cumplan el filtro <code>ansible_eth[0-2]</code>):</p>
+<div class="highlight"><pre><span></span>ansible localhost -m setup -a <span class="s1">&#39;filter=ansible_eth[0-2]&#39;</span>
+</pre></div>
+
+
+
+      <a class="btn" href="https://okelet.github.io/posts/2016/04/ansible-sin-root/#ansible-sin-root">Leer más...</a>
+  </div>
+  <hr />
+</article>
 <article>
   <header>
     <h2><a href="https://okelet.github.io/posts/2016/02/instalar-openstack-packstack-detras-de-un-proxy/#instalar-openstack-packstack-detras-de-un-proxy">Instalar OpenStack PackStack detrás de un proxy</a></h2>

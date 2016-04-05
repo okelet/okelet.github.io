@@ -30,7 +30,7 @@
 <meta property="og:locale" content="es_ES"/>
 <meta property="og:url" content="https://okelet.github.io"/>
 
-  <title>Mis notas &ndash; Proyectos</title>
+  <title>Mis notas &ndash; Category: Ansible</title>
 </head>
 <body>
   <aside>
@@ -65,15 +65,37 @@
 
 <article>
   <header>
-    <h1 id="proyectos">Proyectos</h1>
+    <h2><a href="https://okelet.github.io/posts/2016/04/ansible-sin-root/#ansible-sin-root">Ansible sin root</a></h2>
+    <p>
+      Publicado el mar 05 abril 2016 en <a href="https://okelet.github.io/category/ansible/">Ansible</a>
+      &#8226; <a href="https://okelet.github.io/posts/2016/04/ansible-sin-root/#disqus_thread">Comentarios</a>
+    </p>
   </header>
   <div>
-    <ul>
-<li><a href="https://github.com/okelet/chphpass">chphpass</a>: interfaz web para el cambio de contraseña en <a href="https://www.samba.org/">Samba4</a> y Active Directory.</li>
-<li><a href="https://github.com/okelet/gcm">GCM Connection Manager</a>: gestor de conexiones SSH (fork de <a href="http://kuthulu.com/gcm/">Gnome Connection Manager</a>)</li>
-</ul>
+      <p>Cuando se instala Ansible, por defecto va a usar la configuración y fichero de hosts del directorio <code>/etc/ansible</code>. Si queremos poder ejecutar Ansible sin necesidad de estar tocando continuamente ficheros de configuración con root, podemos crear un archivo de configuración y otro de hosts en nuestro directorio personal, que prevalecerán sobre los que hay en <code>/etc/ansible</code>.</p>
+<p>Para ello, crearemos el <a href="http://docs.ansible.com/ansible/intro_configuration.html#configuration-file">fichero de configuración</a> <code>~/.ansible.cfg</code> con el siguiente contenido:</p>
+<div class="highlight"><pre><span></span>[defaults]
+inventory = ~/.ansible_hosts
+</pre></div>
+
+
+<p>Y tras esto, crear el <a href="http://docs.ansible.com/ansible/intro_inventory.html">archivo de hosts</a> al que hacemos referencia:</p>
+<div class="highlight"><pre><span></span>localhost
+</pre></div>
+
+
+<p>Para probar que Ansible está cogiendo esta configuración, ejecutaremos el siguiente comando (muestra los <a href="http://docs.ansible.com/ansible/intro_inventory.html"><code>facts</code> del servidor</a> que cumplan el filtro <code>ansible_eth[0-2]</code>):</p>
+<div class="highlight"><pre><span></span>ansible localhost -m setup -a <span class="s1">&#39;filter=ansible_eth[0-2]&#39;</span>
+</pre></div>
+
+
+
+      <a class="btn" href="https://okelet.github.io/posts/2016/04/ansible-sin-root/#ansible-sin-root">Leer más...</a>
   </div>
 </article>
+
+  <div class="pagination">
+  </div>
 
     <footer>
 <p>
@@ -111,5 +133,23 @@
 
 
 
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " Mis notas ",
+  "url" : "https://okelet.github.io",
+  "image": "",
+  "description": "Notas de un devop, administrador de sistemas, aprendiz de desarrollador, etc."
+}
+</script><script type="text/javascript">
+    var disqus_shortname = 'okeletgithubio';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
 </body>
 </html>

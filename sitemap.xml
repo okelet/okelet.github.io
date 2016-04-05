@@ -5,28 +5,28 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>https://okelet.github.io/</loc>
-<lastmod>2016-02-22T06:01:07-00:00</lastmod>
+<lastmod>2016-04-05T10:19:05-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/archives.html</loc>
-<lastmod>2016-02-22T06:01:07-00:00</lastmod>
+<lastmod>2016-04-05T10:19:05-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/tags.html</loc>
-<lastmod>2016-02-22T06:01:07-00:00</lastmod>
+<lastmod>2016-04-05T10:19:05-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/categories.html</loc>
-<lastmod>2016-02-22T06:01:07-00:00</lastmod>
+<lastmod>2016-04-05T10:19:05-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
@@ -40,7 +40,14 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>https://okelet.github.io/pages/proyectos.html</loc>
-<lastmod>2016-02-22T06:01:07-00:00</lastmod>
+<lastmod>2016-04-05T10:19:05-00:00</lastmod>
+<changefreq>monthly</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
+<loc>https://okelet.github.io/posts/2016/04/ansible-sin-root/</loc>
+<lastmod>2016-04-05T00:00:00+02:00</lastmod>
 <changefreq>monthly</changefreq>
 <priority>0.5</priority>
 </url>
@@ -88,6 +95,13 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 </url>
 
 <url>
+<loc>https://okelet.github.io/category/ansible/</loc>
+<lastmod>2016-04-05T00:00:00-00:15</lastmod>
+<changefreq>daily</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
 <loc>https://okelet.github.io/category/kvm/</loc>
 <lastmod>2014-08-12T13:12:48-00:15</lastmod>
 <changefreq>daily</changefreq>
@@ -130,13 +144,6 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 </url>
 
 <url>
-<loc>https://okelet.github.io/tag/redhat/</loc>
-<lastmod>2014-09-23T10:54:17-00:15</lastmod>
-<changefreq>daily</changefreq>
-<priority>0.5</priority>
-</url>
-
-<url>
 <loc>https://okelet.github.io/tag/licencias/</loc>
 <lastmod>2014-09-23T10:54:17-00:15</lastmod>
 <changefreq>daily</changefreq>
@@ -144,8 +151,15 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 </url>
 
 <url>
+<loc>https://okelet.github.io/tag/redhat/</loc>
+<lastmod>2014-09-23T10:54:17-00:15</lastmod>
+<changefreq>daily</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
 <loc>https://okelet.github.io/author/juan-asensio-sanchez.html</loc>
-<lastmod>2016-02-18T00:00:00-00:15</lastmod>
+<lastmod>2016-04-05T00:00:00-00:15</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
