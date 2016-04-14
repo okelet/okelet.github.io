@@ -32,8 +32,16 @@
 
   <title>Mis notas &ndash; Posts by: Juan Asensio Sánchez</title>
 
-  <!-- http://cookie-bar.eu/ -->
-  <script type="text/javascript" src="//cdn.jsdelivr.net/cookie-bar/1/cookiebar-latest.min.js?theme=white"></script>
+  <script type="text/javascript">
+    // Forzar HTTPS
+    if ( window.location.protocol == "http:" || window.location.protocol == "https:") {
+      if ( window.location.hostname != "localhost" ) {
+        if ( window.location.protocol != "https:" ) {
+          window.location.href = "https:" + window.location.href.substring(window.location.protocol.length);
+        }
+      }
+    }
+  </script>
 
 </head>
 <body>
@@ -228,6 +236,9 @@ inventory = ~/.ansible_hosts
 </a>
 <!-- End StatusCake --></p>    </footer>
   </main>
+
+  <!-- http://cookie-bar.eu/ -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/cookie-bar/1/cookiebar-latest.min.js?theme=white"></script>
 
 <!-- Google Analytics -->
 <script type="text/javascript">

@@ -37,8 +37,16 @@
 <meta property="og:image" content="">
   <title>Mis notas &ndash; Compilar NXLOG en Red Hat/CentOS 5</title>
 
-  <!-- http://cookie-bar.eu/ -->
-  <script type="text/javascript" src="//cdn.jsdelivr.net/cookie-bar/1/cookiebar-latest.min.js?theme=white"></script>
+  <script type="text/javascript">
+    // Forzar HTTPS
+    if ( window.location.protocol == "http:" || window.location.protocol == "https:") {
+      if ( window.location.hostname != "localhost" ) {
+        if ( window.location.protocol != "https:" ) {
+          window.location.href = "https:" + window.location.href.substring(window.location.protocol.length);
+        }
+      }
+    }
+  </script>
 
 </head>
 <body>
@@ -129,6 +137,9 @@ rpm -Uvh rpmbuild/RPMS/x86_64/nxlog-ce-<span class="si">${</span><span class="nv
 </a>
 <!-- End StatusCake --></p>    </footer>
   </main>
+
+  <!-- http://cookie-bar.eu/ -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/cookie-bar/1/cookiebar-latest.min.js?theme=white"></script>
 
 <!-- Google Analytics -->
 <script type="text/javascript">
