@@ -36,6 +36,10 @@
 <meta property="article:section" content="Ansible"/>
 <meta property="og:image" content="">
   <title>Mis notas &ndash; Ansible en local y uso para autoconfiguración</title>
+
+  <!-- http://cookie-bar.eu/ -->
+  <script type="text/javascript" src="//cdn.jsdelivr.net/cookie-bar/1/cookiebar-latest.min.js?theme=white"></script>
+
 </head>
 <body>
   <aside>
@@ -86,9 +90,25 @@ ansible all -i <span class="s1">&#39;localhost,&#39;</span> -c <span class="nb">
 </pre></div>
 
 
-<p>Para acciones más complejas, podemos crear un <code>playbook</code> y añadir todas las tareas que queramos:</p>
 <!-- PELICAN_END_SUMMARY -->
 
+<p>Para acciones más complejas, podemos crear un <a href="http://docs.ansible.com/ansible/playbooks.html"><code>playbook</code></a> y añadir todas las tareas que queramos; para ejecutar este playbook es necesario tener algunos roles descargados de <a href="https://galaxy.ansible.com/">Ansible Galaxy</a> previamente; para ello modificaremos nuestro fichero de configuración, bien el de sistema <code>/etc/ansible/ansible.cfg</code> o el de nuestro propio usuario <code>~/.ansible.cfg</code>, asegurándonos de que contiene la ruta al directorio donde se almacenan los ficheros de roles (variable <a href="http://docs.ansible.com/ansible/intro_configuration.html#roles-path"><code>roles_path</code></a>):</p>
+<div class="highlight"><pre><span></span><span class="k">[defaults]</span>
+<span class="na">host_key_checking</span> <span class="o">=</span> <span class="s">False</span>
+<span class="na">inventory</span> <span class="o">=</span> <span class="s">~/Dropbox/TrabajoIndra/Ansible/ansible_hosts.txt</span>
+<span class="na">library</span> <span class="o">=</span> <span class="s">~/.ansible/library</span>
+<span class="na">display_skipped_hosts</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">nocows</span> <span class="o">=</span> <span class="s">1</span>
+<span class="na">roles_path</span> <span class="o">=</span> <span class="s">~/.ansible/roles:/etc/ansible/roles</span>
+</pre></div>
+
+
+<p>Y a continuación descargar dichos roles (en este caso, los que se hacen referencia en este playbook):</p>
+<div class="highlight"><pre><span></span>ansible-galaxy install geerlingguy.composer igor_mukhin.sublimetext3_packagecontrol
+</pre></div>
+
+
+<p>Por último creamos el playbook:</p>
 <div class="highlight"><pre><span></span>---
 
 - hosts: localhost
@@ -108,6 +128,7 @@ ansible all -i <span class="s1">&#39;localhost,&#39;</span> -c <span class="nb">
 
   - name: configure virtualbox repo
     become: yes
+    with_i
     apt_repository:
       repo: deb http://download.virtualbox.org/virtualbox/debian vivid contrib
       filename: virtualbox
@@ -115,7 +136,7 @@ ansible all -i <span class="s1">&#39;localhost,&#39;</span> -c <span class="nb">
 </pre></div>
 
 
-<p>Y ejecutarlo con:</p>
+<p>Y lo ejecutamos con:</p>
 <div class="highlight"><pre><span></span>ansible-playbook my_playbook.yml
 </pre></div>
   </div>
