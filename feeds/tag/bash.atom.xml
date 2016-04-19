@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Mis notas</title><link href="https://okelet.github.io/" rel="alternate"></link><link href="https://okelet.github.io/feeds/tag/bash.atom.xml" rel="self"></link><id>https://okelet.github.io/</id><updated>2016-04-19T00:00:00+02:00</updated><entry><title>La forma más corta y simple de crear o vaciar un archivo en Linux</title><link href="https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/" rel="alternate"></link><updated>2016-04-19T00:00:00+02:00</updated><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-19:posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</id><summary type="html">&lt;p&gt;Pues eso, la forma más corta y simple de crear o vaciar un archivo en Linux:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&amp;gt; fichero
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Otras formas:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;touch fichero
+&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &amp;gt; fichero
+cat /dev/null &amp;gt; fichero
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;br/&gt;El artículo &lt;a href="https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/"&gt;La forma más corta y simple de crear o vaciar un archivo en Linux&lt;/a&gt; fue publicado por primera vez en &lt;a href="https://okelet.github.io"&gt;Mis notas&lt;/a&gt; por Juan Asensio Sánchez.</summary><category term="Linux"></category><category term="Bash"></category></entry></feed>

@@ -5,28 +5,28 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>https://okelet.github.io/</loc>
-<lastmod>2016-04-14T20:26:42-00:00</lastmod>
+<lastmod>2016-04-19T20:21:10-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/archives.html</loc>
-<lastmod>2016-04-14T20:26:42-00:00</lastmod>
+<lastmod>2016-04-19T20:21:10-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/tags.html</loc>
-<lastmod>2016-04-14T20:26:42-00:00</lastmod>
+<lastmod>2016-04-19T20:21:10-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/categories.html</loc>
-<lastmod>2016-04-14T20:26:42-00:00</lastmod>
+<lastmod>2016-04-19T20:21:10-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
@@ -40,7 +40,14 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>https://okelet.github.io/pages/proyectos.html</loc>
-<lastmod>2016-04-14T20:26:42-00:00</lastmod>
+<lastmod>2016-04-19T20:21:10-00:00</lastmod>
+<changefreq>monthly</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
+<loc>https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</loc>
+<lastmod>2016-04-19T00:00:00+02:00</lastmod>
 <changefreq>monthly</changefreq>
 <priority>0.5</priority>
 </url>
@@ -109,6 +116,13 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 </url>
 
 <url>
+<loc>https://okelet.github.io/category/linux/</loc>
+<lastmod>2016-04-19T00:00:00-00:15</lastmod>
+<changefreq>daily</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
 <loc>https://okelet.github.io/category/misc/</loc>
 <lastmod>2014-09-23T10:54:17-00:15</lastmod>
 <changefreq>daily</changefreq>
@@ -158,8 +172,22 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 </url>
 
 <url>
+<loc>https://okelet.github.io/tag/bash/</loc>
+<lastmod>2016-04-19T00:00:00-00:15</lastmod>
+<changefreq>daily</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
+<loc>https://okelet.github.io/tag/linux/</loc>
+<lastmod>2016-04-19T00:00:00-00:15</lastmod>
+<changefreq>daily</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
 <loc>https://okelet.github.io/author/juan-asensio-sanchez.html</loc>
-<lastmod>2016-04-05T00:00:00-00:15</lastmod>
+<lastmod>2016-04-19T00:00:00-00:15</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
