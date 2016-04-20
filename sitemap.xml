@@ -5,28 +5,28 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>https://okelet.github.io/</loc>
-<lastmod>2016-04-19T20:35:49-00:00</lastmod>
+<lastmod>2016-04-20T12:27:13-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/archives.html</loc>
-<lastmod>2016-04-19T20:35:49-00:00</lastmod>
+<lastmod>2016-04-20T12:27:13-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/tags.html</loc>
-<lastmod>2016-04-19T20:35:49-00:00</lastmod>
+<lastmod>2016-04-20T12:27:13-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/categories.html</loc>
-<lastmod>2016-04-19T20:35:49-00:00</lastmod>
+<lastmod>2016-04-20T12:27:13-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
@@ -40,7 +40,14 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>https://okelet.github.io/pages/proyectos.html</loc>
-<lastmod>2016-04-19T20:35:49-00:00</lastmod>
+<lastmod>2016-04-20T12:27:13-00:00</lastmod>
+<changefreq>monthly</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
+<loc>https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/</loc>
+<lastmod>2016-04-20T00:00:00+02:00</lastmod>
 <changefreq>monthly</changefreq>
 <priority>0.5</priority>
 </url>
@@ -117,7 +124,7 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>https://okelet.github.io/category/linux/</loc>
-<lastmod>2016-04-19T00:00:00-00:15</lastmod>
+<lastmod>2016-04-20T00:00:00-00:15</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
@@ -173,21 +180,21 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>https://okelet.github.io/tag/bash/</loc>
-<lastmod>2016-04-19T00:00:00-00:15</lastmod>
+<lastmod>2016-04-20T00:00:00-00:15</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/tag/linux/</loc>
-<lastmod>2016-04-19T00:00:00-00:15</lastmod>
+<lastmod>2016-04-20T00:00:00-00:15</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>https://okelet.github.io/author/juan-asensio-sanchez.html</loc>
-<lastmod>2016-04-19T00:00:00-00:15</lastmod>
+<lastmod>2016-04-20T00:00:00-00:15</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>

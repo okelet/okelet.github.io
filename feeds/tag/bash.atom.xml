@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Mis notas</title><link href="https://okelet.github.io/" rel="alternate"></link><link href="https://okelet.github.io/feeds/tag/bash.atom.xml" rel="self"></link><id>https://okelet.github.io/</id><updated>2016-04-19T00:00:00+02:00</updated><entry><title>La forma más corta y simple de crear o vaciar un archivo en Linux</title><link href="https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/" rel="alternate"></link><updated>2016-04-19T00:00:00+02:00</updated><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-19:posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</id><summary type="html">&lt;p&gt;Pues eso, la forma más corta y simple de crear o vaciar un archivo en Linux:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Mis notas</title><link href="https://okelet.github.io/" rel="alternate"></link><link href="https://okelet.github.io/feeds/tag/bash.atom.xml" rel="self"></link><id>https://okelet.github.io/</id><updated>2016-04-20T00:00:00+02:00</updated><entry><title>Enviar salida éstandar y de error al mismo tiempo</title><link href="https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/" rel="alternate"></link><updated>2016-04-20T00:00:00+02:00</updated><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-20:posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/</id><summary type="html">&lt;p&gt;Normalmente, en Bash, redirigimos la salida estándar a un fichero o la entrada de otro comando con la siguiente sintaxis:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls -l mifichero.txt noexiste &amp;gt; salida.txt
+ls -l mifichero.txt noexiste &lt;span class="p"&gt;|&lt;/span&gt; tee salida.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Y la salida de error así:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls -l mifichero.txt noexiste 2&amp;gt; salida.txt
+ls -l mifichero.txt noexiste 2&amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt; &amp;gt;/dev/null &lt;span class="p"&gt;|&lt;/span&gt; tee salida.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Podemos redirigir la salida estándar y de error al mismo tiempo:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls -l mifichero.txt noexiste &amp;gt; salida.txt 2&amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt;1
+ls -l mifichero.txt noexiste 2&amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; tee salida.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;O de esta otra forma más simplificada (&lt;code&gt;&amp;amp;|&lt;/code&gt; no funciona):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls -l mifichero.txt noexiste &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;&amp;gt; salida.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;br/&gt;El artículo &lt;a href="https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/"&gt;Enviar salida éstandar y de error al mismo tiempo&lt;/a&gt; fue publicado por primera vez en &lt;a href="https://okelet.github.io"&gt;Mis notas&lt;/a&gt; por Juan Asensio Sánchez.</summary><category term="Linux"></category><category term="Bash"></category></entry><entry><title>La forma más corta y simple de crear o vaciar un archivo en Linux</title><link href="https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/" rel="alternate"></link><updated>2016-04-19T00:00:00+02:00</updated><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-19:posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</id><summary type="html">&lt;p&gt;Pues eso, la forma más corta y simple de crear o vaciar un archivo en Linux:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&amp;gt; fichero
 &lt;/pre&gt;&lt;/div&gt;
 
