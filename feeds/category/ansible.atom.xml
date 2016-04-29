@@ -1,5 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Mis notas</title><link href="https://okelet.github.io/" rel="alternate"></link><link href="https://okelet.github.io/feeds/category/ansible.atom.xml" rel="self"></link><id>https://okelet.github.io/</id><updated>2016-04-05T00:00:00+02:00</updated><entry><title>Ansible sin root</title><link href="https://okelet.github.io/posts/2016/04/ansible-sin-root/" rel="alternate"></link><updated>2016-04-05T00:00:00+02:00</updated><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-05:posts/2016/04/ansible-sin-root/</id><summary type="html">&lt;p&gt;Cuando se instala Ansible, por defecto va a usar la configuración y fichero de hosts del directorio &lt;code&gt;/etc/ansible&lt;/code&gt;. Si queremos poder ejecutar Ansible sin necesidad de estar tocando continuamente ficheros de configuración con root, podemos crear un archivo de configuración y otro de hosts en nuestro directorio personal, que prevalecerán sobre los que hay en &lt;code&gt;/etc/ansible&lt;/code&gt;.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Mis notas</title><link href="https://okelet.github.io/" rel="alternate"></link><link href="https://okelet.github.io/feeds/category/ansible.atom.xml" rel="self"></link><id>https://okelet.github.io/</id><updated>2016-04-30T00:00:00+02:00</updated><entry><title>Instalar Ansible en Cygwin</title><link href="https://okelet.github.io/posts/2016/04/instalar-ansible-en-cygwin/" rel="alternate"></link><published>2016-04-30T00:00:00+02:00</published><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-30:posts/2016/04/instalar-ansible-en-cygwin/</id><summary type="html">&lt;p&gt;Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete &lt;code&gt;wget&lt;/code&gt; en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;setup-x86_64.exe -P wget
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Tras esto, instalamos &lt;a href="https://github.com/transcode-open/apt-cyg"&gt;&lt;code&gt;apt-cyg&lt;/code&gt;&lt;/a&gt;, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg
+install apt-cyg /bin
+apt-cyg install curl gcc-core make nano vim git python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Por último, instalamos Ansible desde &lt;a href="https://pypi.python.org/pypi"&gt;PyPi&lt;/a&gt; (se podría instalar &lt;code&gt;ansible&lt;/code&gt; directamente con &lt;code&gt;easy_install&lt;/code&gt;, pero prefiero hacerlo con &lt;code&gt;pip&lt;/code&gt;, y así ya lo tengo para el futuro):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;easy_install-2.7 pip
+pip install ansible
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Para probar el correcto funcionamiento:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ansible --version
+ansible -i localhost, -c &lt;span class="nb"&gt;local&lt;/span&gt; all -m ping
+ansible -i localhost, -c &lt;span class="nb"&gt;local&lt;/span&gt; all -m setup
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;br/&gt;El artículo &lt;a href="https://okelet.github.io/posts/2016/04/instalar-ansible-en-cygwin/"&gt;Instalar Ansible en Cygwin&lt;/a&gt; fue publicado por primera vez en &lt;a href="https://okelet.github.io"&gt;Mis notas&lt;/a&gt; por Juan Asensio Sánchez.</summary><category term="Linux"></category><category term="Cygwin"></category><category term="Ansible"></category></entry><entry><title>Ansible sin root</title><link href="https://okelet.github.io/posts/2016/04/ansible-sin-root/" rel="alternate"></link><published>2016-04-05T00:00:00+02:00</published><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-05:posts/2016/04/ansible-sin-root/</id><summary type="html">&lt;p&gt;Cuando se instala Ansible, por defecto va a usar la configuración y fichero de hosts del directorio &lt;code&gt;/etc/ansible&lt;/code&gt;. Si queremos poder ejecutar Ansible sin necesidad de estar tocando continuamente ficheros de configuración con root, podemos crear un archivo de configuración y otro de hosts en nuestro directorio personal, que prevalecerán sobre los que hay en &lt;code&gt;/etc/ansible&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Para ello, crearemos el &lt;a href="http://docs.ansible.com/ansible/intro_configuration.html#configuration-file"&gt;fichero de configuración&lt;/a&gt; &lt;code&gt;~/.ansible.cfg&lt;/code&gt; con el siguiente contenido:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;[defaults]
 inventory = ~/.ansible_hosts

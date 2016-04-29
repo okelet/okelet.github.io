@@ -1,5 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Mis notas</title><link href="https://okelet.github.io/" rel="alternate"></link><link href="https://okelet.github.io/feeds/tag/linux.atom.xml" rel="self"></link><id>https://okelet.github.io/</id><updated>2016-04-20T00:00:00+02:00</updated><entry><title>Enviar salida éstandar y de error al mismo tiempo</title><link href="https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/" rel="alternate"></link><updated>2016-04-20T00:00:00+02:00</updated><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-20:posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/</id><summary type="html">&lt;p&gt;Normalmente, en Bash, redirigimos la salida estándar a un fichero o la entrada de otro comando con la siguiente sintaxis:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Mis notas</title><link href="https://okelet.github.io/" rel="alternate"></link><link href="https://okelet.github.io/feeds/tag/linux.atom.xml" rel="self"></link><id>https://okelet.github.io/</id><updated>2016-04-30T00:00:00+02:00</updated><entry><title>Instalar Ansible en Cygwin</title><link href="https://okelet.github.io/posts/2016/04/instalar-ansible-en-cygwin/" rel="alternate"></link><published>2016-04-30T00:00:00+02:00</published><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-30:posts/2016/04/instalar-ansible-en-cygwin/</id><summary type="html">&lt;p&gt;Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete &lt;code&gt;wget&lt;/code&gt; en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;setup-x86_64.exe -P wget
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Tras esto, instalamos &lt;a href="https://github.com/transcode-open/apt-cyg"&gt;&lt;code&gt;apt-cyg&lt;/code&gt;&lt;/a&gt;, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg
+install apt-cyg /bin
+apt-cyg install curl gcc-core make nano vim git python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Por último, instalamos Ansible desde &lt;a href="https://pypi.python.org/pypi"&gt;PyPi&lt;/a&gt; (se podría instalar &lt;code&gt;ansible&lt;/code&gt; directamente con &lt;code&gt;easy_install&lt;/code&gt;, pero prefiero hacerlo con &lt;code&gt;pip&lt;/code&gt;, y así ya lo tengo para el futuro):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;easy_install-2.7 pip
+pip install ansible
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Para probar el correcto funcionamiento:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ansible --version
+ansible -i localhost, -c &lt;span class="nb"&gt;local&lt;/span&gt; all -m ping
+ansible -i localhost, -c &lt;span class="nb"&gt;local&lt;/span&gt; all -m setup
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;br/&gt;El artículo &lt;a href="https://okelet.github.io/posts/2016/04/instalar-ansible-en-cygwin/"&gt;Instalar Ansible en Cygwin&lt;/a&gt; fue publicado por primera vez en &lt;a href="https://okelet.github.io"&gt;Mis notas&lt;/a&gt; por Juan Asensio Sánchez.</summary><category term="Linux"></category><category term="Cygwin"></category><category term="Ansible"></category></entry><entry><title>Enviar salida éstandar y de error al mismo tiempo</title><link href="https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/" rel="alternate"></link><published>2016-04-20T00:00:00+02:00</published><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-20:posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/</id><summary type="html">&lt;p&gt;Normalmente, en Bash, redirigimos la salida estándar a un fichero o la entrada de otro comando con la siguiente sintaxis:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls -l mifichero.txt noexiste &amp;gt; salida.txt
 ls -l mifichero.txt noexiste &lt;span class="p"&gt;|&lt;/span&gt; tee salida.txt
 &lt;/pre&gt;&lt;/div&gt;
@@ -22,7 +47,7 @@ ls -l mifichero.txt noexiste 2&amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&g
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;br/&gt;El artículo &lt;a href="https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/"&gt;Enviar salida éstandar y de error al mismo tiempo&lt;/a&gt; fue publicado por primera vez en &lt;a href="https://okelet.github.io"&gt;Mis notas&lt;/a&gt; por Juan Asensio Sánchez.</summary><category term="Linux"></category><category term="Bash"></category></entry><entry><title>La forma más corta y simple de crear o vaciar un archivo en Linux</title><link href="https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/" rel="alternate"></link><updated>2016-04-19T00:00:00+02:00</updated><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-19:posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</id><summary type="html">&lt;p&gt;Pues eso, la forma más corta y simple de crear o vaciar un archivo en Linux:&lt;/p&gt;
+&lt;br/&gt;El artículo &lt;a href="https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/"&gt;Enviar salida éstandar y de error al mismo tiempo&lt;/a&gt; fue publicado por primera vez en &lt;a href="https://okelet.github.io"&gt;Mis notas&lt;/a&gt; por Juan Asensio Sánchez.</summary><category term="Linux"></category><category term="Bash"></category></entry><entry><title>La forma más corta y simple de crear o vaciar un archivo en Linux</title><link href="https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/" rel="alternate"></link><published>2016-04-19T00:00:00+02:00</published><author><name>Juan Asensio Sánchez</name></author><id>tag:okelet.github.io,2016-04-19:posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</id><summary type="html">&lt;p&gt;Pues eso, la forma más corta y simple de crear o vaciar un archivo en Linux:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&amp;gt; fichero
 &lt;/pre&gt;&lt;/div&gt;
 

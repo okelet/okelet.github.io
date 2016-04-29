@@ -30,7 +30,7 @@
 <meta property="og:locale" content="es_ES"/>
 <meta property="og:url" content="https://okelet.github.io"/>
 
-  <title>Mis notas &ndash; Category: Linux</title>
+  <title>Mis notas &ndash; Tag: Cygwin</title>
 
   <script type="text/javascript">
     // Forzar HTTPS
@@ -77,66 +77,41 @@
 
 <article>
   <header>
-    <h2><a href="https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/#enviar-salida-estandar-y-de-error-al-mismo-tiempo">Enviar salida éstandar y de error al mismo tiempo</a></h2>
+    <h2><a href="https://okelet.github.io/posts/2016/04/instalar-ansible-en-cygwin/#instalar-ansible-en-cygwin">Instalar Ansible en Cygwin</a></h2>
     <p>
-      Publicado el mi. 20 abril 2016 en <a href="https://okelet.github.io/category/linux/">Linux</a>
+      Publicado el sá. 30 abril 2016 en <a href="https://okelet.github.io/category/ansible/">Ansible</a>
       &#8226; Etiquetado en
-      <a href="https://okelet.github.io/tag/linux/">Linux</a>,      <a href="https://okelet.github.io/tag/bash/">Bash</a>      &#8226; <a href="https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/#disqus_thread">Comentarios</a>
+      <a href="https://okelet.github.io/tag/linux/">Linux</a>,      <a href="https://okelet.github.io/tag/cygwin/">Cygwin</a>,      <a href="https://okelet.github.io/tag/ansible/">Ansible</a>      &#8226; <a href="https://okelet.github.io/posts/2016/04/instalar-ansible-en-cygwin/#disqus_thread">Comentarios</a>
     </p>
   </header>
   <div>
-      <p>Normalmente, en Bash, redirigimos la salida estándar a un fichero o la entrada de otro comando con la siguiente sintaxis:</p>
-<div class="highlight"><pre><span></span>ls -l mifichero.txt noexiste &gt; salida.txt
-ls -l mifichero.txt noexiste <span class="p">|</span> tee salida.txt
+      <p>Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete <code>wget</code> en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando:</p>
+<div class="highlight"><pre><span></span>setup-x86_64.exe -P wget
 </pre></div>
 
 
-<p>Y la salida de error así:</p>
-<div class="highlight"><pre><span></span>ls -l mifichero.txt noexiste 2&gt; salida.txt
-ls -l mifichero.txt noexiste 2&gt;<span class="p">&amp;</span><span class="m">1</span> &gt;/dev/null <span class="p">|</span> tee salida.txt
+<p>Tras esto, instalamos <a href="https://github.com/transcode-open/apt-cyg"><code>apt-cyg</code></a>, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles:</p>
+<div class="highlight"><pre><span></span>wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg
+install apt-cyg /bin
+apt-cyg install curl gcc-core make nano vim git python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml
 </pre></div>
 
 
-<p>Podemos redirigir la salida estándar y de error al mismo tiempo:</p>
-<div class="highlight"><pre><span></span>ls -l mifichero.txt noexiste &gt; salida.txt 2&gt;<span class="p">&amp;</span>1
-ls -l mifichero.txt noexiste 2&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">|</span> tee salida.txt
+<p>Por último, instalamos Ansible desde <a href="https://pypi.python.org/pypi">PyPi</a> (se podría instalar <code>ansible</code> directamente con <code>easy_install</code>, pero prefiero hacerlo con <code>pip</code>, y así ya lo tengo para el futuro):</p>
+<div class="highlight"><pre><span></span>easy_install-2.7 pip
+pip install ansible
 </pre></div>
 
 
-<p>O de esta otra forma más simplificada (<code>&amp;|</code> no funciona):</p>
-<div class="highlight"><pre><span></span>ls -l mifichero.txt noexiste <span class="p">&amp;</span>&gt; salida.txt
-</pre></div>
-
-
-
-      <a class="btn" href="https://okelet.github.io/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/#enviar-salida-estandar-y-de-error-al-mismo-tiempo">Leer más...</a>
-  </div>
-  <hr />
-</article>
-<article>
-  <header>
-    <h2><a href="https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/#la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux">La forma más corta y simple de crear o vaciar un archivo en Linux</a></h2>
-    <p>
-      Publicado el ma. 19 abril 2016 en <a href="https://okelet.github.io/category/linux/">Linux</a>
-      &#8226; Etiquetado en
-      <a href="https://okelet.github.io/tag/linux/">Linux</a>,      <a href="https://okelet.github.io/tag/bash/">Bash</a>      &#8226; <a href="https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/#disqus_thread">Comentarios</a>
-    </p>
-  </header>
-  <div>
-      <p>Pues eso, la forma más corta y simple de crear o vaciar un archivo en Linux:</p>
-<div class="highlight"><pre><span></span>&gt; fichero
-</pre></div>
-
-
-<p>Otras formas:</p>
-<div class="highlight"><pre><span></span>touch fichero
-<span class="nb">echo</span> <span class="s2">&quot;&quot;</span> &gt; fichero
-cat /dev/null &gt; fichero
+<p>Para probar el correcto funcionamiento:</p>
+<div class="highlight"><pre><span></span>ansible --version
+ansible -i localhost, -c <span class="nb">local</span> all -m ping
+ansible -i localhost, -c <span class="nb">local</span> all -m setup
 </pre></div>
 
 
 
-      <a class="btn" href="https://okelet.github.io/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/#la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux">Leer más...</a>
+      <a class="btn" href="https://okelet.github.io/posts/2016/04/instalar-ansible-en-cygwin/#instalar-ansible-en-cygwin">Leer más...</a>
   </div>
 </article>
 
