@@ -83,7 +83,7 @@
 <article>
   <header>
     <h1 id="ansible-en-local-y-uso-para-autoconfiguracion">Ansible en local y uso para autoconfiguración</h1>
-    <p>Publicado el do. 03 abril 2016 en <a href="https://okelet.github.io/category/ansible/">Ansible</a></p>
+    <p>Publicado el dom 03 abril 2016 en <a href="https://okelet.github.io/category/ansible/">Ansible</a></p>
   </header>
   <div>
     <p>Ansible también puede utilizarse en local sin necesidad de conectarse por SSH a ningún equipo. Esto puede ser útil a la hora de configurar después de formatear para instalar repositorios, software, crear accesos directos, modificar configuración, etc.</p>
@@ -101,6 +101,9 @@ ansible all -i <span class="s1">&#39;localhost,&#39;</span> -c <span class="nb">
 <!-- PELICAN_END_SUMMARY -->
 
 <p>Para acciones más complejas, podemos crear un <a href="http://docs.ansible.com/ansible/playbooks.html"><code>playbook</code></a> y añadir todas las tareas que queramos; para ejecutar este playbook es necesario tener algunos roles descargados de <a href="https://galaxy.ansible.com/">Ansible Galaxy</a> previamente; para ello modificaremos nuestro fichero de configuración, bien el de sistema <code>/etc/ansible/ansible.cfg</code> o el de nuestro propio usuario <code>~/.ansible.cfg</code>, asegurándonos de que contiene la ruta al directorio donde se almacenan los ficheros de roles (variable <a href="http://docs.ansible.com/ansible/intro_configuration.html#roles-path"><code>roles_path</code></a>):</p>
+<blockquote>
+<p>NOTA: hay que tener en cuenta que la versión de Ansible disponible en <a href="http://packages.ubuntu.com/xenial/ansible">Ubuntu 16.04 Xenial, la 2.0.0.2</a>, tiene un bug que impide ejecutar ......, y tampoco está disponible el repositorio propio de Ansible para poder actualizarlo, mientras que para Ubuntu 14.04 Trusty sí que está disponible. Si se instala desde este repositorio en Trusty (versión de Ansible 2.0.2.0), no se produce el problema.</p>
+</blockquote>
 <div class="highlight"><pre><span></span><span class="k">[defaults]</span>
 <span class="na">host_key_checking</span> <span class="o">=</span> <span class="s">False</span>
 <span class="na">inventory</span> <span class="o">=</span> <span class="s">~/Dropbox/TrabajoIndra/Ansible/ansible_hosts.txt</span>

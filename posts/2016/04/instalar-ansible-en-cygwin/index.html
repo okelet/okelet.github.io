@@ -22,11 +22,11 @@
   <meta name="robots" content="index, follow" />
 
 <meta name="author" content="Juan Asensio Sánchez" />
-<meta name="description" content="Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete wget en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando: setup-x86_64.exe -P wget Tras esto, instalamos apt-cyg, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles: wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg install apt-cyg /bin apt-cyg install curl gcc-core make nano vim git python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml Por último, instalamos Ansible desde PyPi (se podría instalar ansible directamente con easy_install, pero prefiero hacerlo con pip, y así ya lo tengo para el futuro): easy_install-2.7 pip pip install ansible Para probar el correcto funcionamiento: ansible --version ansible -i localhost, -c local all -m ping ansible -i localhost, -c local all -m setup" />
+<meta name="description" content="Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete wget en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando: setup-x86_64.exe -P wget Tras esto, instalamos apt-cyg, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles: wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg install apt-cyg /bin apt-cyg install curl gcc-core make nano vim git openssh python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml Por último, instalamos Ansible desde PyPi (se podría instalar ansible directamente con easy_install, pero prefiero hacerlo con pip, y así ya lo tengo para el futuro): easy_install-2.7 pip pip install ansible Para probar el correcto funcionamiento: ansible --version ansible -i localhost, -c local all -m ping ansible -i localhost, -c local all -m setup" />
 <meta name="keywords" content="Linux, Cygwin, Ansible">
 <meta property="og:site_name" content="Mis notas"/>
 <meta property="og:title" content="Instalar Ansible en Cygwin"/>
-<meta property="og:description" content="Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete wget en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando: setup-x86_64.exe -P wget Tras esto, instalamos apt-cyg, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles: wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg install apt-cyg /bin apt-cyg install curl gcc-core make nano vim git python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml Por último, instalamos Ansible desde PyPi (se podría instalar ansible directamente con easy_install, pero prefiero hacerlo con pip, y así ya lo tengo para el futuro): easy_install-2.7 pip pip install ansible Para probar el correcto funcionamiento: ansible --version ansible -i localhost, -c local all -m ping ansible -i localhost, -c local all -m setup"/>
+<meta property="og:description" content="Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete wget en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando: setup-x86_64.exe -P wget Tras esto, instalamos apt-cyg, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles: wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg install apt-cyg /bin apt-cyg install curl gcc-core make nano vim git openssh python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml Por último, instalamos Ansible desde PyPi (se podría instalar ansible directamente con easy_install, pero prefiero hacerlo con pip, y así ya lo tengo para el futuro): easy_install-2.7 pip pip install ansible Para probar el correcto funcionamiento: ansible --version ansible -i localhost, -c local all -m ping ansible -i localhost, -c local all -m setup"/>
 <meta property="og:locale" content="es_ES"/>
 <meta property="og:url" content="https://okelet.github.io/posts/2016/04/instalar-ansible-en-cygwin/"/>
 <meta property="og:type" content="article"/>
@@ -86,7 +86,7 @@
 <article>
   <header>
     <h1 id="instalar-ansible-en-cygwin">Instalar Ansible en Cygwin</h1>
-    <p>Publicado el sá. 30 abril 2016 en <a href="https://okelet.github.io/category/ansible/">Ansible</a></p>
+    <p>Publicado el sáb 30 abril 2016 en <a href="https://okelet.github.io/category/ansible/">Ansible</a></p>
   </header>
   <div>
     <p>Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete <code>wget</code> en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando:</p>
@@ -97,7 +97,7 @@
 <p>Tras esto, instalamos <a href="https://github.com/transcode-open/apt-cyg"><code>apt-cyg</code></a>, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles:</p>
 <div class="highlight"><pre><span></span>wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg
 install apt-cyg /bin
-apt-cyg install curl gcc-core make nano vim git python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml
+apt-cyg install curl gcc-core make nano vim git openssh python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml
 </pre></div>
 
 
@@ -189,7 +189,7 @@ ansible -i localhost, -c <span class="nb">local</span> all -m setup
   },
   "image": "https://okelet.github.io/theme/img/profile.png",
   "url": "https://okelet.github.io/posts/2016/04/instalar-ansible-en-cygwin/",
-  "description": "Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete wget en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando: setup-x86_64.exe -P wget Tras esto, instalamos apt-cyg, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles: wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg install apt-cyg /bin apt-cyg install curl gcc-core make nano vim git python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml Por último, instalamos Ansible desde PyPi (se podría instalar ansible directamente con easy_install, pero prefiero hacerlo con pip, y así ya lo tengo para el futuro): easy_install-2.7 pip pip install ansible Para probar el correcto funcionamiento: ansible --version ansible -i localhost, -c local all -m ping ansible -i localhost, -c local all -m setup"
+  "description": "Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete wget en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando: setup-x86_64.exe -P wget Tras esto, instalamos apt-cyg, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles: wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg install apt-cyg /bin apt-cyg install curl gcc-core make nano vim git openssh python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml Por último, instalamos Ansible desde PyPi (se podría instalar ansible directamente con easy_install, pero prefiero hacerlo con pip, y así ya lo tengo para el futuro): easy_install-2.7 pip pip install ansible Para probar el correcto funcionamiento: ansible --version ansible -i localhost, -c local all -m ping ansible -i localhost, -c local all -m setup"
 }
 </script></body>
 </html>

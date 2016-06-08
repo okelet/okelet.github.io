@@ -7,7 +7,7 @@
 &lt;p&gt;Tras esto, instalamos &lt;a href="https://github.com/transcode-open/apt-cyg"&gt;&lt;code&gt;apt-cyg&lt;/code&gt;&lt;/a&gt;, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg
 install apt-cyg /bin
-apt-cyg install curl gcc-core make nano vim git python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml
+apt-cyg install curl gcc-core make nano vim git openssh python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml
 &lt;/pre&gt;&lt;/div&gt;
 
 
