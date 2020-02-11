@@ -1,93 +1,63 @@
-<!doctype html><html lang=es><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>Crear custom runtime para PHP en AWS Lambda - Mis notas</title><meta name=renderer content=webkit><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv=cache-control content=no-transform><meta http-equiv=cache-control content=no-siteapp><meta name=theme-color content=#f8f5ec><meta name=msapplication-navbutton-color content=#f8f5ec><meta name=apple-mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-status-bar-style content=#f8f5ec><meta name=author content="Juan Asensio"><meta name=description content="Actualización 2019-06-27: Añadida extensión para MongoDB.
-En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con pipenv.
-Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de custom runtimes, que básicamente consiste en subir el ejecutable con un determinado nombre."><meta name=keywords content=okelet,linux,bash,python,aws,google,cloud,gcloud><meta name=generator content="Hugo 0.54.0 with even 4.0.0"><link rel=canonical href=https://okelet.netlify.com/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/><link href=https://okelet.netlify.com/atom.xml type=application/atom+xml rel=alternate title="Mis notas - Atom"><link href=https://okelet.netlify.com/index.xml type=application/rss+xml rel=alternate title="Mis notas - RSS"><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/manifest.json><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link href=/dist/even.c2a46f00.min.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous><link rel=stylesheet href=https://okelet.netlify.com/css/custom.css><link rel=stylesheet href=https://use.fontawesome.com/releases/v5.9.0/css/all.css><meta property=og:title content="Crear custom runtime para PHP en AWS Lambda"><meta property=og:description content="Actualización 2019-06-27: Añadida extensión para MongoDB.
-
-En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con pipenv.
-
-Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de custom runtimes, que básicamente consiste en subir el ejecutable con un determinado nombre."><meta property=og:type content=article><meta property=og:url content=https://okelet.netlify.com/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/><meta property=article:published_time content=2019-06-11T00:00:00&#43;00:00><meta property=article:modified_time content=2019-06-27T00:00:00&#43;00:00><meta itemprop=name content="Crear custom runtime para PHP en AWS Lambda"><meta itemprop=description content="Actualización 2019-06-27: Añadida extensión para MongoDB.
-
-En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con pipenv.
-
-Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de custom runtimes, que básicamente consiste en subir el ejecutable con un determinado nombre."><meta itemprop=datePublished content=2019-06-11T00:00:00&#43;00:00><meta itemprop=dateModified content=2019-06-27T00:00:00&#43;00:00><meta itemprop=wordCount content=934><meta itemprop=keywords content=AWS,PHP,Lambda,runtime,custom,layer,><meta name=twitter:card content=summary><meta name=twitter:title content="Crear custom runtime para PHP en AWS Lambda"><meta name=twitter:description content="Actualización 2019-06-27: Añadida extensión para MongoDB.
-
-En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con pipenv.
-
-Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de custom runtimes, que básicamente consiste en subir el ejecutable con un determinado nombre."><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script><script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]--><link rel=stylesheet type=text/css href=https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.css><script src=https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.js></script><script>window.addEventListener("load",function(){window.cookieconsent.initialise({"palette":{"popup":{"background":"#000"},"button":{"background":"#f1d600"}},"theme":"classic"})});</script></head><body><div id=mobile-navbar class=mobile-navbar><div class=mobile-header-logo><a href=/ class=logo>Mis notas</a></div><div class=mobile-navbar-icon><span></span><span></span><span></span></div></div><nav id=mobile-menu class="mobile-menu slideout-menu"><ul class=mobile-menu-list><a href=/><li class=mobile-menu-item>Inicio</li></a><a href=/posts/><li class=mobile-menu-item>Archivos</li></a><a href=/tags/><li class=mobile-menu-item>Tags</li></a><a href=/pages/projects/><li class=mobile-menu-item>Proyectos</li></a><a href=/pages/about/><li class=mobile-menu-item>Acerca de</li></a></ul></nav><div class=container id=mobile-panel><header id=header class=header><div class=logo-wrapper><a href=/ class=logo>Mis notas</a></div><nav class=site-navbar><ul id=menu class=menu><li class=menu-item><a class=menu-item-link href=/>Inicio</a></li><li class=menu-item><a class=menu-item-link href=/posts/>Archivos</a></li><li class=menu-item><a class=menu-item-link href=/tags/>Tags</a></li><li class=menu-item><a class=menu-item-link href=/pages/projects/>Proyectos</a></li><li class=menu-item><a class=menu-item-link href=/pages/about/>Acerca de</a></li></ul></nav></header><main id=main class=main><div class=content-wrapper><div id=content class=content><article class=post><header class=post-header><h1 class=post-title>Crear custom runtime para PHP en AWS Lambda</h1><div class=post-meta><span class=post-time>2019-06-11</span></div></header><div class=post-toc id=post-toc><h2 class=post-toc-title>Contenidos</h2><div class="post-toc-content always-active"></div></div><div class=post-content><p>Actualización 2019-06-27: Añadida extensión para MongoDB.</p><p>En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con <a href=https://docs.pipenv.org/en/latest/>pipenv</a>.</p><p>Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de <a href=https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/><em>custom runtimes</em></a>, que básicamente consiste en subir el ejecutable con un determinado nombre.</p><p>En resumen, lo que el post anterior viene a decir es que:</p><ul><li>Tenemos que compilar PHP</li><li>Tenemos que crear un script llamado <code>bootstrap</code> que será al que llame Lambda; este script será el encargado de conectarse a un endpoint &ldquo;mágico&rdquo; (<code>http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next</code>), que nos devolverá un JSON con las propiedades de la petición a procesar. Este JSON se lo podemos pasar entonces a una función PHP de nuestra elección.</li></ul><p>Un ejemplo de fichero <code>bootstrap</code> se encuentra en <a href=https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae>este gist</a>.</p><p>El motivo de este post, es que <a href=https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/>AWS ha publicado una noticia</a> diciendo que va a cambiar la imagen base donde se ejecutan los <em>custom runtimes</em>. Hasta ahora se basaba en una Amazon Linux 2017.03, pero a partir de ahora se van a ejecutar sobre una Amazon Linux 2018.03; esto puede causar que determinados <em>runtimes</em> dejen de funcionar, si están compilados con versiones determinadas de librerías del sistema operativo.</p><p>Ya tenía hecho un scriptillo para la versión antigua del runtime, pero como tenía que revisarlo, he decidido &ldquo;ponerlo bonito&rdquo; y publicarlo en el blog. Manos a la obra.</p><p>Lo primero que tenemos que hacer es determinar una imagen de Docker válida para la imagen donde se ejecutaría el <em>runtime</em>; en nuestro caso, <a href=https://docs.aws.amazon.com/es_es/lambda/latest/dg/current-supported-versions.html>según la documentación</a> sería una AMI Linux 2018.03, y yendo al Docker Hub, podemos ver la versión de la <a href=https://hub.docker.com/_/amazonlinux>imagen Docker equivalente</a>.</p><p>Una vez que sabemos la imagen Docker, lanzamos un contenedor:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt>1
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash>docker run -it --name php-lambda-layer --rm amazonlinux:2018.03.0.20190514 bash</code></pre></td></tr></table></div></div><p>Una vez lanzado, lo primero que haremos será actualizar el sistema e instalar una serie de librerías necesarias para compilar PHP y las dependencias que queremos:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt>1
-</span><span class=lnt>2
-</span><span class=lnt>3
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=nb>cd</span>
+<!doctype html><html lang=es-es><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=generator content="Source Themes Academic 4.7.0"><meta name=author content="Juan Asensio"><meta name=description content="Actualización 2019-06-27: Añadida extensión para MongoDB.
+En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con 
+pipenv.
+Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de 
+custom runtimes, que básicamente consiste en subir el ejecutable con un determinado nombre."><link rel=alternate hreflang=es-es href=/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/><meta name=theme-color content="#2962ff"><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin=anonymous><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin=anonymous><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin=anonymous><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/github.min.css crossorigin=anonymous title=hl-light><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/dracula.min.css crossorigin=anonymous title=hl-dark disabled><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin=anonymous><script src=https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin=anonymous async></script><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap"><link rel=stylesheet href=/css/academic.css><script async src="https://www.googletagmanager.com/gtag/js?id=UA-53728915-2"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+function trackOutboundLink(url,target){gtag('event','click',{'event_category':'outbound','event_label':url,'transport_type':'beacon','event_callback':function(){if(target!=='_blank'){document.location=url;}}});console.debug("Outbound link clicked: "+url);}
+function onClickCallback(event){if((event.target.tagName!=='A')||(event.target.host===window.location.host)){return;}
+trackOutboundLink(event.target,event.target.getAttribute('target'));}
+gtag('js',new Date());gtag('config','UA-53728915-2',{});document.addEventListener('click',onClickCallback,false);</script><link rel=manifest href=/index.webmanifest><link rel=icon type=image/png href=/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png><link rel=apple-touch-icon type=image/png href=/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png><link rel=canonical href=/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/><meta property="twitter:card" content="summary"><meta property="og:site_name" content="Academic"><meta property="og:url" content="/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/"><meta property="og:title" content="Crear custom runtime para PHP en AWS Lambda | Academic"><meta property="og:description" content="Actualización 2019-06-27: Añadida extensión para MongoDB.
+En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con 
+pipenv.
+Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de 
+custom runtimes, que básicamente consiste en subir el ejecutable con un determinado nombre."><meta property="og:image" content="img/map[gravatar:%!s(bool=false) shape:circle]"><meta property="twitter:image" content="img/map[gravatar:%!s(bool=false) shape:circle]"><meta property="og:locale" content="es-es"><meta property="article:published_time" content="2019-06-11T00:00:00+00:00"><meta property="article:modified_time" content="2019-06-27T00:00:00+00:00"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/"},"headline":"Crear custom runtime para PHP en AWS Lambda","datePublished":"2019-06-11T00:00:00Z","dateModified":"2019-06-27T00:00:00Z","author":{"@type":"Person","name":"Juan Asensio"},"publisher":{"@type":"Organization","name":"Academic","logo":{"@type":"ImageObject","url":"/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"}},"description":"\u003cp\u003eActualización 2019-06-27: Añadida extensión para MongoDB.\u003c/p\u003e\n\u003cp\u003eEn el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con \n\u003ca href=\"https://docs.pipenv.org/en/latest/\" target=\"_blank\" rel=\"noopener\"\u003epipenv\u003c/a\u003e.\u003c/p\u003e\n\u003cp\u003ePero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de \n\u003ca href=\"https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/\" target=\"_blank\" rel=\"noopener\"\u003e\u003cem\u003ecustom runtimes\u003c/em\u003e\u003c/a\u003e, que básicamente consiste en subir el ejecutable con un determinado nombre.\u003c/p\u003e"}</script><title>Crear custom runtime para PHP en AWS Lambda | Academic</title></head><body id=top data-spy=scroll data-offset=70 data-target=#TableOfContents><aside class=search-results id=search><div class=container><section class=search-header><div class="row no-gutters justify-content-between mb-3"><div class=col-6><h1>Buscar</h1></div><div class="col-6 col-search-close"><a class=js-search href=#><i class="fas fa-times-circle text-muted" aria-hidden=true></i></a></div></div><div id=search-box><input name=q id=search-query placeholder=Buscar... autocapitalize=off autocomplete=off autocorrect=off spellcheck=false type=search></div></section><section class=section-search-results><div id=search-hits></div></section></div></aside><nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id=navbar-main><div class=container><div class="d-none d-lg-inline-flex"><a class=navbar-brand href=/>Academic</a></div><button type=button class=navbar-toggler data-toggle=collapse data-target=#navbar-content aria-controls=navbar aria-expanded=false aria-label="Barra de navegación">
+<span><i class="fas fa-bars"></i></span></button><div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none"><a class=navbar-brand href=/>Academic</a></div><div class="navbar-collapse main-menu-item collapse justify-content-start" id=navbar-content><ul class="navbar-nav d-md-inline-flex"><li class=nav-item><a class="nav-link active" href=/><span>Inicio</span></a></li><li class=nav-item><a class="nav-link active" href=/posts/><span>Archivos</span></a></li><li class=nav-item><a class=nav-link href=/tags/><span>Tags</span></a></li><li class=nav-item><a class=nav-link href=/projects/><span>Proyectos</span></a></li><li class=nav-item><a class=nav-link href=/authors/okelet/><span>Acerca de</span></a></li></ul></div><ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2"><li class=nav-item><a class="nav-link js-search" href=#><i class="fas fa-search" aria-hidden=true></i></a></li><li class=nav-item><a class="nav-link js-dark-toggle" href=#><i class="fas fa-moon" aria-hidden=true></i></a></li></ul></div></nav><article class=article><div class="article-container pt-3"><h1>Crear custom runtime para PHP en AWS Lambda</h1><div class=article-metadata><span class=article-date>Última actualización el
+Thu, 27 Jun 2019</span>
+<span class=middot-divider></span><span class=article-reading-time>5 min de lectura</span>
+<span class=middot-divider></span><a href=/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/#disqus_thread></a></div></div><div class=article-container><div class=article-style><p>Actualización 2019-06-27: Añadida extensión para MongoDB.</p><p>En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con
+<a href=https://docs.pipenv.org/en/latest/ target=_blank rel=noopener>pipenv</a>.</p><p>Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de
+<a href=https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/ target=_blank rel=noopener><em>custom runtimes</em></a>, que básicamente consiste en subir el ejecutable con un determinado nombre.</p><p>En resumen, lo que el post anterior viene a decir es que:</p><ul><li>Tenemos que compilar PHP</li><li>Tenemos que crear un script llamado <code>bootstrap</code> que será al que llame Lambda; este script será el encargado de conectarse a un endpoint &ldquo;mágico&rdquo; (<code>http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next</code>), que nos devolverá un JSON con las propiedades de la petición a procesar. Este JSON se lo podemos pasar entonces a una función PHP de nuestra elección.</li></ul><p>Un ejemplo de fichero <code>bootstrap</code> se encuentra en
+<a href=https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae target=_blank rel=noopener>este gist</a>:</p><script type=application/javascript src=https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae.js></script><p>El motivo de este post, es que
+<a href=https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/ target=_blank rel=noopener>AWS ha publicado una noticia</a> diciendo que va a cambiar la imagen base donde se ejecutan los <em>custom runtimes</em>. Hasta ahora se basaba en una Amazon Linux 2017.03, pero a partir de ahora se van a ejecutar sobre una Amazon Linux 2018.03; esto puede causar que determinados <em>runtimes</em> dejen de funcionar, si están compilados con versiones determinadas de librerías del sistema operativo.</p><p>Ya tenía hecho un scriptillo para la versión antigua del runtime, pero como tenía que revisarlo, he decidido &ldquo;ponerlo bonito&rdquo; y publicarlo en el blog. Manos a la obra.</p><p>Lo primero que tenemos que hacer es determinar una imagen de Docker válida para la imagen donde se ejecutaría el <em>runtime</em>; en nuestro caso,
+<a href=https://docs.aws.amazon.com/es_es/lambda/latest/dg/current-supported-versions.html target=_blank rel=noopener>según la documentación</a> sería una AMI Linux 2018.03, y yendo al Docker Hub, podemos ver la versión de la
+<a href=https://hub.docker.com/_/amazonlinux target=_blank rel=noopener>imagen Docker equivalente</a>.</p><p>Una vez que sabemos la imagen Docker, lanzamos un contenedor:</p><pre><code class=language-bash>docker run -it --name php-lambda-layer --rm amazonlinux:2018.03.0.20190514 bash
+</code></pre><p>Una vez lanzado, lo primero que haremos será actualizar el sistema e instalar una serie de librerías necesarias para compilar PHP y las dependencias que queremos:</p><pre><code class=language-bash>cd
 yum update -y
-yum install autoconf bison gcc gcc-c++ libcurl-devel libxml2-devel openssl-devel git tree zip vim python36 python36-pip libicu-devel unzip diff libpng-devel -y</code></pre></td></tr></table></div></div><p>A continuación, nos bajamos la última versión de PHP y la compilamos, indicando los módulos que queremos incluir:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt> 1
-</span><span class=lnt> 2
-</span><span class=lnt> 3
-</span><span class=lnt> 4
-</span><span class=lnt> 5
-</span><span class=lnt> 6
-</span><span class=lnt> 7
-</span><span class=lnt> 8
-</span><span class=lnt> 9
-</span><span class=lnt>10
-</span><span class=lnt>11
-</span><span class=lnt>12
-</span><span class=lnt>13
-</span><span class=lnt>14
-</span><span class=lnt>15
-</span><span class=lnt>16
-</span><span class=lnt>17
-</span><span class=lnt>18
-</span><span class=lnt>19
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=nb>cd</span>
+yum install autoconf bison gcc gcc-c++ libcurl-devel libxml2-devel openssl-devel git tree zip vim python36 python36-pip libicu-devel unzip diff libpng-devel -y
+</code></pre><p>A continuación, nos bajamos la última versión de PHP y la compilamos, indicando los módulos que queremos incluir:</p><pre><code class=language-bash>cd
 git clone https://github.com/mongodb/mongo-php-driver.git mongodb
-<span class=nb>cd</span> mongodb
-git checkout <span class=m>1</span>.5.5
+cd mongodb
+git checkout 1.5.5
 git submodule update --init
 
-<span class=nb>cd</span>
+cd
 mkdir ~/php-7-bin
-curl -sL https://github.com/php/php-src/archive/php-7.3.6.tar.gz <span class=p>|</span> tar -xz
-<span class=nb>cd</span> ~/php-src-php-7.3.6
+curl -sL https://github.com/php/php-src/archive/php-7.3.6.tar.gz | tar -xz
+cd ~/php-src-php-7.3.6
 mv ~/mongodb ext/mongodb
 ./buildconf --force
-./configure --prefix<span class=o>=</span>/root/php-7-bin/ --with-openssl --enable-intl --enable-mbstring --with-pdo-mysql --with-curl --with-zlib --with-gd --enable-bcmath --enable-mongodb --without-pear
+./configure --prefix=/root/php-7-bin/ --with-openssl --enable-intl --enable-mbstring --with-pdo-mysql --with-curl --with-zlib --with-gd --enable-bcmath --enable-mongodb --without-pear
 make
 make install
 ~/php-7-bin/bin/php -v
 ~/php-7-bin/bin/php -m
-rm -Rf ~/php-7-bin/<span class=o>{</span>include,lib,php,var<span class=o>}</span>
-rm -Rf ~/php-7-bin/bin/<span class=o>{</span>php-cgi,phpdbg<span class=o>}</span></code></pre></td></tr></table></div></div><p>Con los parámetros anteriores al compilar, tendremos PHP con los siguientes módulos:</p><ul><li>openssl</li><li>curl</li><li>intl</li><li>mbstring</li><li>pdo/mysql</li><li>gd</li><li>bcmath</li><li>mongodb</li><li><del>zip</del> (<a href=https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer>https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer</a>)</li></ul><p>Tras esto, nos bajamos <a href=https://getcomposer.org/>composer</a>; lo utilizaremos para utilizar la librería <a href=https://packagist.org/packages/guzzlehttp/guzzle>guzzlehttp/guzzle</a> para facilitar la manera en la que obtenemos el evento y reportar el estado (y no estar peleando con llamadas a <code>curl</code>):</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt>1
-</span><span class=lnt>2
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=nb>cd</span>
-curl -sS https://getcomposer.org/installer <span class=p>|</span> ~/php-7-bin/bin/php</code></pre></td></tr></table></div></div><p>Lo siguiente sería crear un proyecto de <code>composer</code> e instalar la dependencia mencionada antes; al mismo tiempo, también nos bajamos el fichero <code>bootstrap</code> que será el punto de entrada de nuestro <em>runtime</em>.</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt>1
-</span><span class=lnt>2
-</span><span class=lnt>3
-</span><span class=lnt>4
-</span><span class=lnt>5
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash>mkdir ~/php-runtime
-<span class=nb>cd</span> ~/php-runtime
+rm -Rf ~/php-7-bin/{include,lib,php,var}
+rm -Rf ~/php-7-bin/bin/{php-cgi,phpdbg}
+</code></pre><p>Con los parámetros anteriores al compilar, tendremos PHP con los siguientes módulos:</p><ul><li>openssl</li><li>curl</li><li>intl</li><li>mbstring</li><li>pdo/mysql</li><li>gd</li><li>bcmath</li><li>mongodb</li><li><del>zip</del> (<a href=https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer>https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer</a>)</li></ul><p>Tras esto, nos bajamos
+<a href=https://getcomposer.org/ target=_blank rel=noopener>composer</a>; lo utilizaremos para utilizar la librería
+<a href=https://packagist.org/packages/guzzlehttp/guzzle target=_blank rel=noopener>guzzlehttp/guzzle</a> para facilitar la manera en la que obtenemos el evento y reportar el estado (y no estar peleando con llamadas a <code>curl</code>):</p><pre><code class=language-bash>cd
+curl -sS https://getcomposer.org/installer | ~/php-7-bin/bin/php
+</code></pre><p>Lo siguiente sería crear un proyecto de <code>composer</code> e instalar la dependencia mencionada antes; al mismo tiempo, también nos bajamos el fichero <code>bootstrap</code> que será el punto de entrada de nuestro <em>runtime</em>.</p><pre><code class=language-bash>mkdir ~/php-runtime
+cd ~/php-runtime
 curl -qL https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae/raw &gt; bootstrap
-chmod <span class=m>755</span> bootstrap
-~/php-7-bin/bin/php ~/composer.phar require guzzlehttp/guzzle</code></pre></td></tr></table></div></div><p>Por último, lo metemos todo en un fichero ZIP comprimido</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt>1
-</span><span class=lnt>2
-</span><span class=lnt>3
-</span><span class=lnt>4
-</span><span class=lnt>5
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash>rm -f ~/runtime.zip
-<span class=nb>cd</span> ~/php-7-bin
+chmod 755 bootstrap
+~/php-7-bin/bin/php ~/composer.phar require guzzlehttp/guzzle
+</code></pre><p>Por último, lo metemos todo en un fichero ZIP comprimido</p><pre><code class=language-bash>rm -f ~/runtime.zip
+cd ~/php-7-bin
 zip -r ~/runtime.zip bin/php
-<span class=nb>cd</span> ~/php-runtime
-zip -r ~/runtime.zip .</code></pre></td></tr></table></div></div><p>La estructura final de este fichero ZIP es la siguiente:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><span class=lnt> 1
-</span><span class=lnt> 2
-</span><span class=lnt> 3
-</span><span class=lnt> 4
-</span><span class=lnt> 5
-</span><span class=lnt> 6
-</span><span class=lnt> 7
-</span><span class=lnt> 8
-</span><span class=lnt> 9
-</span><span class=lnt>10
-</span><span class=lnt>11
-</span></pre></td><td class=lntd><pre class=chroma>├── bin
+cd ~/php-runtime
+zip -r ~/runtime.zip .
+</code></pre><p>La estructura final de este fichero ZIP es la siguiente:</p><pre><code>├── bin
 │   └── php
 ├── bootstrap
 ├── composer.json
@@ -97,82 +67,58 @@ zip -r ~/runtime.zip .</code></pre></td></tr></table></div></div><p>La estructur
     ├── composer
     ├── guzzlehttp
     ├── psr
-    └── ralouphie</pre></td></tr></table></div></div><p>Antes de finalizar el contenedor, desde una shell externa, copiaremos el fichero generado:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt>1
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash>docker cp php-lambda-layer:/root/runtime.zip .</code></pre></td></tr></table></div></div><p>Ahora subimos la capa (<code>layer</code>) a AWS:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt>1
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash>aws lambda publish-layer-version --layer-name php-cake-amzlx201803 --zip-file fileb://runtime.zip --compatible-runtimes provided --region eu-west-1</code></pre></td></tr></table></div></div><p>Lo único que nos quedaría sería subir la función en PHP, indicando que queremos usar un <em>custom runtime</em> y añadirle este <code>layer</code> que hemos subido.</p><p>Hay que tener en cuenta que el script <code>bootstrap</code> hace un mapeo entre el directorio <code>src</code> y el <code>namespace</code> <code>App</code>, de modo que si especificamos <code>App\Lambda\MyFunction::handler</code> como <code>handler</code> (en la configuración de la función Lambda), buscaría un fichero <code>src/Lambda/MyFunction.php</code>, que debería contener una función estática <code>handler</code>, que aceptaría un único parámetro, que sería el evento; algo así como:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-php data-lang=php><span class=lnt> 1
-</span><span class=lnt> 2
-</span><span class=lnt> 3
-</span><span class=lnt> 4
-</span><span class=lnt> 5
-</span><span class=lnt> 6
-</span><span class=lnt> 7
-</span><span class=lnt> 8
-</span><span class=lnt> 9
-</span><span class=lnt>10
-</span><span class=lnt>11
-</span><span class=lnt>12
-</span><span class=lnt>13
-</span><span class=lnt>14
-</span><span class=lnt>15
-</span><span class=lnt>16
-</span><span class=lnt>17
-</span><span class=lnt>18
-</span><span class=lnt>19
-</span><span class=lnt>20
-</span><span class=lnt>21
-</span><span class=lnt>22
-</span><span class=lnt>23
-</span><span class=lnt>24
-</span><span class=lnt>25
-</span><span class=lnt>26
-</span><span class=lnt>27
-</span><span class=lnt>28
-</span><span class=lnt>29
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-php data-lang=php><span class=cp>&lt;?php</span>
-<span class=k>namespace</span> <span class=nx>App\Lambda</span><span class=p>;</span>
+    └── ralouphie
+</code></pre><p>Antes de finalizar el contenedor, desde una shell externa, copiaremos el fichero generado:</p><pre><code class=language-bash>docker cp php-lambda-layer:/root/runtime.zip .
+</code></pre><p>Ahora subimos la capa (<code>layer</code>) a AWS:</p><pre><code class=language-bash>aws lambda publish-layer-version --layer-name php-cake-amzlx201803 --zip-file fileb://runtime.zip --compatible-runtimes provided --region eu-west-1
+</code></pre><p>Lo único que nos quedaría sería subir la función en PHP, indicando que queremos usar un <em>custom runtime</em> y añadirle este <code>layer</code> que hemos subido.</p><p>Hay que tener en cuenta que el script <code>bootstrap</code> hace un mapeo entre el directorio <code>src</code> y el <code>namespace</code> <code>App</code>, de modo que si especificamos <code>App\Lambda\MyFunction::handler</code> como <code>handler</code> (en la configuración de la función Lambda), buscaría un fichero <code>src/Lambda/MyFunction.php</code>, que debería contener una función estática <code>handler</code>, que aceptaría un único parámetro, que sería el evento; algo así como:</p><pre><code class=language-php>&lt;?php
+namespace App\Lambda;
 
-<span class=k>require</span> <span class=nx>dirname</span><span class=p>(</span><span class=no>__DIR__</span><span class=p>)</span> <span class=o>.</span> <span class=s1>&#39;/../vendor/autoload.php&#39;</span><span class=p>;</span>
+require dirname(__DIR__) . '/../vendor/autoload.php';
 
-<span class=k>class</span> <span class=nc>MyFunction</span>
-<span class=p>{</span>
-    <span class=k>public</span> <span class=k>static</span> <span class=k>function</span> <span class=nf>handler</span><span class=p>(</span><span class=nv>$event</span><span class=p>)</span>
-    <span class=p>{</span>
-        <span class=k>return</span> <span class=s2>&#34;Hello &#34;</span> <span class=o>.</span> <span class=nv>$event</span><span class=p>[</span><span class=s2>&#34;name&#34;</span><span class=p>]</span> <span class=o>.</span> <span class=s2>&#34;!; full event is &#34;</span> <span class=o>.</span> <span class=nx>json_encode</span><span class=p>(</span><span class=nv>$event</span><span class=p>);</span>
-    <span class=p>}</span>
+class MyFunction
+{
+    public static function handler($event)
+    {
+        return &quot;Hello &quot; . $event[&quot;name&quot;] . &quot;!; full event is &quot; . json_encode($event);
+    }
 
-    <span class=k>public</span> <span class=k>static</span> <span class=k>function</span> <span class=nf>runner</span><span class=p>()</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=nx>self</span><span class=o>::</span><span class=na>handler</span><span class=p>([</span>
-            <span class=s2>&#34;name&#34;</span> <span class=o>=&gt;</span> <span class=s2>&#34;Foo&#34;</span><span class=p>,</span>
-            <span class=s2>&#34;email&#34;</span> <span class=o>=&gt;</span> <span class=s2>&#34;no@reply.com&#34;</span><span class=p>,</span>
-            <span class=s2>&#34;groups&#34;</span> <span class=o>=&gt;</span> <span class=p>[</span>
-                <span class=p>[</span>
-                    <span class=s2>&#34;id&#34;</span> <span class=o>=&gt;</span> <span class=mi>1</span><span class=p>,</span>
-                    <span class=s2>&#34;name&#34;</span> <span class=o>=&gt;</span> <span class=s2>&#34;admin&#34;</span>
-                <span class=p>],</span>
-                <span class=p>[</span>
-                    <span class=s2>&#34;id&#34;</span> <span class=o>=&gt;</span> <span class=mi>8</span><span class=p>,</span>
-                    <span class=s2>&#34;name&#34;</span> <span class=o>=&gt;</span> <span class=s2>&#34;bar&#34;</span>
-                <span class=p>]</span>
-            <span class=p>]</span>
-        <span class=p>]);</span>
-    <span class=p>}</span>
-<span class=p>}</span>
-</code></pre></td></tr></table></div></div><p>La función <code>runner</code> es una función de ayuda para desarrollar en local, de tal forma que podamos indicar dentro de ella el evento al llamar a la función <code>handler</code>, ejecutándolo de la siguiente forma:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt>1
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash>php -r <span class=s2>&#34;require &#39;src/Lambda/MyFunction.php&#39; ; print_r(call_user_func(&#39;App\Lambda\MyFunction::runner&#39;));&#34;</span></code></pre></td></tr></table></div></div><p>Referencias:</p><ul><li><a href=https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/>https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/</a></li><li><a href=https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/>https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/</a></li><li><a href=https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/>https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/</a></li><li><a href=https://developpaper.com/aliyun-centos-7-6-install-php7-3/>https://developpaper.com/aliyun-centos-7-6-install-php7-3/</a></li></ul></div><footer class=post-footer><div class=post-tags><a href=/tags/aws/>AWS</a>
-<a href=/tags/php/>PHP</a>
-<a href=/tags/lambda/>Lambda</a>
-<a href=/tags/runtime/>runtime</a>
-<a href=/tags/custom/>custom</a>
-<a href=/tags/layer/>layer</a></div><nav class=post-nav><a class=prev href=/posts/2019/06/python-es-el-lenguaje-m%C3%A1s-popular-hoy-por-hoy/><i class="iconfont icon-left"></i><span class="prev-text nav-default">Python es el lenguaje más popular hoy por hoy</span>
-<span class="prev-text nav-mobile">Previo</span></a>
-<a class=next href=/posts/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/><span class="next-text nav-default">Crear usuario y base de datos en MySQL y dar permisos</span>
-<span class="next-text nav-mobile">Siguiente</span>
-<i class="iconfont icon-right"></i></a></nav></footer></article></div><div id=disqus_thread></div><script type=text/javascript>(function(){if(window.location.hostname==='localhost')return;var dsq=document.createElement('script');dsq.type='text/javascript';dsq.async=true;var disqus_shortname='okeletgithubio';dsq.src='//'+disqus_shortname+'.disqus.com/embed.js';(document.getElementsByTagName('head')[0]||document.getElementsByTagName('body')[0]).appendChild(dsq);})();</script><noscript>Please enable JavaScript to view the <a href=http://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript></div></main><footer id=footer class=footer><div class=social-links><a href=https://stackoverflow.com/users/576138/okelet class="iconfont icon-stack-overflow" title=stack-overflow></a><a href=https://www.linkedin.com/in/okelet/ class="iconfont icon-linkedin" title=linkedin></a><a href=https://github.com/okelet/ class="iconfont icon-github" title=github></a><a href=https://gitlab.com/okelet class="iconfont icon-gitlab" title=gitlab></a><a href=https://okelet.netlify.com/atom.xml type=application/atom+xml class="iconfont icon-rss" title="Atom feed"></a></div><div class=copyright><span class=power-by>Creado con <a class=hexo-link href=https://gohugo.io>Hugo</a></span>
-<span class=division>|</span>
-<span class=theme-info>Tema -
-<a class=theme-link href=https://github.com/olOwOlo/hugo-theme-even>Even</a></span>
-<span class=copyright-year>&copy;
-2017 -
-2020
-<span class=heart><i class="iconfont icon-heart"></i></span><span class=author>Juan Asensio</span></span></div><script type=text/javascript>(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-(window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");ym(54019648,"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true});</script><noscript><div><img src=https://mc.yandex.ru/watch/54019648 style=position:absolute;left:-9999px alt></div></noscript></footer><div class=back-to-top id=back-to-top><i class="iconfont icon-up"></i></div></div><script src=https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin=anonymous></script><script>var languageCode="es".replace(/-/g,'_').replace(/_(.*)/,function($0,$1){return $0.replace($1,$1.toUpperCase());});timeago().render(document.querySelectorAll('.timeago'),languageCode);timeago.cancel();</script><script type=text/javascript src=/dist/even.26188efa.min.js></script><script type=application/javascript>var doNotTrack=false;if(!doNotTrack){window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;ga('create','UA-53728915-2','auto');ga('set','anonymizeIp',true);ga('send','pageview');}</script><script async src=https://www.google-analytics.com/analytics.js></script><script src=/js/custom.js></script></body></html>
+    public static function runner() {
+        return self::handler([
+            &quot;name&quot; =&gt; &quot;Foo&quot;,
+            &quot;email&quot; =&gt; &quot;no@reply.com&quot;,
+            &quot;groups&quot; =&gt; [
+                [
+                    &quot;id&quot; =&gt; 1,
+                    &quot;name&quot; =&gt; &quot;admin&quot;
+                ],
+                [
+                    &quot;id&quot; =&gt; 8,
+                    &quot;name&quot; =&gt; &quot;bar&quot;
+                ]
+            ]
+        ]);
+    }
+}
+</code></pre><p>La función <code>runner</code> es una función de ayuda para desarrollar en local, de tal forma que podamos indicar dentro de ella el evento al llamar a la función <code>handler</code>, ejecutándolo de la siguiente forma:</p><pre><code class=language-bash>php -r &quot;require 'src/Lambda/MyFunction.php' ; print_r(call_user_func('App\Lambda\MyFunction::runner'));&quot;
+</code></pre><p>Referencias:</p><ul><li><a href=https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/>https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/</a></li><li><a href=https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/>https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/</a></li><li><a href=https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/>https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/</a></li><li><a href=https://developpaper.com/aliyun-centos-7-6-install-php7-3/>https://developpaper.com/aliyun-centos-7-6-install-php7-3/</a></li></ul></div><div class=article-tags><a class="badge badge-light" href=/tags/aws/>AWS</a>
+<a class="badge badge-light" href=/tags/php/>PHP</a>
+<a class="badge badge-light" href=/tags/lambda/>Lambda</a>
+<a class="badge badge-light" href=/tags/runtime/>runtime</a>
+<a class="badge badge-light" href=/tags/custom/>custom</a>
+<a class="badge badge-light" href=/tags/layer/>layer</a></div><div class=share-box aria-hidden=true><ul class=share><li><a href="https://twitter.com/intent/tweet?url=/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/&text=Crear%20custom%20runtime%20para%20PHP%20en%20AWS%20Lambda" target=_blank rel=noopener class=share-btn-twitter><i class="fab fa-twitter"></i></a></li><li><a href="https://www.facebook.com/sharer.php?u=/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/&t=Crear%20custom%20runtime%20para%20PHP%20en%20AWS%20Lambda" target=_blank rel=noopener class=share-btn-facebook><i class="fab fa-facebook"></i></a></li><li><a href="mailto:?subject=Crear%20custom%20runtime%20para%20PHP%20en%20AWS%20Lambda&body=/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/" target=_blank rel=noopener class=share-btn-email><i class="fas fa-envelope"></i></a></li><li><a href="https://www.linkedin.com/shareArticle?url=/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/&title=Crear%20custom%20runtime%20para%20PHP%20en%20AWS%20Lambda" target=_blank rel=noopener class=share-btn-linkedin><i class="fab fa-linkedin-in"></i></a></li><li><a href="https://web.whatsapp.com/send?text=Crear%20custom%20runtime%20para%20PHP%20en%20AWS%20Lambda%20/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/" target=_blank rel=noopener class=share-btn-whatsapp><i class="fab fa-whatsapp"></i></a></li><li><a href="https://service.weibo.com/share/share.php?url=/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/&title=Crear%20custom%20runtime%20para%20PHP%20en%20AWS%20Lambda" target=_blank rel=noopener class=share-btn-weibo><i class="fab fa-weibo"></i></a></li></ul></div><section id=comments><div id=disqus_thread></div><script>let disqus_config=function(){};(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('disqus_thread').innerHTML='Disqus comments not available by default when the website is previewed locally.';return;}
+var d=document,s=d.createElement('script');s.async=true;s.src='https://'+"okeletgithubio"+'.disqus.com/embed.js';s.setAttribute('data-timestamp',+new Date());(d.head||d.body).appendChild(s);})();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></section><div class="article-widget content-widget-hr"><h3>Relacionado</h3><ul><li><a href=/posts/2019/05/parsear-maintenancewindow-de-rds-en-python/>Parsear MaintenanceWindow de RDS en Python</a></li></ul></div></div></article><script src=https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/r.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin=anonymous></script><script>const code_highlighting=true;</script><script>const isSiteThemeDark=false;</script><script>const search_config={"indexURI":"/index.json","minLength":1,"threshold":0.3};const i18n={"no_results":"No se encontraron resultados","placeholder":"Buscar...","results":"resultados encontrados"};const content_type={'post':"Posts",'project':"Proyectos",'publication':"Publicaciones",'talk':"Charlas"};</script><script id=search-hit-fuse-template type=text/x-template>
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script><script src=https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin=anonymous></script><script id=dsq-count-scr src=https://okeletgithubio.disqus.com/count.js async></script><script src=/js/academic.min.a07fb7ff02bd7120efbadd0dda2cba9f.js></script><div class=container><footer class=site-footer><p class=powered-by>Powered by the
+<a href=https://sourcethemes.com/academic/ target=_blank rel=noopener>Academic theme</a> for
+<a href=https://gohugo.io target=_blank rel=noopener>Hugo</a>.
+<span class=float-right aria-hidden=true><a href=# class=back-to-top><span class=button_icon><i class="fas fa-chevron-up fa-2x"></i></span></a></span></p></footer></div><div id=modal class="modal fade" role=dialog><div class=modal-dialog><div class=modal-content><div class=modal-header><h5 class=modal-title>Citar</h5><button type=button class=close data-dismiss=modal aria-label=Close>
+<span aria-hidden=true>&#215;</span></button></div><div class=modal-body><pre><code class="tex hljs"></code></pre></div><div class=modal-footer><a class="btn btn-outline-primary my-1 js-copy-cite" href=# target=_blank><i class="fas fa-copy"></i>Copiar</a>
+<a class="btn btn-outline-primary my-1 js-download-cite" href=# target=_blank><i class="fas fa-download"></i>Descargar</a><div id=modal-error></div></div></div></div></div></body></html>

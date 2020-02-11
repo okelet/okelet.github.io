@@ -1,32 +1,6 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AWX on
-Mis notas</title><link>https://okelet.netlify.com/tags/awx/</link><description>Recent content in AWX
-on Mis notas</description><language>es</language><managingEditor>okelet@gmail.com (Juan Asensio)</managingEditor><webMaster>okelet@gmail.com (Juan Asensio)</webMaster><lastBuildDate>Tue, 11 Feb 2020 16:14:27 +0000</lastBuildDate><generator>Hugo -- gohugo.io</generator><docs>https://validator.w3.org/feed/docs/rss2.html</docs><atom:link href="https://okelet.netlify.com/tags/awx/index.xml" rel="self" type="application/rss&#43;xml"/><item><title>Configurar Microk8s para usar repositorios de AWS ECR</title><link>https://okelet.netlify.com/posts/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</link><description>&lt;p&gt;Continuando con un post anterior de cómo &lt;a href=&#34;https://okelet.netlify.com/posts/2019/06/probando-ansible-awx-con-microk8s/&#34;&gt;probar Ansible AWX con Microk8s&lt;/a&gt; (en AWS EC2). Bueno, pues resulta que me creé una imagen personalizada para el contener &lt;code&gt;awx_task&lt;/code&gt; para instalar una serie de librerías y comandos que necesitaba para lanzar unos playbooks; el fichero &lt;code&gt;Dockerfile&lt;/code&gt; es similar a éste:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;FROM ansible/awx_task:9.1.1
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AWX | Academic</title><link>/tags/awx/</link><atom:link href="/tags/awx/index.xml" rel="self" type="application/rss+xml"/><description>AWX</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-es</language><lastBuildDate>Sat, 18 Jan 2020 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>AWX</title><link>/tags/awx/</link></image><item><title>Configurar Microk8s para usar repositorios de AWS ECR</title><link>/posts/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</link><pubDate>Sat, 18 Jan 2020 00:00:00 +0000</pubDate><guid>/posts/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</guid><description>&lt;p>Continuando con un post anterior de cómo
+&lt;a href="/posts/2019/06/probando-ansible-awx-con-microk8s/">probar Ansible AWX con Microk8s&lt;/a> (en AWS EC2). Bueno, pues resulta que me creé una imagen personalizada para el contener &lt;code>awx_task&lt;/code> para instalar una serie de librerías y comandos que necesitaba para lanzar unos playbooks; el fichero &lt;code>Dockerfile&lt;/code> es similar a éste:&lt;/p>
+&lt;pre>&lt;code class="language-text">FROM ansible/awx_task:9.1.1
 # Switch user to become root
 USER 0
 # Additional software
@@ -42,400 +16,218 @@ pip install --upgrade pypsrp pysocks &amp;amp;&amp;amp; \
 deactivate
 # Restore the original user
 # https://github.com/ansible/awx/blob/devel/installer/roles/image_build/templates/Dockerfile.task.j2
-USER 1000&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Y me creé un repositorio en &lt;a href=&#34;https://aws.amazon.com/es/ecr/&#34;&gt;AWS ECR&lt;/a&gt;. Después generé la imagen y la subí al repositorio (siendo &lt;code&gt;xxxxxxxxxxx&lt;/code&gt; el ID de la cuenta de AWS):&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;k&#34;&gt;$(&lt;/span&gt;aws ecr get-login --no-include-email&lt;span class=&#34;k&#34;&gt;)&lt;/span&gt;
+USER 1000
+&lt;/code>&lt;/pre>
+&lt;p>Y me creé un repositorio en
+&lt;a href="https://aws.amazon.com/es/ecr/" target="_blank" rel="noopener">AWS ECR&lt;/a>. Después generé la imagen y la subí al repositorio (siendo &lt;code>xxxxxxxxxxx&lt;/code> el ID de la cuenta de AWS):&lt;/p>
+&lt;pre>&lt;code class="language-bash">$(aws ecr get-login --no-include-email)
 docker build --force-rm --pull --no-cache -t xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1 .
-docker push xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Tras esto modifiqué el fichero de inventario que usa el instalador de AWX para hacer referencia a la imagen que acabo de subir y crear.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;kubernetes_task_image=xxxxxxxxxxx.dkr.ecr.eu-west-&lt;span class=&#34;m&#34;&gt;1.&lt;/span&gt;amazonaws.com/ansible/awx_task&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Pero cuando el cluster de Kubernetes intenta obtener la imagen para crear el pod, se queda en estado &lt;code&gt;ErrImagePull&lt;/code&gt; con el mensaje:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt; Normal Pulling 2s (x3 over 46s) kubelet, pcjuan Pulling image &amp;#34;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;#34;
-Warning Failed 2s (x3 over 45s) kubelet, pcjuan Failed to pull image &amp;#34;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;#34;: rpc error: code = Unknown desc = failed to resolve image &amp;#34;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;#34;: no available registry endpoint: unexpected status code https://xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/v2/ansible/awx_task/manifests/9.1.1: 401 Unauthorized
-Warning Failed 2s (x3 over 45s) kubelet, pcjuan Error: ErrImagePull&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Esto se debe a que Kubernetes no tiene las credenciales necesarias para acceder al repositorio. Pero después de investigar, es fácil solucionarlo. Lo primero que tenemos que hacer es crear un &lt;code&gt;cronjob&lt;/code&gt; en Kubernetes (lo haremos con un crojob porque realmente lo que usa Docker es un token, que tiene caducidad, y hay que renovarlo cada cierto tiempo), para que haga login en el repositorio, y cree una credencial para obtener de forma correcta la imagen; para esto, crearemos un fichero llamado &lt;code&gt;ecr-cred-refresh.yml&lt;/code&gt; con el siguiente contenido:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;32
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;33
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;34
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;35
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;36
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;37
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;38
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;39
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;40
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;41
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;42
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;43
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;44
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;45
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;46
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;47
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;48
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;49
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;50
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;apiVersion&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;batch/v1beta1&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;kind&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;CronJob&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;metadata&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;name&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;ecr-cred-helper&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;spec&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;concurrencyPolicy&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;Allow&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;schedule&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;cp&#34;&gt;*/6&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;*&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;*&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;*&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;failedJobsHistoryLimit&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;successfulJobsHistoryLimit&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;suspend&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;kc&#34;&gt;false&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;jobTemplate&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;spec&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;template&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;spec&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;containers&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;command&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;/bin/sh&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-c&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;|&lt;span class=&#34;sd&#34;&gt;-
-&lt;/span&gt;&lt;span class=&#34;sd&#34;&gt; NAMESPACE=awx&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;SERVICE_ACCOUNT=awx&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;ACCOUNT=$(aws&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;sts&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;get-caller-identity&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;--query&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Account&amp;#39;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;--output&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;text)&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;REGION=$(curl&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-s&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;http&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;//&lt;span class=&#34;m&#34;&gt;169.254&lt;/span&gt;.&lt;span class=&#34;m&#34;&gt;169.254&lt;/span&gt;/latest/dynamic/instance-identity/document&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;|&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;python&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-c&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;import json,sys; print(json.loads(sys.stdin.read())[&amp;#39;region&amp;#39;])&amp;#34;&lt;/span&gt;)&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;SECRET_NAME=${REGION}-ecr-registry&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;EMAIL=anymail.doesnt.matter@email.com&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;TOKEN=$(aws&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;ecr&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;get-login&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;--region&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;${REGION}&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;--registry-ids&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;${ACCOUNT}&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;|&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;cut&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-d&lt;span class=&#34;s1&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-f6)&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;echo&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;ENV variables setup done.&amp;#34;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;kubectl&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-n&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;${NAMESPACE}&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;delete&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;secret&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;--ignore-not-found&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;$SECRET_NAME&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;kubectl&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-n&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;${NAMESPACE}&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;create&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;secret&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;docker-registry&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;$SECRET_NAME&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;\&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;--docker-server=https&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;//${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;\&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;--docker-username=AWS&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;\&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;--docker-password=&lt;span class=&#34;s2&#34;&gt;&amp;#34;${TOKEN}&amp;#34;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;\&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;--docker-email=&lt;span class=&#34;s2&#34;&gt;&amp;#34;${EMAIL}&amp;#34;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;echo&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;Secret created by name $SECRET_NAME&amp;#34;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;kubectl&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-n&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;${NAMESPACE}&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;patch&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;serviceaccount&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;${SERVICE_ACCOUNT}&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;-p&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;{&amp;#34;imagePullSecrets&amp;#34;:[{&amp;#34;name&amp;#34;:&amp;#34;&amp;#39;&lt;/span&gt;$SECRET_NAME&lt;span class=&#34;s1&#34;&gt;&amp;#39;&amp;#34;}]}&amp;#39;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;echo&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;All done.&amp;#34;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;image&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;odaniait/aws-kubectl&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;latest&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;imagePullPolicy&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;IfNotPresent&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;name&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;ecr-cred-helper&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;resources&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{}&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;securityContext&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;capabilities&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{}&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;terminationMessagePath&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;/dev/termination-log&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;terminationMessagePolicy&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;File&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;dnsPolicy&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;Default&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;hostNetwork&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;kc&#34;&gt;true&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;restartPolicy&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;Never&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;schedulerName&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;default-scheduler&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;securityContext&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{}&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;terminationGracePeriodSeconds&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;30&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;En el fichero anterior, dependiendo de nuestra configuración particular, podremos cambiar el valor de las variables &lt;code&gt;NAMESPACE&lt;/code&gt; y &lt;code&gt;SERVICE_ACCOUNT&lt;/code&gt;, y también especificar manualmente las variables &lt;code&gt;ACCOUNT&lt;/code&gt; y &lt;code&gt;REGION&lt;/code&gt; si no queremos que el script las auto-detecte porque usamos otras en concreto.&lt;/p&gt;
-&lt;p&gt;Básicamente, lo que hace esto, es crear un trabajo de cron, que lanza un contenedor y ejecuta el script en Bash definido en la especificación del pod. En resumen:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Obtiene las credenciales de acceso a ECR utilizando la cli de AWS&lt;/li&gt;
-&lt;li&gt;Elimina, si existe, el secreto llamado &lt;code&gt;${REGION}-ecr-registry&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Lo crea de nuevo, con el token obtenido de ECR&lt;/li&gt;
-&lt;li&gt;Actualiza la service account de AWX indicándole que para obtener las imágenes (&lt;code&gt;imagePullSecrets&lt;/code&gt;) tiene usar las credenciales del secreto recién creado&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Tras esto, importamos la definición del job en Kubernetes:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;kubectl -n awx apply -f ecr-cred-refresh.yml&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Este job se ejecuta cada 6 horas; si queremos forzar la ejecución, podemos hacerlo con los siguientes comandos:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;nv&#34;&gt;JOB_NAME&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;manual-&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;$(&lt;/span&gt;date --utc +%Y%m%d-%H%M%S&lt;span class=&#34;k&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt;
-kubectl -n awx create job --from&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;cronjob/ecr-cred-helper &lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;JOB_NAME&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;
-kubectl -n awx &lt;span class=&#34;nb&#34;&gt;wait&lt;/span&gt; --for&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;condition&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;complete&lt;/span&gt; job.batch/&lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;JOB_NAME&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;
-kubectl -n awx logs job.batch/&lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;JOB_NAME&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Pero esto por sí solo no nos vale&amp;hellip; porque ¿dónde le decimos las crendenciales para acceder a AWS (es decir, para que desde dentro del cronjob se pueda hacer &lt;code&gt;aws ecr get-login&lt;/code&gt;)? Es decir, el access key y el secret. Para esto, no le pasaremos una key y un secret, sino que crearemos un rol y se lo asignaremos a la instancia EC2 de AWS donde estemos ejecutando Microk8s. El rol debe tener una policy que permita a la instancia acceder al repositorio; podemos usar la policy predefinida &lt;code&gt;AmazonEC2ContainerRegistryReadOnly&lt;/code&gt; o crear una manualmente.&lt;/p&gt;
-&lt;p&gt;Tras crear el rol y la policy, y asignar el rol a la instancia, podemos ejecutar manualmente el &lt;code&gt;cronjob&lt;/code&gt;, y ejecutar de nuevo el instalador de AWX, que ya debería obtener la imagen de Docker sin problemas.&lt;/p&gt;
-&lt;p&gt;Comandos útiles:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;c1&#34;&gt;# Ver información de la service account de awx&lt;/span&gt;
+docker push xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1
+&lt;/code>&lt;/pre>
+&lt;p>Tras esto modifiqué el fichero de inventario que usa el instalador de AWX para hacer referencia a la imagen que acabo de subir y crear.&lt;/p>
+&lt;pre>&lt;code class="language-yaml">kubernetes_task_image=xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task
+&lt;/code>&lt;/pre>
+&lt;p>Pero cuando el cluster de Kubernetes intenta obtener la imagen para crear el pod, se queda en estado &lt;code>ErrImagePull&lt;/code> con el mensaje:&lt;/p>
+&lt;pre>&lt;code class="language-text"> Normal Pulling 2s (x3 over 46s) kubelet, pcjuan Pulling image &amp;quot;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;quot;
+Warning Failed 2s (x3 over 45s) kubelet, pcjuan Failed to pull image &amp;quot;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;quot;: rpc error: code = Unknown desc = failed to resolve image &amp;quot;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;quot;: no available registry endpoint: unexpected status code https://xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/v2/ansible/awx_task/manifests/9.1.1: 401 Unauthorized
+Warning Failed 2s (x3 over 45s) kubelet, pcjuan Error: ErrImagePull
+&lt;/code>&lt;/pre>
+&lt;p>Esto se debe a que Kubernetes no tiene las credenciales necesarias para acceder al repositorio. Pero después de investigar, es fácil solucionarlo. Lo primero que tenemos que hacer es crear un &lt;code>cronjob&lt;/code> en Kubernetes (lo haremos con un crojob porque realmente lo que usa Docker es un token, que tiene caducidad, y hay que renovarlo cada cierto tiempo), para que haga login en el repositorio, y cree una credencial para obtener de forma correcta la imagen; para esto, crearemos un fichero llamado &lt;code>ecr-cred-refresh.yml&lt;/code> con el siguiente contenido:&lt;/p>
+&lt;pre>&lt;code class="language-yaml">apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+name: ecr-cred-helper
+spec:
+concurrencyPolicy: Allow
+schedule: 0 */6 * * *
+failedJobsHistoryLimit: 1
+successfulJobsHistoryLimit: 3
+suspend: false
+jobTemplate:
+spec:
+template:
+spec:
+containers:
+- command:
+- /bin/sh
+- -c
+- |-
+NAMESPACE=awx
+SERVICE_ACCOUNT=awx
+ACCOUNT=$(aws sts get-caller-identity --query 'Account' --output text)
+REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | python -c &amp;quot;import json,sys; print(json.loads(sys.stdin.read())['region'])&amp;quot;)
+SECRET_NAME=${REGION}-ecr-registry
+EMAIL=anymail.doesnt.matter@email.com
+TOKEN=$(aws ecr get-login --region ${REGION} --registry-ids ${ACCOUNT} | cut -d' ' -f6)
+echo &amp;quot;ENV variables setup done.&amp;quot;
+kubectl -n ${NAMESPACE} delete secret --ignore-not-found $SECRET_NAME
+kubectl -n ${NAMESPACE} create secret docker-registry $SECRET_NAME \
+--docker-server=https://${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com \
+--docker-username=AWS \
+--docker-password=&amp;quot;${TOKEN}&amp;quot; \
+--docker-email=&amp;quot;${EMAIL}&amp;quot;
+echo &amp;quot;Secret created by name $SECRET_NAME&amp;quot;
+kubectl -n ${NAMESPACE} patch serviceaccount ${SERVICE_ACCOUNT} -p '{&amp;quot;imagePullSecrets&amp;quot;:[{&amp;quot;name&amp;quot;:&amp;quot;'$SECRET_NAME'&amp;quot;}]}'
+echo &amp;quot;All done.&amp;quot;
+image: odaniait/aws-kubectl:latest
+imagePullPolicy: IfNotPresent
+name: ecr-cred-helper
+resources: {}
+securityContext:
+capabilities: {}
+terminationMessagePath: /dev/termination-log
+terminationMessagePolicy: File
+dnsPolicy: Default
+hostNetwork: true
+restartPolicy: Never
+schedulerName: default-scheduler
+securityContext: {}
+terminationGracePeriodSeconds: 30
+&lt;/code>&lt;/pre>
+&lt;p>En el fichero anterior, dependiendo de nuestra configuración particular, podremos cambiar el valor de las variables &lt;code>NAMESPACE&lt;/code> y &lt;code>SERVICE_ACCOUNT&lt;/code>, y también especificar manualmente las variables &lt;code>ACCOUNT&lt;/code> y &lt;code>REGION&lt;/code> si no queremos que el script las auto-detecte porque usamos otras en concreto.&lt;/p>
+&lt;p>Básicamente, lo que hace esto, es crear un trabajo de cron, que lanza un contenedor y ejecuta el script en Bash definido en la especificación del pod. En resumen:&lt;/p>
+&lt;ul>
+&lt;li>Obtiene las credenciales de acceso a ECR utilizando la cli de AWS&lt;/li>
+&lt;li>Elimina, si existe, el secreto llamado &lt;code>${REGION}-ecr-registry&lt;/code>&lt;/li>
+&lt;li>Lo crea de nuevo, con el token obtenido de ECR&lt;/li>
+&lt;li>Actualiza la service account de AWX indicándole que para obtener las imágenes (&lt;code>imagePullSecrets&lt;/code>) tiene usar las credenciales del secreto recién creado&lt;/li>
+&lt;/ul>
+&lt;p>Tras esto, importamos la definición del job en Kubernetes:&lt;/p>
+&lt;pre>&lt;code class="language-bash">kubectl -n awx apply -f ecr-cred-refresh.yml
+&lt;/code>&lt;/pre>
+&lt;p>Este job se ejecuta cada 6 horas; si queremos forzar la ejecución, podemos hacerlo con los siguientes comandos:&lt;/p>
+&lt;pre>&lt;code class="language-bash">JOB_NAME=&amp;quot;manual-$(date --utc +%Y%m%d-%H%M%S)&amp;quot;
+kubectl -n awx create job --from=cronjob/ecr-cred-helper ${JOB_NAME}
+kubectl -n awx wait --for=condition=complete job.batch/${JOB_NAME}
+kubectl -n awx logs job.batch/${JOB_NAME}
+&lt;/code>&lt;/pre>
+&lt;p>Pero esto por sí solo no nos vale&amp;hellip; porque ¿dónde le decimos las crendenciales para acceder a AWS (es decir, para que desde dentro del cronjob se pueda hacer &lt;code>aws ecr get-login&lt;/code>)? Es decir, el access key y el secret. Para esto, no le pasaremos una key y un secret, sino que crearemos un rol y se lo asignaremos a la instancia EC2 de AWS donde estemos ejecutando Microk8s. El rol debe tener una policy que permita a la instancia acceder al repositorio; podemos usar la policy predefinida &lt;code>AmazonEC2ContainerRegistryReadOnly&lt;/code> o crear una manualmente.&lt;/p>
+&lt;p>Tras crear el rol y la policy, y asignar el rol a la instancia, podemos ejecutar manualmente el &lt;code>cronjob&lt;/code>, y ejecutar de nuevo el instalador de AWX, que ya debería obtener la imagen de Docker sin problemas.&lt;/p>
+&lt;p>Comandos útiles:&lt;/p>
+&lt;pre>&lt;code class="language-bash"># Ver información de la service account de awx
 kubectl -n awx describe serviceaccounts awx
-&lt;span class=&#34;c1&#34;&gt;# Ver información de los secretos (cuándo se actualizó/obtuvo el token por última vez)&lt;/span&gt;
-kubectl -n awx get secrets&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Probar manualmente el script:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;kubectl run -i --tty --rm debug --image&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;odaniait/aws-kubectl:latest --restart&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;Never -- sh
-kubectl run --generator&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;run-pod/v1 -n awx --rm -i --tty compass-tmp --image&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;odaniait/aws-kubectl:latest -- sh&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Referencias:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://medium.com/@damitj07/how-to-configure-and-use-aws-ecr-with-kubernetes-rancher2-0-6144c626d42c&#34;&gt;How to configure and use AWS ECR with kubernetes &amp;amp; Rancher2.0&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</description><category domain="https://okelet.netlify.com/tags/ansible">Ansible</category><category domain="https://okelet.netlify.com/tags/awx">AWX</category><category domain="https://okelet.netlify.com/tags/kubernetes">Kubernetes</category><category domain="https://okelet.netlify.com/tags/microk8s">MicroK8s</category><category domain="https://okelet.netlify.com/tags/ecr">ECR</category><guid>https://okelet.netlify.com/posts/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</guid><pubDate>Sat, 18 Jan 2020 00:00:00 +0000</pubDate></item><item><title>Probando Ansible AWX con MicroK8s</title><link>https://okelet.netlify.com/posts/2019/06/probando-ansible-awx-con-microk8s/</link><description>&lt;p&gt;AVISO: Post largo (intro a Ansible, AWX, MicroK8s)&lt;/p&gt;
-&lt;p&gt;Actualización 2020-01-14: Actualizado a &lt;a href=&#34;https://groups.google.com/forum/#!topic/awx-project/aYYtuAuHMzY&#34;&gt;Ansible AWX 9.1.1&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Ansible (&lt;em&gt;/ánsibol/&lt;/em&gt;) es el gestor de configuración de moda, y por méritos propios. Aunque no es perfecto (en determinadas ocasiones se puede preferir un modelo cliente/servidor en lugar de una conexión SSH &lt;em&gt;ad-hoc&lt;/em&gt;), ofrece una buena combinación entre funcionalidad y simplicidad. Siempre y cuando tengamos conectividad SSH con la máquina a gestionar (o no, a través de &lt;a href=&#34;https://docs.aws.amazon.com/es_es/quickstart/latest/linux-bastion/architecture.html&#34;&gt;bastiones&lt;/a&gt;), en el caso de equipos Linux, o conectividad WinRM o o PSRP para equipos Windows, podremos realizar infinidad de acciones o tareas sobre las máquinas a gestionar.&lt;/p&gt;
-&lt;p&gt;Uno de los problemas de Ansible (hablando correctamente, &lt;a href=&#34;https://www.ansible.com/blog/red-hat-ansible-automation-engine-vs-tower&#34;&gt;Ansible Engine&lt;/a&gt;) es que no tiene una forma de ejecutar de forma automatizada playbooks, para mantener la configuración sincronizada de forma periódica, ejecutar tareas planificadas o incluso auto-provisionar equipos. Aquí es donde entra Ansible Tower, que es la versión con soporte de &lt;a href=&#34;https://github.com/ansible/awx&#34;&gt;Ansible AWX&lt;/a&gt;, al estilo de lo que Red Hat hace con Wildfly y JBoss. Ansible Tower/AWX en básicamente una API REST con una interfaz web que se comunica con ella. Utilizando esta API, se pueden definir inventarios, credenciales, equipos, plantillas de trabajo, flujos de trabajo, etc. así como asignar permisos por usarios/grupos mediante su sistema RBAC.&lt;/p&gt;
-&lt;p&gt;He de reconocer que al principio cuesta un poco, pero cuando se le pilla el truco, uno se da cuenta de lo potente que es. Pero lo que no me explico es la complejidad de instalación del software. Creo que Red Hat se está empeñando en poner las cosas difíciles a quienes usan sus productos sin suscripción (que al final son los que en gran medida depuran el software, contribuyen de forma gratuita, etc.); en este caso, se nos obliga a hacer una instalación mediante Docker, que aunque está de moda, que lo veo muy bien, creo que deberían dar alternativas (que sí que las dan con la versión con soporte, por lo que impedimentos técnicos no los hay, simplemente es intencionalidad). Para la versión libre (AWX) se soportan los siguientes &lt;a href=&#34;https://github.com/ansible/awx/blob/devel/INSTALL.md&#34;&gt;métodos de instalación&lt;/a&gt;:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Openshift (claramente enfocado a utilizar un stack completo de Red Hat)&lt;/li&gt;
-&lt;li&gt;Docker Compose&lt;/li&gt;
-&lt;li&gt;Kubernetes&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;En cambio, para Tower, la versión con soporte, es básicamente un script de instalación, que la verdad no he probado, aunque me imagino que lo que hace es provisionar los nodos con el software necesario, a la antigua usanza (no sé si por debajo creará un cluster de K8s u Openshift, o directamente lo hace sobre el sistema operativo).&lt;/p&gt;
-&lt;p&gt;Básicamente, la forma de instalación de AWX es crear una serie de contenedores en el orquestador en cuestión (AWX task, AWX web, RabbitMQ, Postgres, Memcached).&lt;/p&gt;
-&lt;p&gt;Con ideas de probar AWX para un proyecto interno, empecé a analizar las 3 opciones de instalación; la primera de ellas, Openshift, la descarté desde el principio por ser una tecnología no muy extendida, en favor, en todo caso, de Kubernetes. Ya que esto era una &lt;a href=&#34;https://es.wikipedia.org/wiki/Prueba_de_concepto&#34;&gt;PoC&lt;/a&gt;, no quería complicarme mucho con Kubernetes, por lo que empecé a probar con Docker Compose, pero a la hora de escalar, lanzando la instalación en varios nodos, me di cuenta de que el modo de funcionar de AWX requiere un cluster de &lt;a href=&#34;https://www.rabbitmq.com/&#34;&gt;RabbitMQ&lt;/a&gt;, que es difícil de configurar dinámicamente con Docker Compose. Con Kubernetes y su &lt;a href=&#34;https://github.com/ansible/awx/blob/devel/installer/roles/kubernetes/templates/deployment.yml.j2#L38&#34;&gt;&amp;ldquo;magia&amp;rdquo;&lt;/a&gt; hace que el cluster de RabbitMQ se configure y escale automáticamente.&lt;/p&gt;
-&lt;p&gt;Siendo mi única opción Kubernetes, no quería montarme un cluster por mi cuenta, ni tener que montar un cluster de EKS, que &lt;a href=&#34;https://aws.amazon.com/es/eks/pricing/&#34;&gt;de base ya son 144$ al mes&lt;/a&gt; más los nodos de computación, al final tuve que buscar alternativas más simples.&lt;/p&gt;
-&lt;p&gt;Mi primera intención fue probar &lt;a href=&#34;https://kubernetes.io/es/docs/tasks/tools/install-minikube/&#34;&gt;Minikube&lt;/a&gt; en mi máquina local, pero cada pod de AWX consume 6 GB de RAM, por lo que mínimo a la MV de Minikube le tenía que dar 7 GB, y teniendo mi portátil 8 GB, murió varias veces en el intento&amp;hellip; Me planteé montar Minikube en una instancia EC2, pero esto sería montar Virtualbox, sobre un entorno ya virtualizado (EC2), y sobre el que correría Kubernetes&amp;hellip; Aunque factible, me parecía un poco engorroso. Así que gracias a mi compañero Roque, que me recordó la existencia de &lt;a href=&#34;https://microk8s.io/&#34;&gt;MicroK8s&lt;/a&gt;, me decidí a probar.&lt;/p&gt;
-&lt;p&gt;Partiendo de una EC2 con Ubuntu 18.04 limpia, estos son los comandos a ejecutar para montar un entorno de Ansible AWX con MicroK8s (forzamos la versión 1.15, ya que AWX no es compatible con una versión mayor, por ahora):&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;sudo snap refresh microk8s --channel &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;.15/stable
-sudo snap install helm --channel&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;.16/stable --classic
-&lt;span class=&#34;o&#34;&gt;(&lt;/span&gt;grep &lt;span class=&#34;s2&#34;&gt;&amp;#34;^--allow-privileged&lt;/span&gt;$&lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt; /var/snap/microk8s/current/args/kube-apiserver &amp;gt; /dev/null&lt;span class=&#34;o&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;||&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;echo&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;--allow-privileged&amp;#34;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;|&lt;/span&gt; sudo tee -a /var/snap/microk8s/current/args/kube-apiserver&lt;span class=&#34;o&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;o&#34;&gt;(&lt;/span&gt;grep &lt;span class=&#34;s2&#34;&gt;&amp;#34;^--allow-privileged&lt;/span&gt;$&lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt; /var/snap/microk8s/current/args/kubelet &amp;gt; /dev/null&lt;span class=&#34;o&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;||&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;echo&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;--allow-privileged&amp;#34;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;|&lt;/span&gt; sudo tee -a /var/snap/microk8s/current/args/kubelet&lt;span class=&#34;o&#34;&gt;)&lt;/span&gt;
+# Ver información de los secretos (cuándo se actualizó/obtuvo el token por última vez)
+kubectl -n awx get secrets
+&lt;/code>&lt;/pre>
+&lt;p>Probar manualmente el script:&lt;/p>
+&lt;pre>&lt;code class="language-bash">kubectl run -i --tty --rm debug --image=odaniait/aws-kubectl:latest --restart=Never -- sh
+kubectl run --generator=run-pod/v1 -n awx --rm -i --tty compass-tmp --image=odaniait/aws-kubectl:latest -- sh
+&lt;/code>&lt;/pre>
+&lt;p>Referencias:&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;a href="https://medium.com/@damitj07/how-to-configure-and-use-aws-ecr-with-kubernetes-rancher2-0-6144c626d42c" target="_blank" rel="noopener">How to configure and use AWS ECR with kubernetes &amp;amp; Rancher2.0&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>Probando Ansible AWX con MicroK8s</title><link>/posts/2019/06/probando-ansible-awx-con-microk8s/</link><pubDate>Wed, 19 Jun 2019 00:00:00 +0000</pubDate><guid>/posts/2019/06/probando-ansible-awx-con-microk8s/</guid><description>&lt;p>AVISO: Post largo (intro a Ansible, AWX, MicroK8s)&lt;/p>
+&lt;p>Actualización 2020-01-14: Actualizado a
+&lt;a href="https://groups.google.com/forum/#!topic/awx-project/aYYtuAuHMzY" target="_blank" rel="noopener">Ansible AWX 9.1.1&lt;/a>&lt;/p>
+&lt;p>Ansible (&lt;em>/ánsibol/&lt;/em>) es el gestor de configuración de moda, y por méritos propios. Aunque no es perfecto (en determinadas ocasiones se puede preferir un modelo cliente/servidor en lugar de una conexión SSH &lt;em>ad-hoc&lt;/em>), ofrece una buena combinación entre funcionalidad y simplicidad. Siempre y cuando tengamos conectividad SSH con la máquina a gestionar (o no, a través de
+&lt;a href="https://docs.aws.amazon.com/es_es/quickstart/latest/linux-bastion/architecture.html" target="_blank" rel="noopener">bastiones&lt;/a>), en el caso de equipos Linux, o conectividad WinRM o o PSRP para equipos Windows, podremos realizar infinidad de acciones o tareas sobre las máquinas a gestionar.&lt;/p>
+&lt;p>Uno de los problemas de Ansible (hablando correctamente,
+&lt;a href="https://www.ansible.com/blog/red-hat-ansible-automation-engine-vs-tower" target="_blank" rel="noopener">Ansible Engine&lt;/a>) es que no tiene una forma de ejecutar de forma automatizada playbooks, para mantener la configuración sincronizada de forma periódica, ejecutar tareas planificadas o incluso auto-provisionar equipos. Aquí es donde entra Ansible Tower, que es la versión con soporte de
+&lt;a href="https://github.com/ansible/awx" target="_blank" rel="noopener">Ansible AWX&lt;/a>, al estilo de lo que Red Hat hace con Wildfly y JBoss. Ansible Tower/AWX en básicamente una API REST con una interfaz web que se comunica con ella. Utilizando esta API, se pueden definir inventarios, credenciales, equipos, plantillas de trabajo, flujos de trabajo, etc. así como asignar permisos por usarios/grupos mediante su sistema RBAC.&lt;/p>
+&lt;p>He de reconocer que al principio cuesta un poco, pero cuando se le pilla el truco, uno se da cuenta de lo potente que es. Pero lo que no me explico es la complejidad de instalación del software. Creo que Red Hat se está empeñando en poner las cosas difíciles a quienes usan sus productos sin suscripción (que al final son los que en gran medida depuran el software, contribuyen de forma gratuita, etc.); en este caso, se nos obliga a hacer una instalación mediante Docker, que aunque está de moda, que lo veo muy bien, creo que deberían dar alternativas (que sí que las dan con la versión con soporte, por lo que impedimentos técnicos no los hay, simplemente es intencionalidad). Para la versión libre (AWX) se soportan los siguientes
+&lt;a href="https://github.com/ansible/awx/blob/devel/INSTALL.md" target="_blank" rel="noopener">métodos de instalación&lt;/a>:&lt;/p>
+&lt;ul>
+&lt;li>Openshift (claramente enfocado a utilizar un stack completo de Red Hat)&lt;/li>
+&lt;li>Docker Compose&lt;/li>
+&lt;li>Kubernetes&lt;/li>
+&lt;/ul>
+&lt;p>En cambio, para Tower, la versión con soporte, es básicamente un script de instalación, que la verdad no he probado, aunque me imagino que lo que hace es provisionar los nodos con el software necesario, a la antigua usanza (no sé si por debajo creará un cluster de K8s u Openshift, o directamente lo hace sobre el sistema operativo).&lt;/p>
+&lt;p>Básicamente, la forma de instalación de AWX es crear una serie de contenedores en el orquestador en cuestión (AWX task, AWX web, RabbitMQ, Postgres, Memcached).&lt;/p>
+&lt;p>Con ideas de probar AWX para un proyecto interno, empecé a analizar las 3 opciones de instalación; la primera de ellas, Openshift, la descarté desde el principio por ser una tecnología no muy extendida, en favor, en todo caso, de Kubernetes. Ya que esto era una
+&lt;a href="https://es.wikipedia.org/wiki/Prueba_de_concepto" target="_blank" rel="noopener">PoC&lt;/a>, no quería complicarme mucho con Kubernetes, por lo que empecé a probar con Docker Compose, pero a la hora de escalar, lanzando la instalación en varios nodos, me di cuenta de que el modo de funcionar de AWX requiere un cluster de
+&lt;a href="https://www.rabbitmq.com/" target="_blank" rel="noopener">RabbitMQ&lt;/a>, que es difícil de configurar dinámicamente con Docker Compose. Con Kubernetes y su
+&lt;a href="https://github.com/ansible/awx/blob/devel/installer/roles/kubernetes/templates/deployment.yml.j2#L38" target="_blank" rel="noopener">&amp;ldquo;magia&amp;rdquo;&lt;/a> hace que el cluster de RabbitMQ se configure y escale automáticamente.&lt;/p>
+&lt;p>Siendo mi única opción Kubernetes, no quería montarme un cluster por mi cuenta, ni tener que montar un cluster de EKS, que
+&lt;a href="https://aws.amazon.com/es/eks/pricing/" target="_blank" rel="noopener">de base ya son 144$ al mes&lt;/a> más los nodos de computación, al final tuve que buscar alternativas más simples.&lt;/p>
+&lt;p>Mi primera intención fue probar
+&lt;a href="https://kubernetes.io/es/docs/tasks/tools/install-minikube/" target="_blank" rel="noopener">Minikube&lt;/a> en mi máquina local, pero cada pod de AWX consume 6 GB de RAM, por lo que mínimo a la MV de Minikube le tenía que dar 7 GB, y teniendo mi portátil 8 GB, murió varias veces en el intento&amp;hellip; Me planteé montar Minikube en una instancia EC2, pero esto sería montar Virtualbox, sobre un entorno ya virtualizado (EC2), y sobre el que correría Kubernetes&amp;hellip; Aunque factible, me parecía un poco engorroso. Así que gracias a mi compañero Roque, que me recordó la existencia de
+&lt;a href="https://microk8s.io/" target="_blank" rel="noopener">MicroK8s&lt;/a>, me decidí a probar.&lt;/p>
+&lt;p>Partiendo de una EC2 con Ubuntu 18.04 limpia, estos son los comandos a ejecutar para montar un entorno de Ansible AWX con MicroK8s (forzamos la versión 1.15, ya que AWX no es compatible con una versión mayor, por ahora):&lt;/p>
+&lt;pre>&lt;code class="language-bash">sudo snap refresh microk8s --channel 1.15/stable
+sudo snap install helm --channel=2.16/stable --classic
+(grep &amp;quot;^--allow-privileged$&amp;quot; /var/snap/microk8s/current/args/kube-apiserver &amp;gt; /dev/null) || (echo &amp;quot;--allow-privileged&amp;quot; | sudo tee -a /var/snap/microk8s/current/args/kube-apiserver)
+(grep &amp;quot;^--allow-privileged$&amp;quot; /var/snap/microk8s/current/args/kubelet &amp;gt; /dev/null) || (echo &amp;quot;--allow-privileged&amp;quot; | sudo tee -a /var/snap/microk8s/current/args/kubelet)
 sudo microk8s.stop
 sudo microk8s.start
 microk8s.enable ingress
 microk8s.enable dns
 microk8s.enable storage
-sudo snap &lt;span class=&#34;nb&#34;&gt;alias&lt;/span&gt; microk8s.kubectl kubectl
-microk8s.config &amp;gt; &lt;span class=&#34;nv&#34;&gt;$HOME&lt;/span&gt;/.kube/config
-helm init&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;&lt;a href=&#34;https://helm.sh/&#34;&gt;Helm&lt;/a&gt; es necesario para instalación de Postgres; si vamos a utilizar una BBDD externa, no es necesario.&lt;/p&gt;
-&lt;p&gt;Tras esto, ya tenemos el entorno de MicroK8s disponible; ahora nos bajamos AWX y lo configuramos:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;c1&#34;&gt;# Actualizar e instalar dependencias mínimas&lt;/span&gt;
+sudo snap alias microk8s.kubectl kubectl
+microk8s.config &amp;gt; $HOME/.kube/config
+helm init
+&lt;/code>&lt;/pre>
+&lt;p>
+&lt;a href="https://helm.sh/" target="_blank" rel="noopener">Helm&lt;/a> es necesario para instalación de Postgres; si vamos a utilizar una BBDD externa, no es necesario.&lt;/p>
+&lt;p>Tras esto, ya tenemos el entorno de MicroK8s disponible; ahora nos bajamos AWX y lo configuramos:&lt;/p>
+&lt;pre>&lt;code class="language-bash"># Actualizar e instalar dependencias mínimas
 sudo apt update
 sudo apt upgrade -y
 sudo apt install -y python3-pip vim
 pip3 install docker docker-compose --user
-&lt;span class=&#34;c1&#34;&gt;# Instalar Ansible, necesario para instalar AWX&lt;/span&gt;
+# Instalar Ansible, necesario para instalar AWX
 sudo add-apt-repository ppa:ansible/ansible -y
 sudo apt update
 sudo apt install -y ansible
-&lt;span class=&#34;c1&#34;&gt;# Nos bajamos la release 9.1.1 de AWX&lt;/span&gt;
+# Nos bajamos la release 9.1.1 de AWX
 curl -sLO https://github.com/ansible/awx/archive/9.1.1.tar.gz
-tar zxf &lt;span class=&#34;m&#34;&gt;9&lt;/span&gt;.1.1.tar.gz
-&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; awx-9.1.1/installer
-cp -a inventory&lt;span class=&#34;o&#34;&gt;{&lt;/span&gt;,.original&lt;span class=&#34;o&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;# Configuramos el fichero de inventario para que use Kubernetes&lt;/span&gt;
-sed -i -e &lt;span class=&#34;s1&#34;&gt;&amp;#39;s/#* *kubernetes_context.*/kubernetes_context=microk8s/&amp;#39;&lt;/span&gt; inventory
-sed -i -e &lt;span class=&#34;s1&#34;&gt;&amp;#39;s/#* *kubernetes_namespace.*/kubernetes_namespace=awx/&amp;#39;&lt;/span&gt; inventory
-&lt;span class=&#34;c1&#34;&gt;# Y lanzamos la instalación&lt;/span&gt;
-ansible-playbook -i inventory install.yml&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Variables interesantes en el fichero &lt;code&gt;inventory&lt;/code&gt;:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;kubernetes_context&lt;/code&gt;: el contexto del cliente de Kubernetes que usaremos para conectarnos al cluster; para MicroK8s, en general será &lt;code&gt;microk8s&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;kubernetes_namespace&lt;/code&gt;: el &lt;em&gt;namespace&lt;/em&gt; del cluster de Kubernetes que se usará para crear todos los elementos de AWX; por defecto es &lt;code&gt;awx&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;kubernetes_deployment_name&lt;/code&gt;: es un prefijo que se usa para generar los nombres de los recursos dentro del &lt;em&gt;namespace&lt;/em&gt;; por defecto es &lt;code&gt;awx&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;pg_hostname&lt;/code&gt;: es el host remoto donde debemos tener instalado un servidor de Postgres; si esta variable está comentada, el instalador creará un servidor de Postgres en Kubernetes usando Helm; si está definida, se usará el servidor indicado (habrá que configurar adecuadamente el resto de parámetros de conexión a la BBDD: &lt;code&gt;pg_username&lt;/code&gt;, &lt;code&gt;pg_password&lt;/code&gt;, &lt;code&gt;pg_database&lt;/code&gt;, etc.).&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;También se pueden especificar las siguientes variables para indicar imágenes y versiones alternativas a las oficiales (por ejemplo, si hemos creado unas propias para añadir software, etc.):&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;kubernetes_task_version&lt;/code&gt; (por defecto: &lt;code&gt;9.1.1&lt;/code&gt;)&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;kubernetes_task_image&lt;/code&gt; (por defecto: &lt;code&gt;ansible/awx_task&lt;/code&gt;)&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;kubernetes_web_version&lt;/code&gt; (por defecto: &lt;code&gt;9.1.1&lt;/code&gt;)&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;kubernetes_web_image&lt;/code&gt; (por defecto: &lt;code&gt;ansible/awx_web&lt;/code&gt;)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Esto nos creará un namespace llamado &lt;code&gt;awx&lt;/code&gt; en MicroK8s, y desplegará en él 2 &lt;code&gt;statefulsets&lt;/code&gt;: 1 para Postgres y uno para AWX. Cada &lt;code&gt;statefulset/pod&lt;/code&gt; de AWX contiene los siguientes contenedores:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;memcached&lt;/li&gt;
-&lt;li&gt;rabbitmq&lt;/li&gt;
-&lt;li&gt;awx-celery (awx_task)&lt;/li&gt;
-&lt;li&gt;awx-web&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Cada vez que se escala el &lt;code&gt;statefulset&lt;/code&gt; se crean estos 4 contenedores. Gracias al plugin &lt;a href=&#34;https://github.com/rabbitmq/rabbitmq-peer-discovery-k8s&#34;&gt;&lt;code&gt;rabbitmq_peer_discovery_k8s&lt;/code&gt;&lt;/a&gt; (&lt;a href=&#34;https://github.com/ansible/awx/blob/devel/installer/roles/kubernetes/templates/deployment.yml.j2#L38&#34;&gt;aquí&lt;/a&gt; se puede ver fichero YAML de configuración) los contenedores de rabbitmq forman un cluster de forma automática.&lt;/p&gt;
-&lt;p&gt;Para volver a empezar desde 0, tenemos 2 posibilidades; o bien borrar el &lt;em&gt;namespace&lt;/em&gt;:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;kubectl delete namespaces awx&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;O bien con el comando &lt;code&gt;microk8s.reset&lt;/code&gt;, aunque con este comando, frecuentemente se queda &amp;ldquo;colgado&amp;rdquo;:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;microk8s.reset&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Después del reset, es necesario volver a configurar los complementos (dns, storage, ingress), y configurar el cliente:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;6
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;microk8s.enable ingress
+tar zxf 9.1.1.tar.gz
+cd awx-9.1.1/installer
+cp -a inventory{,.original}
+# Configuramos el fichero de inventario para que use Kubernetes
+sed -i -e 's/#* *kubernetes_context.*/kubernetes_context=microk8s/' inventory
+sed -i -e 's/#* *kubernetes_namespace.*/kubernetes_namespace=awx/' inventory
+# Y lanzamos la instalación
+ansible-playbook -i inventory install.yml
+&lt;/code>&lt;/pre>
+&lt;p>Variables interesantes en el fichero &lt;code>inventory&lt;/code>:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>kubernetes_context&lt;/code>: el contexto del cliente de Kubernetes que usaremos para conectarnos al cluster; para MicroK8s, en general será &lt;code>microk8s&lt;/code>.&lt;/li>
+&lt;li>&lt;code>kubernetes_namespace&lt;/code>: el &lt;em>namespace&lt;/em> del cluster de Kubernetes que se usará para crear todos los elementos de AWX; por defecto es &lt;code>awx&lt;/code>.&lt;/li>
+&lt;li>&lt;code>kubernetes_deployment_name&lt;/code>: es un prefijo que se usa para generar los nombres de los recursos dentro del &lt;em>namespace&lt;/em>; por defecto es &lt;code>awx&lt;/code>.&lt;/li>
+&lt;li>&lt;code>pg_hostname&lt;/code>: es el host remoto donde debemos tener instalado un servidor de Postgres; si esta variable está comentada, el instalador creará un servidor de Postgres en Kubernetes usando Helm; si está definida, se usará el servidor indicado (habrá que configurar adecuadamente el resto de parámetros de conexión a la BBDD: &lt;code>pg_username&lt;/code>, &lt;code>pg_password&lt;/code>, &lt;code>pg_database&lt;/code>, etc.).&lt;/li>
+&lt;/ul>
+&lt;p>También se pueden especificar las siguientes variables para indicar imágenes y versiones alternativas a las oficiales (por ejemplo, si hemos creado unas propias para añadir software, etc.):&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>kubernetes_task_version&lt;/code> (por defecto: &lt;code>9.1.1&lt;/code>)&lt;/li>
+&lt;li>&lt;code>kubernetes_task_image&lt;/code> (por defecto: &lt;code>ansible/awx_task&lt;/code>)&lt;/li>
+&lt;li>&lt;code>kubernetes_web_version&lt;/code> (por defecto: &lt;code>9.1.1&lt;/code>)&lt;/li>
+&lt;li>&lt;code>kubernetes_web_image&lt;/code> (por defecto: &lt;code>ansible/awx_web&lt;/code>)&lt;/li>
+&lt;/ul>
+&lt;p>Esto nos creará un namespace llamado &lt;code>awx&lt;/code> en MicroK8s, y desplegará en él 2 &lt;code>statefulsets&lt;/code>: 1 para Postgres y uno para AWX. Cada &lt;code>statefulset/pod&lt;/code> de AWX contiene los siguientes contenedores:&lt;/p>
+&lt;ul>
+&lt;li>memcached&lt;/li>
+&lt;li>rabbitmq&lt;/li>
+&lt;li>awx-celery (awx_task)&lt;/li>
+&lt;li>awx-web&lt;/li>
+&lt;/ul>
+&lt;p>Cada vez que se escala el &lt;code>statefulset&lt;/code> se crean estos 4 contenedores. Gracias al plugin
+&lt;a href="https://github.com/rabbitmq/rabbitmq-peer-discovery-k8s" target="_blank" rel="noopener">&lt;code>rabbitmq_peer_discovery_k8s&lt;/code>&lt;/a> (
+&lt;a href="https://github.com/ansible/awx/blob/devel/installer/roles/kubernetes/templates/deployment.yml.j2#L38" target="_blank" rel="noopener">aquí&lt;/a> se puede ver fichero YAML de configuración) los contenedores de rabbitmq forman un cluster de forma automática.&lt;/p>
+&lt;p>Para volver a empezar desde 0, tenemos 2 posibilidades; o bien borrar el &lt;em>namespace&lt;/em>:&lt;/p>
+&lt;pre>&lt;code class="language-bash">kubectl delete namespaces awx
+&lt;/code>&lt;/pre>
+&lt;p>O bien con el comando &lt;code>microk8s.reset&lt;/code>, aunque con este comando, frecuentemente se queda &amp;ldquo;colgado&amp;rdquo;:&lt;/p>
+&lt;pre>&lt;code class="language-bash">microk8s.reset
+&lt;/code>&lt;/pre>
+&lt;p>Después del reset, es necesario volver a configurar los complementos (dns, storage, ingress), y configurar el cliente:&lt;/p>
+&lt;pre>&lt;code class="language-bash">microk8s.enable ingress
 microk8s.enable dns
 microk8s.enable storage
-sudo snap &lt;span class=&#34;nb&#34;&gt;alias&lt;/span&gt; microk8s.kubectl kubectl
-microk8s.config &amp;gt; &lt;span class=&#34;nv&#34;&gt;$HOME&lt;/span&gt;/.kube/config
-helm init&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Y podemos lanzar de nuevo la instalación:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;ansible-playbook -i inventory install.yml&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Si por delante del servidor vamos a poner un balanceador (por ejemplo, un ELB o ALB), debemos configurar el &lt;code&gt;ingress&lt;/code&gt; de Nginx para que reenvíe las cabeceras &lt;code&gt;X-Forwarded-*&lt;/code&gt;:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;kubectl -n default edit configmaps nginx-load-balancer-microk8s-conf&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Añadiendo/modificando la sección data con este valor:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;data&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
-&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;use-forwarded-headers&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;true&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Esto es necesario, por ejemplo, si se usa un balanceador con HTTPS, y configuramos la autentificación de Azure, ya que sin el reenvío de estas cabeceras, AWX se cree que vamos por HTTP en lugar de HTTPS, y la URL de callback para el login de Azure se genera incorrectamente.&lt;/p&gt;
-&lt;p&gt;Una vez realizados los pasos de la instalación, lo único que nos queda es acceder a la aplicación, usando el puerto 80 de la máquina, por ejemplo, &lt;a href=&#34;http://localhost&#34;&gt;http://localhost&lt;/a&gt;, que es donde publica los servicios el &lt;em&gt;ingress controller&lt;/em&gt; de nginx.&lt;/p&gt;</description><category domain="https://okelet.netlify.com/tags/ansible">Ansible</category><category domain="https://okelet.netlify.com/tags/awx">AWX</category><category domain="https://okelet.netlify.com/tags/kubernetes">Kubernetes</category><category domain="https://okelet.netlify.com/tags/microk8s">MicroK8s</category><guid>https://okelet.netlify.com/posts/2019/06/probando-ansible-awx-con-microk8s/</guid><pubDate>Wed, 19 Jun 2019 00:00:00 +0000</pubDate></item></channel></rss>
+sudo snap alias microk8s.kubectl kubectl
+microk8s.config &amp;gt; $HOME/.kube/config
+helm init
+&lt;/code>&lt;/pre>
+&lt;p>Y podemos lanzar de nuevo la instalación:&lt;/p>
+&lt;pre>&lt;code class="language-bash">ansible-playbook -i inventory install.yml
+&lt;/code>&lt;/pre>
+&lt;p>Si por delante del servidor vamos a poner un balanceador (por ejemplo, un ELB o ALB), debemos configurar el &lt;code>ingress&lt;/code> de Nginx para que reenvíe las cabeceras &lt;code>X-Forwarded-*&lt;/code>:&lt;/p>
+&lt;pre>&lt;code class="language-bash">kubectl -n default edit configmaps nginx-load-balancer-microk8s-conf
+&lt;/code>&lt;/pre>
+&lt;p>Añadiendo/modificando la sección data con este valor:&lt;/p>
+&lt;pre>&lt;code class="language-yaml">data:
+use-forwarded-headers: &amp;quot;true&amp;quot;
+&lt;/code>&lt;/pre>
+&lt;p>Esto es necesario, por ejemplo, si se usa un balanceador con HTTPS, y configuramos la autentificación de Azure, ya que sin el reenvío de estas cabeceras, AWX se cree que vamos por HTTP en lugar de HTTPS, y la URL de callback para el login de Azure se genera incorrectamente.&lt;/p>
+&lt;p>Una vez realizados los pasos de la instalación, lo único que nos queda es acceder a la aplicación, usando el puerto 80 de la máquina, por ejemplo,
+&lt;a href="http://localhost" target="_blank" rel="noopener">http://localhost&lt;/a>, que es donde publica los servicios el &lt;em>ingress controller&lt;/em> de nginx.&lt;/p></description></item></channel></rss>

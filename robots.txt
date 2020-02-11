@@ -1,2 +1,0 @@
-User-agent: *
-Sitemap: https://okelet.netlify.com/sitemap.xml

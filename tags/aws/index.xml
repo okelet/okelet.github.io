@@ -1,384 +1,195 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AWS on
-Mis notas</title><link>https://okelet.netlify.com/tags/aws/</link><description>Recent content in AWS
-on Mis notas</description><language>es</language><managingEditor>okelet@gmail.com (Juan Asensio)</managingEditor><webMaster>okelet@gmail.com (Juan Asensio)</webMaster><lastBuildDate>Tue, 11 Feb 2020 16:14:27 +0000</lastBuildDate><generator>Hugo -- gohugo.io</generator><docs>https://validator.w3.org/feed/docs/rss2.html</docs><atom:link href="https://okelet.netlify.com/tags/aws/index.xml" rel="self" type="application/rss&#43;xml"/><item><title>Monitorizar memoria y errores de funciones Lambda</title><link>https://okelet.netlify.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</link><description>&lt;p&gt;A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas &lt;em&gt;builtin&lt;/em&gt; como:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Cantidad de &lt;em&gt;throttles&lt;/em&gt;&lt;/li&gt;
-&lt;li&gt;Número de invocaciones&lt;/li&gt;
-&lt;li&gt;Número de errores &amp;ldquo;genéricos&amp;rdquo;&lt;/li&gt;
-&lt;li&gt;Duración (media y total)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto.&lt;/p&gt;
-&lt;p&gt;Para conseguir información de este tipo de errores, tendremos que recurrir a crear &lt;a href=&#34;https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringPolicyExamples.html&#34;&gt;filtros de métricas (&lt;em&gt;metric filters&lt;/em&gt;)&lt;/a&gt; de los LOGs que deja Lambda en Cloudwatch. Por ejemplo, con el siguiente script, recorremos todas los grupos de LOGs de Lambda (aquellos que empiezan por &lt;code&gt;/aws/lambda/&lt;/code&gt;) y creamos unas cuantas métricas en cada uno de ellos, para poder después obtener estadísticas:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;32
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;33
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;34
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;35
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;36
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;cp&#34;&gt;#!/bin/bash
-&lt;/span&gt;&lt;span class=&#34;cp&#34;&gt;&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;# Based on https://gist.github.com/sandfox/337129afa5555af6372d4eae536b20f0&lt;/span&gt;
-&lt;span class=&#34;nv&#34;&gt;prefix&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;/aws/lambda/&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; log_group in &lt;span class=&#34;k&#34;&gt;$(&lt;/span&gt;aws logs describe-log-groups --log-group-name-prefix &lt;span class=&#34;nv&#34;&gt;$prefix&lt;/span&gt; --query &lt;span class=&#34;s2&#34;&gt;&amp;#34;logGroups[].logGroupName&amp;#34;&lt;/span&gt; --output text&lt;span class=&#34;k&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;do&lt;/span&gt;
-&lt;span class=&#34;nv&#34;&gt;fn_name&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;log_group&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;#&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;$prefix&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-aws logs put-metric-filter &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --log-group-name &lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;$log_group&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --filter-name lambda-memory-usage &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --filter-pattern &lt;span class=&#34;s1&#34;&gt;&amp;#39;[ x=&amp;#34;REPORT&amp;#34;, x=&amp;#34;RequestId:&amp;#34;, request_id, x=&amp;#34;Duration:&amp;#34;, duration, x=&amp;#34;ms&amp;#34;, x=&amp;#34;Billed&amp;#34;, x=&amp;#34;Duration:&amp;#34;, billed_duration, x=&amp;#34;ms&amp;#34;, x=&amp;#34;Memory&amp;#34;, x=&amp;#34;Size:&amp;#34;, memory_size, x=&amp;#34;MB&amp;#34;, x=&amp;#34;Max&amp;#34;, x=&amp;#34;Memory&amp;#34;, x=&amp;#34;Used:&amp;#34;, memory_used, x=&amp;#34;MB&amp;#34;]&amp;#39;&lt;/span&gt; &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --metric-transformations &lt;span class=&#34;s2&#34;&gt;&amp;#34;metricNamespace=Custom/Lambda,metricName=&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;fn_name&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;-MemoryUsed,metricValue=\$memory_used&amp;#34;&lt;/span&gt;
-aws logs put-metric-filter &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --log-group-name &lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;$log_group&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --filter-name lambda-memory-size &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --filter-pattern &lt;span class=&#34;s1&#34;&gt;&amp;#39;[ x=&amp;#34;REPORT&amp;#34;, x=&amp;#34;RequestId:&amp;#34;, request_id, x=&amp;#34;Duration:&amp;#34;, duration, x=&amp;#34;ms&amp;#34;, x=&amp;#34;Billed&amp;#34;, x=&amp;#34;Duration:&amp;#34;, billed_duration, x=&amp;#34;ms&amp;#34;, x=&amp;#34;Memory&amp;#34;, x=&amp;#34;Size:&amp;#34;, memory_size, x=&amp;#34;MB&amp;#34;, x=&amp;#34;Max&amp;#34;, x=&amp;#34;Memory&amp;#34;, x=&amp;#34;Used:&amp;#34;, memory_used, x=&amp;#34;MB&amp;#34;]&amp;#39;&lt;/span&gt; &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --metric-transformations &lt;span class=&#34;s2&#34;&gt;&amp;#34;metricNamespace=Custom/Lambda,metricName=&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;fn_name&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;-MemorySize,metricValue=\$memory_size&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;# Errores que se dan cuando la ejecución se pasa del máximo de memoria permitido&lt;/span&gt;
-aws logs put-metric-filter &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --log-group-name &lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;log_group&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --filter-name lambda-memory-errors &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --filter-pattern &lt;span class=&#34;s1&#34;&gt;&amp;#39;Process exited before completing request&amp;#39;&lt;/span&gt; &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --metric-transformations &lt;span class=&#34;s2&#34;&gt;&amp;#34;metricNamespace=Custom/Lambda,metricName=&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;fn_name&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;-MemoryErrors,metricValue=1,defaultValue=0&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;c1&#34;&gt;# Errores que se dan cuando la ejecución se pasa del máximo de tiempo permitido&lt;/span&gt;
-aws logs put-metric-filter &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --log-group-name &lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;log_group&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --filter-name lambda-timeout-errors &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --filter-pattern &lt;span class=&#34;s1&#34;&gt;&amp;#39;Task timed out after&amp;#39;&lt;/span&gt; &lt;span class=&#34;se&#34;&gt;\
-&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt; --metric-transformations &lt;span class=&#34;s2&#34;&gt;&amp;#34;metricNamespace=Custom/Lambda,metricName=&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;${&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;fn_name&lt;/span&gt;&lt;span class=&#34;si&#34;&gt;}&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;-TimeoutErrors,metricValue=1,defaultValue=0&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;done&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Una vez creados, y pasados cierto tiempo para poder obtener datos, en la sección de métricas de Cloudwatch, tendremos una nueva categoría, &lt;code&gt;Custom/Lambda&lt;/code&gt;, donde tendremos el listado de nuevas métricas, por cada función Lambda:&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;cloudwatch_lambda_custom_namespace.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;Podremos seleccionar estas estadísticas para poder visualizar los datos en un gráfico:&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;cloudwatch_lambda_memory_used_graph.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
-&lt;p&gt;También podremos consultar estos datos desde la CLI:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;aws cloudwatch get-metric-statistics --namespace Custom/Lambda --metric-name my_function_name-MemoryUsed --start-time &lt;span class=&#34;k&#34;&gt;$(&lt;/span&gt;date --date &lt;span class=&#34;s2&#34;&gt;&amp;#34;1 day ago&amp;#34;&lt;/span&gt; +%s&lt;span class=&#34;k&#34;&gt;)&lt;/span&gt; --end-time &lt;span class=&#34;k&#34;&gt;$(&lt;/span&gt;date +%s&lt;span class=&#34;k&#34;&gt;)&lt;/span&gt; --period &lt;span class=&#34;m&#34;&gt;300&lt;/span&gt; --statistics Average&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;32
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;33
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;34
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;35
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;36
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;37
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;38
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;39
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;40
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;41
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;42
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;43
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;44
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;45
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;46
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;47
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;48
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;49
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;50
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;51
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;52
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;53
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;54
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;55
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;56
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;57
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;58
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;59
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;60
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;61
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;62
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;63
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;64
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;65
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Label&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;my_function_name-MemoryUsed&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Datapoints&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-29T04:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;84.32894736842105&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-28T18:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;82.94736842105263&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-29T08:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;83.72368421052632&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-28T22:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;84.63157894736842&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-29T12:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;83.59210526315789&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-29T02:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;83.17105263157895&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-28T16:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;84.35526315789474&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-29T06:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;83.85526315789474&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-29T10:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;84.48684210526316&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-28T20:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;85.0657894736842&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-29T00:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;84.97368421052632&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;},&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Timestamp&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2019-08-29T14:10:00Z&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Average&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;82.57894736842105&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;nt&#34;&gt;&amp;#34;Unit&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;None&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;</description><category domain="https://okelet.netlify.com/tags/aws">AWS</category><category domain="https://okelet.netlify.com/tags/lambda">Lambda</category><category domain="https://okelet.netlify.com/tags/cloudwatch">Cloudwatch</category><guid>https://okelet.netlify.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</guid><pubDate>Sun, 01 Sep 2019 00:00:00 +0000</pubDate></item><item><title>Crear custom runtime para PHP en AWS Lambda</title><link>https://okelet.netlify.com/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/</link><description>&lt;p&gt;Actualización 2019-06-27: Añadida extensión para MongoDB.&lt;/p&gt;
-&lt;p&gt;En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con &lt;a href=&#34;https://docs.pipenv.org/en/latest/&#34;&gt;pipenv&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de &lt;a href=&#34;https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/&#34;&gt;&lt;em&gt;custom runtimes&lt;/em&gt;&lt;/a&gt;, que básicamente consiste en subir el ejecutable con un determinado nombre.&lt;/p&gt;
-&lt;p&gt;En resumen, lo que el post anterior viene a decir es que:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Tenemos que compilar PHP&lt;/li&gt;
-&lt;li&gt;Tenemos que crear un script llamado &lt;code&gt;bootstrap&lt;/code&gt; que será al que llame Lambda; este script será el encargado de conectarse a un endpoint &amp;ldquo;mágico&amp;rdquo; (&lt;code&gt;http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next&lt;/code&gt;), que nos devolverá un JSON con las propiedades de la petición a procesar. Este JSON se lo podemos pasar entonces a una función PHP de nuestra elección.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Un ejemplo de fichero &lt;code&gt;bootstrap&lt;/code&gt; se encuentra en &lt;a href=&#34;https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae&#34;&gt;este gist&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;El motivo de este post, es que &lt;a href=&#34;https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/&#34;&gt;AWS ha publicado una noticia&lt;/a&gt; diciendo que va a cambiar la imagen base donde se ejecutan los &lt;em&gt;custom runtimes&lt;/em&gt;. Hasta ahora se basaba en una Amazon Linux 2017.03, pero a partir de ahora se van a ejecutar sobre una Amazon Linux 2018.03; esto puede causar que determinados &lt;em&gt;runtimes&lt;/em&gt; dejen de funcionar, si están compilados con versiones determinadas de librerías del sistema operativo.&lt;/p&gt;
-&lt;p&gt;Ya tenía hecho un scriptillo para la versión antigua del runtime, pero como tenía que revisarlo, he decidido &amp;ldquo;ponerlo bonito&amp;rdquo; y publicarlo en el blog. Manos a la obra.&lt;/p&gt;
-&lt;p&gt;Lo primero que tenemos que hacer es determinar una imagen de Docker válida para la imagen donde se ejecutaría el &lt;em&gt;runtime&lt;/em&gt;; en nuestro caso, &lt;a href=&#34;https://docs.aws.amazon.com/es_es/lambda/latest/dg/current-supported-versions.html&#34;&gt;según la documentación&lt;/a&gt; sería una AMI Linux 2018.03, y yendo al Docker Hub, podemos ver la versión de la &lt;a href=&#34;https://hub.docker.com/_/amazonlinux&#34;&gt;imagen Docker equivalente&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Una vez que sabemos la imagen Docker, lanzamos un contenedor:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;docker run -it --name php-lambda-layer --rm amazonlinux:2018.03.0.20190514 bash&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Una vez lanzado, lo primero que haremos será actualizar el sistema e instalar una serie de librerías necesarias para compilar PHP y las dependencias que queremos:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AWS | Academic</title><link>/tags/aws/</link><atom:link href="/tags/aws/index.xml" rel="self" type="application/rss+xml"/><description>AWS</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-es</language><lastBuildDate>Sun, 01 Sep 2019 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>AWS</title><link>/tags/aws/</link></image><item><title>Monitorizar memoria y errores de funciones Lambda</title><link>/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</link><pubDate>Sun, 01 Sep 2019 00:00:00 +0000</pubDate><guid>/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</guid><description>&lt;p>A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas &lt;em>builtin&lt;/em> como:&lt;/p>
+&lt;ul>
+&lt;li>Cantidad de &lt;em>throttles&lt;/em>&lt;/li>
+&lt;li>Número de invocaciones&lt;/li>
+&lt;li>Número de errores &amp;ldquo;genéricos&amp;rdquo;&lt;/li>
+&lt;li>Duración (media y total)&lt;/li>
+&lt;/ul>
+&lt;p>Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto.&lt;/p>
+&lt;p>Para conseguir información de este tipo de errores, tendremos que recurrir a crear
+&lt;a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringPolicyExamples.html" target="_blank" rel="noopener">filtros de métricas (&lt;em>metric filters&lt;/em>)&lt;/a> de los LOGs que deja Lambda en Cloudwatch. Por ejemplo, con el siguiente script, recorremos todas los grupos de LOGs de Lambda (aquellos que empiezan por &lt;code>/aws/lambda/&lt;/code>) y creamos unas cuantas métricas en cada uno de ellos, para poder después obtener estadísticas:&lt;/p>
+&lt;pre>&lt;code class="language-bash">#!/bin/bash
+# Based on https://gist.github.com/sandfox/337129afa5555af6372d4eae536b20f0
+prefix=&amp;quot;/aws/lambda/&amp;quot;
+for log_group in $(aws logs describe-log-groups --log-group-name-prefix $prefix --query &amp;quot;logGroups[].logGroupName&amp;quot; --output text) ; do
+fn_name=${log_group#$prefix};
+aws logs put-metric-filter \
+--log-group-name &amp;quot;$log_group&amp;quot; \
+--filter-name lambda-memory-usage \
+--filter-pattern '[ x=&amp;quot;REPORT&amp;quot;, x=&amp;quot;RequestId:&amp;quot;, request_id, x=&amp;quot;Duration:&amp;quot;, duration, x=&amp;quot;ms&amp;quot;, x=&amp;quot;Billed&amp;quot;, x=&amp;quot;Duration:&amp;quot;, billed_duration, x=&amp;quot;ms&amp;quot;, x=&amp;quot;Memory&amp;quot;, x=&amp;quot;Size:&amp;quot;, memory_size, x=&amp;quot;MB&amp;quot;, x=&amp;quot;Max&amp;quot;, x=&amp;quot;Memory&amp;quot;, x=&amp;quot;Used:&amp;quot;, memory_used, x=&amp;quot;MB&amp;quot;]' \
+--metric-transformations &amp;quot;metricNamespace=Custom/Lambda,metricName=${fn_name}-MemoryUsed,metricValue=\$memory_used&amp;quot;
+aws logs put-metric-filter \
+--log-group-name &amp;quot;$log_group&amp;quot; \
+--filter-name lambda-memory-size \
+--filter-pattern '[ x=&amp;quot;REPORT&amp;quot;, x=&amp;quot;RequestId:&amp;quot;, request_id, x=&amp;quot;Duration:&amp;quot;, duration, x=&amp;quot;ms&amp;quot;, x=&amp;quot;Billed&amp;quot;, x=&amp;quot;Duration:&amp;quot;, billed_duration, x=&amp;quot;ms&amp;quot;, x=&amp;quot;Memory&amp;quot;, x=&amp;quot;Size:&amp;quot;, memory_size, x=&amp;quot;MB&amp;quot;, x=&amp;quot;Max&amp;quot;, x=&amp;quot;Memory&amp;quot;, x=&amp;quot;Used:&amp;quot;, memory_used, x=&amp;quot;MB&amp;quot;]' \
+--metric-transformations &amp;quot;metricNamespace=Custom/Lambda,metricName=${fn_name}-MemorySize,metricValue=\$memory_size&amp;quot;
+# Errores que se dan cuando la ejecución se pasa del máximo de memoria permitido
+aws logs put-metric-filter \
+--log-group-name &amp;quot;${log_group}&amp;quot; \
+--filter-name lambda-memory-errors \
+--filter-pattern 'Process exited before completing request' \
+--metric-transformations &amp;quot;metricNamespace=Custom/Lambda,metricName=${fn_name}-MemoryErrors,metricValue=1,defaultValue=0&amp;quot;
+# Errores que se dan cuando la ejecución se pasa del máximo de tiempo permitido
+aws logs put-metric-filter \
+--log-group-name &amp;quot;${log_group}&amp;quot; \
+--filter-name lambda-timeout-errors \
+--filter-pattern 'Task timed out after' \
+--metric-transformations &amp;quot;metricNamespace=Custom/Lambda,metricName=${fn_name}-TimeoutErrors,metricValue=1,defaultValue=0&amp;quot;
+done
+&lt;/code>&lt;/pre>
+&lt;p>Una vez creados, y pasados cierto tiempo para poder obtener datos, en la sección de métricas de Cloudwatch, tendremos una nueva categoría, &lt;code>Custom/Lambda&lt;/code>, donde tendremos el listado de nuevas métricas, por cada función Lambda:&lt;/p>
+&lt;p>&lt;img src="cloudwatch_lambda_custom_namespace.png" alt="">&lt;/p>
+&lt;p>Podremos seleccionar estas estadísticas para poder visualizar los datos en un gráfico:&lt;/p>
+&lt;p>&lt;img src="cloudwatch_lambda_memory_used_graph.png" alt="">&lt;/p>
+&lt;p>También podremos consultar estos datos desde la CLI:&lt;/p>
+&lt;pre>&lt;code class="language-bash">aws cloudwatch get-metric-statistics --namespace Custom/Lambda --metric-name my_function_name-MemoryUsed --start-time $(date --date &amp;quot;1 day ago&amp;quot; +%s) --end-time $(date +%s) --period 300 --statistics Average
+&lt;/code>&lt;/pre>
+&lt;pre>&lt;code class="language-json">{
+&amp;quot;Label&amp;quot;: &amp;quot;my_function_name-MemoryUsed&amp;quot;,
+&amp;quot;Datapoints&amp;quot;: [
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T04:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 84.32894736842105,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-28T18:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 82.94736842105263,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T08:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 83.72368421052632,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-28T22:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 84.63157894736842,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T12:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 83.59210526315789,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T02:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 83.17105263157895,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-28T16:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 84.35526315789474,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T06:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 83.85526315789474,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T10:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 84.48684210526316,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-28T20:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 85.0657894736842,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T00:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 84.97368421052632,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+},
+{
+&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T14:10:00Z&amp;quot;,
+&amp;quot;Average&amp;quot;: 82.57894736842105,
+&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
+}
+]
+}
+&lt;/code>&lt;/pre></description></item><item><title>Crear custom runtime para PHP en AWS Lambda</title><link>/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/</link><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate><guid>/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/</guid><description>&lt;p>Actualización 2019-06-27: Añadida extensión para MongoDB.&lt;/p>
+&lt;p>En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con
+&lt;a href="https://docs.pipenv.org/en/latest/" target="_blank" rel="noopener">pipenv&lt;/a>.&lt;/p>
+&lt;p>Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de
+&lt;a href="https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/" target="_blank" rel="noopener">&lt;em>custom runtimes&lt;/em>&lt;/a>, que básicamente consiste en subir el ejecutable con un determinado nombre.&lt;/p>
+&lt;p>En resumen, lo que el post anterior viene a decir es que:&lt;/p>
+&lt;ul>
+&lt;li>Tenemos que compilar PHP&lt;/li>
+&lt;li>Tenemos que crear un script llamado &lt;code>bootstrap&lt;/code> que será al que llame Lambda; este script será el encargado de conectarse a un endpoint &amp;ldquo;mágico&amp;rdquo; (&lt;code>http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next&lt;/code>), que nos devolverá un JSON con las propiedades de la petición a procesar. Este JSON se lo podemos pasar entonces a una función PHP de nuestra elección.&lt;/li>
+&lt;/ul>
+&lt;p>Un ejemplo de fichero &lt;code>bootstrap&lt;/code> se encuentra en
+&lt;a href="https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae" target="_blank" rel="noopener">este gist&lt;/a>:&lt;/p>
+&lt;script type="application/javascript" src="https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae.js">&lt;/script>
+&lt;p>El motivo de este post, es que
+&lt;a href="https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/" target="_blank" rel="noopener">AWS ha publicado una noticia&lt;/a> diciendo que va a cambiar la imagen base donde se ejecutan los &lt;em>custom runtimes&lt;/em>. Hasta ahora se basaba en una Amazon Linux 2017.03, pero a partir de ahora se van a ejecutar sobre una Amazon Linux 2018.03; esto puede causar que determinados &lt;em>runtimes&lt;/em> dejen de funcionar, si están compilados con versiones determinadas de librerías del sistema operativo.&lt;/p>
+&lt;p>Ya tenía hecho un scriptillo para la versión antigua del runtime, pero como tenía que revisarlo, he decidido &amp;ldquo;ponerlo bonito&amp;rdquo; y publicarlo en el blog. Manos a la obra.&lt;/p>
+&lt;p>Lo primero que tenemos que hacer es determinar una imagen de Docker válida para la imagen donde se ejecutaría el &lt;em>runtime&lt;/em>; en nuestro caso,
+&lt;a href="https://docs.aws.amazon.com/es_es/lambda/latest/dg/current-supported-versions.html" target="_blank" rel="noopener">según la documentación&lt;/a> sería una AMI Linux 2018.03, y yendo al Docker Hub, podemos ver la versión de la
+&lt;a href="https://hub.docker.com/_/amazonlinux" target="_blank" rel="noopener">imagen Docker equivalente&lt;/a>.&lt;/p>
+&lt;p>Una vez que sabemos la imagen Docker, lanzamos un contenedor:&lt;/p>
+&lt;pre>&lt;code class="language-bash">docker run -it --name php-lambda-layer --rm amazonlinux:2018.03.0.20190514 bash
+&lt;/code>&lt;/pre>
+&lt;p>Una vez lanzado, lo primero que haremos será actualizar el sistema e instalar una serie de librerías necesarias para compilar PHP y las dependencias que queremos:&lt;/p>
+&lt;pre>&lt;code class="language-bash">cd
 yum update -y
-yum install autoconf bison gcc gcc-c++ libcurl-devel libxml2-devel openssl-devel git tree zip vim python36 python36-pip libicu-devel unzip diff libpng-devel -y&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;A continuación, nos bajamos la última versión de PHP y la compilamos, indicando los módulos que queremos incluir:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt;
+yum install autoconf bison gcc gcc-c++ libcurl-devel libxml2-devel openssl-devel git tree zip vim python36 python36-pip libicu-devel unzip diff libpng-devel -y
+&lt;/code>&lt;/pre>
+&lt;p>A continuación, nos bajamos la última versión de PHP y la compilamos, indicando los módulos que queremos incluir:&lt;/p>
+&lt;pre>&lt;code class="language-bash">cd
 git clone https://github.com/mongodb/mongo-php-driver.git mongodb
-&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; mongodb
-git checkout &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;.5.5
+cd mongodb
+git checkout 1.5.5
 git submodule update --init
-&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt;
+cd
 mkdir ~/php-7-bin
-curl -sL https://github.com/php/php-src/archive/php-7.3.6.tar.gz &lt;span class=&#34;p&#34;&gt;|&lt;/span&gt; tar -xz
-&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; ~/php-src-php-7.3.6
+curl -sL https://github.com/php/php-src/archive/php-7.3.6.tar.gz | tar -xz
+cd ~/php-src-php-7.3.6
 mv ~/mongodb ext/mongodb
 ./buildconf --force
-./configure --prefix&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;/root/php-7-bin/ --with-openssl --enable-intl --enable-mbstring --with-pdo-mysql --with-curl --with-zlib --with-gd --enable-bcmath --enable-mongodb --without-pear
+./configure --prefix=/root/php-7-bin/ --with-openssl --enable-intl --enable-mbstring --with-pdo-mysql --with-curl --with-zlib --with-gd --enable-bcmath --enable-mongodb --without-pear
 make
 make install
 ~/php-7-bin/bin/php -v
 ~/php-7-bin/bin/php -m
-rm -Rf ~/php-7-bin/&lt;span class=&#34;o&#34;&gt;{&lt;/span&gt;include,lib,php,var&lt;span class=&#34;o&#34;&gt;}&lt;/span&gt;
-rm -Rf ~/php-7-bin/bin/&lt;span class=&#34;o&#34;&gt;{&lt;/span&gt;php-cgi,phpdbg&lt;span class=&#34;o&#34;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Con los parámetros anteriores al compilar, tendremos PHP con los siguientes módulos:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;openssl&lt;/li&gt;
-&lt;li&gt;curl&lt;/li&gt;
-&lt;li&gt;intl&lt;/li&gt;
-&lt;li&gt;mbstring&lt;/li&gt;
-&lt;li&gt;pdo/mysql&lt;/li&gt;
-&lt;li&gt;gd&lt;/li&gt;
-&lt;li&gt;bcmath&lt;/li&gt;
-&lt;li&gt;mongodb&lt;/li&gt;
-&lt;li&gt;&lt;del&gt;zip&lt;/del&gt; (&lt;a href=&#34;https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer&#34;&gt;https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer&lt;/a&gt;)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Tras esto, nos bajamos &lt;a href=&#34;https://getcomposer.org/&#34;&gt;composer&lt;/a&gt;; lo utilizaremos para utilizar la librería &lt;a href=&#34;https://packagist.org/packages/guzzlehttp/guzzle&#34;&gt;guzzlehttp/guzzle&lt;/a&gt; para facilitar la manera en la que obtenemos el evento y reportar el estado (y no estar peleando con llamadas a &lt;code&gt;curl&lt;/code&gt;):&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt;
-curl -sS https://getcomposer.org/installer &lt;span class=&#34;p&#34;&gt;|&lt;/span&gt; ~/php-7-bin/bin/php&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Lo siguiente sería crear un proyecto de &lt;code&gt;composer&lt;/code&gt; e instalar la dependencia mencionada antes; al mismo tiempo, también nos bajamos el fichero &lt;code&gt;bootstrap&lt;/code&gt; que será el punto de entrada de nuestro &lt;em&gt;runtime&lt;/em&gt;.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;mkdir ~/php-runtime
-&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; ~/php-runtime
+rm -Rf ~/php-7-bin/{include,lib,php,var}
+rm -Rf ~/php-7-bin/bin/{php-cgi,phpdbg}
+&lt;/code>&lt;/pre>
+&lt;p>Con los parámetros anteriores al compilar, tendremos PHP con los siguientes módulos:&lt;/p>
+&lt;ul>
+&lt;li>openssl&lt;/li>
+&lt;li>curl&lt;/li>
+&lt;li>intl&lt;/li>
+&lt;li>mbstring&lt;/li>
+&lt;li>pdo/mysql&lt;/li>
+&lt;li>gd&lt;/li>
+&lt;li>bcmath&lt;/li>
+&lt;li>mongodb&lt;/li>
+&lt;li>&lt;del>zip&lt;/del> (&lt;a href="https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer">https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer&lt;/a>)&lt;/li>
+&lt;/ul>
+&lt;p>Tras esto, nos bajamos
+&lt;a href="https://getcomposer.org/" target="_blank" rel="noopener">composer&lt;/a>; lo utilizaremos para utilizar la librería
+&lt;a href="https://packagist.org/packages/guzzlehttp/guzzle" target="_blank" rel="noopener">guzzlehttp/guzzle&lt;/a> para facilitar la manera en la que obtenemos el evento y reportar el estado (y no estar peleando con llamadas a &lt;code>curl&lt;/code>):&lt;/p>
+&lt;pre>&lt;code class="language-bash">cd
+curl -sS https://getcomposer.org/installer | ~/php-7-bin/bin/php
+&lt;/code>&lt;/pre>
+&lt;p>Lo siguiente sería crear un proyecto de &lt;code>composer&lt;/code> e instalar la dependencia mencionada antes; al mismo tiempo, también nos bajamos el fichero &lt;code>bootstrap&lt;/code> que será el punto de entrada de nuestro &lt;em>runtime&lt;/em>.&lt;/p>
+&lt;pre>&lt;code class="language-bash">mkdir ~/php-runtime
+cd ~/php-runtime
 curl -qL https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae/raw &amp;gt; bootstrap
-chmod &lt;span class=&#34;m&#34;&gt;755&lt;/span&gt; bootstrap
-~/php-7-bin/bin/php ~/composer.phar require guzzlehttp/guzzle&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Por último, lo metemos todo en un fichero ZIP comprimido&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;rm -f ~/runtime.zip
-&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; ~/php-7-bin
+chmod 755 bootstrap
+~/php-7-bin/bin/php ~/composer.phar require guzzlehttp/guzzle
+&lt;/code>&lt;/pre>
+&lt;p>Por último, lo metemos todo en un fichero ZIP comprimido&lt;/p>
+&lt;pre>&lt;code class="language-bash">rm -f ~/runtime.zip
+cd ~/php-7-bin
 zip -r ~/runtime.zip bin/php
-&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; ~/php-runtime
-zip -r ~/runtime.zip .&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;La estructura final de este fichero ZIP es la siguiente:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;├── bin
+cd ~/php-runtime
+zip -r ~/runtime.zip .
+&lt;/code>&lt;/pre>
+&lt;p>La estructura final de este fichero ZIP es la siguiente:&lt;/p>
+&lt;pre>&lt;code>├── bin
 │   └── php
 ├── bootstrap
 ├── composer.json
@@ -388,212 +199,93 @@ zip -r ~/runtime.zip .&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&
 ├── composer
 ├── guzzlehttp
 ├── psr
-└── ralouphie&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Antes de finalizar el contenedor, desde una shell externa, copiaremos el fichero generado:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;docker cp php-lambda-layer:/root/runtime.zip .&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Ahora subimos la capa (&lt;code&gt;layer&lt;/code&gt;) a AWS:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;aws lambda publish-layer-version --layer-name php-cake-amzlx201803 --zip-file fileb://runtime.zip --compatible-runtimes provided --region eu-west-1&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Lo único que nos quedaría sería subir la función en PHP, indicando que queremos usar un &lt;em&gt;custom runtime&lt;/em&gt; y añadirle este &lt;code&gt;layer&lt;/code&gt; que hemos subido.&lt;/p&gt;
-&lt;p&gt;Hay que tener en cuenta que el script &lt;code&gt;bootstrap&lt;/code&gt; hace un mapeo entre el directorio &lt;code&gt;src&lt;/code&gt; y el &lt;code&gt;namespace&lt;/code&gt; &lt;code&gt;App&lt;/code&gt;, de modo que si especificamos &lt;code&gt;App\Lambda\MyFunction::handler&lt;/code&gt; como &lt;code&gt;handler&lt;/code&gt; (en la configuración de la función Lambda), buscaría un fichero &lt;code&gt;src/Lambda/MyFunction.php&lt;/code&gt;, que debería contener una función estática &lt;code&gt;handler&lt;/code&gt;, que aceptaría un único parámetro, que sería el evento; algo así como:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-php&#34; data-lang=&#34;php&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-php&#34; data-lang=&#34;php&#34;&gt;&lt;span class=&#34;cp&#34;&gt;&amp;lt;?php&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;namespace&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;App\Lambda&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;require&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;dirname&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;no&#34;&gt;__DIR__&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;.&lt;/span&gt; &lt;span class=&#34;s1&#34;&gt;&amp;#39;/../vendor/autoload.php&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;MyFunction&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;public&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;function&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;handler&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;$event&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;Hello &amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;.&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;$event&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;.&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;!; full event is &amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;.&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;json_encode&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;$event&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;public&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;function&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;runner&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;self&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;na&#34;&gt;handler&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;Foo&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;email&amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;no@reply.com&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;groups&amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;admin&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;],&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;8&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;bar&amp;#34;&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;]);&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;La función &lt;code&gt;runner&lt;/code&gt; es una función de ayuda para desarrollar en local, de tal forma que podamos indicar dentro de ella el evento al llamar a la función &lt;code&gt;handler&lt;/code&gt;, ejecutándolo de la siguiente forma:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;php -r &lt;span class=&#34;s2&#34;&gt;&amp;#34;require &amp;#39;src/Lambda/MyFunction.php&amp;#39; ; print_r(call_user_func(&amp;#39;App\Lambda\MyFunction::runner&amp;#39;));&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Referencias:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/&#34;&gt;https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/&#34;&gt;https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/&#34;&gt;https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://developpaper.com/aliyun-centos-7-6-install-php7-3/&#34;&gt;https://developpaper.com/aliyun-centos-7-6-install-php7-3/&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</description><category domain="https://okelet.netlify.com/tags/aws">AWS</category><category domain="https://okelet.netlify.com/tags/php">PHP</category><category domain="https://okelet.netlify.com/tags/lambda">Lambda</category><category domain="https://okelet.netlify.com/tags/runtime">runtime</category><category domain="https://okelet.netlify.com/tags/custom">custom</category><category domain="https://okelet.netlify.com/tags/layer">layer</category><guid>https://okelet.netlify.com/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/</guid><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate></item><item><title>Parsear MaintenanceWindow de RDS en Python</title><link>https://okelet.netlify.com/posts/2019/05/parsear-maintenancewindow-de-rds-en-python/</link><description>&lt;p&gt;Para una aplicación que estamos desarrollando, necesitábamos saber cuándo se van a aplicar los mantenimientos en nuestras instancias de RDS. El problema es que según &lt;a href=&#34;https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/rds.html#RDS.Client.describe_pending_maintenance_actions&#34;&gt;la documentación de Boto3&lt;/a&gt;, el método &lt;code&gt;describe_pending_maintenance_actions&lt;/code&gt; devuelve la fecha de aplicación de la actualización en el campo &lt;code&gt;CurrentApplyDate&lt;/code&gt;, pero esto siempre viene vacío:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ aws rds describe-pending-maintenance-actions&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;El apaño que hemos hecho, es que cuando detectamos que una instancia de RDS tiene una operación de mantenimiento pendiente, obtenemos la fecha a partir del campo &lt;code&gt;PreferredMaintenanceWindow&lt;/code&gt; de la propia instancia.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;32
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;33
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;34
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;35
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;36
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;37
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;38
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;39
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;40
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;41
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;42
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;43
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;44
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;45
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;46
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;47
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;48
-&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;49
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span class=&#34;kn&#34;&gt;from&lt;/span&gt; &lt;span class=&#34;nn&#34;&gt;pprint&lt;/span&gt; &lt;span class=&#34;kn&#34;&gt;import&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;pprint&lt;/span&gt;
-&lt;span class=&#34;kn&#34;&gt;from&lt;/span&gt; &lt;span class=&#34;nn&#34;&gt;datetime&lt;/span&gt; &lt;span class=&#34;kn&#34;&gt;import&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;datetime&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;timedelta&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;def&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;parse_rds_maintenance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;maintenance_str&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;str&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;):&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;ow&#34;&gt;not&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;maintenance_str&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;bp&#34;&gt;None&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;bp&#34;&gt;None&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;start_str&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;end_str&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;maintenance_str&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;split&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;-&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;start_day&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;start_hour&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;start_minute&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;start_str&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;split&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;:&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;end_day&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;end_hour&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;end_minute&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;end_str&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;split&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;:&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;start&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;get_next_date_for&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;start_day&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;start_hour&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;start_minute&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;end&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;get_next_date_for&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;end_day&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;end_hour&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;end_minute&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;start&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;end&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;def&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;get_next_date_for&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;day&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;hour&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;minute&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;):&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;days_mappings&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;mon&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;tue&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;wed&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;thu&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;fri&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;5&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;sat&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;6&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;s2&#34;&gt;&amp;#34;sun&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;7&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
-&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;now&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;datetime&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;utcnow&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;day_int&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;days_mappings&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;day&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;add_days&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;now&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;isoweekday&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;day_int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;add_days&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;day_int&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;now&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;isoweekday&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;elif&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;now&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;isoweekday&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;day_int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;add_days&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;7&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;day_int&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;now&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;isoweekday&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;date&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;now&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;timedelta&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;days&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;add_days&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;replace&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;hour&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;hour&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;minute&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;nb&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;minute&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;second&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;microsecond&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;date&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;now&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;date&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;date&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;timedelta&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;days&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;7&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;date&lt;/span&gt;
-&lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;vm&#34;&gt;__name__&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;s1&#34;&gt;&amp;#39;__main__&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;
-&lt;span class=&#34;n&#34;&gt;pprint&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;parse_rds_maintenance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;tue:07:00-tue:07:30&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;p&gt;Y esto devuelve (depende de la fecha en la que se ejecute, claro&amp;hellip;):&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
-&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
-&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class=&#34;lntd&#34;&gt;
-&lt;pre class=&#34;chroma&#34;&gt;(datetime.datetime(2019, 5, 21, 7, 0), datetime.datetime(2019, 5, 21, 7, 30))&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;!--more--&gt;</description><category domain="https://okelet.netlify.com/tags/aws">AWS</category><category domain="https://okelet.netlify.com/tags/rds">RDS</category><category domain="https://okelet.netlify.com/tags/python">Python</category><guid>https://okelet.netlify.com/posts/2019/05/parsear-maintenancewindow-de-rds-en-python/</guid><pubDate>Mon, 20 May 2019 00:00:00 +0000</pubDate></item></channel></rss>
+└── ralouphie
+&lt;/code>&lt;/pre>
+&lt;p>Antes de finalizar el contenedor, desde una shell externa, copiaremos el fichero generado:&lt;/p>
+&lt;pre>&lt;code class="language-bash">docker cp php-lambda-layer:/root/runtime.zip .
+&lt;/code>&lt;/pre>
+&lt;p>Ahora subimos la capa (&lt;code>layer&lt;/code>) a AWS:&lt;/p>
+&lt;pre>&lt;code class="language-bash">aws lambda publish-layer-version --layer-name php-cake-amzlx201803 --zip-file fileb://runtime.zip --compatible-runtimes provided --region eu-west-1
+&lt;/code>&lt;/pre>
+&lt;p>Lo único que nos quedaría sería subir la función en PHP, indicando que queremos usar un &lt;em>custom runtime&lt;/em> y añadirle este &lt;code>layer&lt;/code> que hemos subido.&lt;/p>
+&lt;p>Hay que tener en cuenta que el script &lt;code>bootstrap&lt;/code> hace un mapeo entre el directorio &lt;code>src&lt;/code> y el &lt;code>namespace&lt;/code> &lt;code>App&lt;/code>, de modo que si especificamos &lt;code>App\Lambda\MyFunction::handler&lt;/code> como &lt;code>handler&lt;/code> (en la configuración de la función Lambda), buscaría un fichero &lt;code>src/Lambda/MyFunction.php&lt;/code>, que debería contener una función estática &lt;code>handler&lt;/code>, que aceptaría un único parámetro, que sería el evento; algo así como:&lt;/p>
+&lt;pre>&lt;code class="language-php">&amp;lt;?php
+namespace App\Lambda;
+require dirname(__DIR__) . '/../vendor/autoload.php';
+class MyFunction
+{
+public static function handler($event)
+{
+return &amp;quot;Hello &amp;quot; . $event[&amp;quot;name&amp;quot;] . &amp;quot;!; full event is &amp;quot; . json_encode($event);
+}
+public static function runner() {
+return self::handler([
+&amp;quot;name&amp;quot; =&amp;gt; &amp;quot;Foo&amp;quot;,
+&amp;quot;email&amp;quot; =&amp;gt; &amp;quot;no@reply.com&amp;quot;,
+&amp;quot;groups&amp;quot; =&amp;gt; [
+[
+&amp;quot;id&amp;quot; =&amp;gt; 1,
+&amp;quot;name&amp;quot; =&amp;gt; &amp;quot;admin&amp;quot;
+],
+[
+&amp;quot;id&amp;quot; =&amp;gt; 8,
+&amp;quot;name&amp;quot; =&amp;gt; &amp;quot;bar&amp;quot;
+]
+]
+]);
+}
+}
+&lt;/code>&lt;/pre>
+&lt;p>La función &lt;code>runner&lt;/code> es una función de ayuda para desarrollar en local, de tal forma que podamos indicar dentro de ella el evento al llamar a la función &lt;code>handler&lt;/code>, ejecutándolo de la siguiente forma:&lt;/p>
+&lt;pre>&lt;code class="language-bash">php -r &amp;quot;require 'src/Lambda/MyFunction.php' ; print_r(call_user_func('App\Lambda\MyFunction::runner'));&amp;quot;
+&lt;/code>&lt;/pre>
+&lt;p>Referencias:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/">https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/">https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/">https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://developpaper.com/aliyun-centos-7-6-install-php7-3/">https://developpaper.com/aliyun-centos-7-6-install-php7-3/&lt;/a>&lt;/li>
+&lt;/ul></description></item><item><title>Parsear MaintenanceWindow de RDS en Python</title><link>/posts/2019/05/parsear-maintenancewindow-de-rds-en-python/</link><pubDate>Mon, 20 May 2019 00:00:00 +0000</pubDate><guid>/posts/2019/05/parsear-maintenancewindow-de-rds-en-python/</guid><description>&lt;p>Para una aplicación que estamos desarrollando, necesitábamos saber cuándo se van a aplicar los mantenimientos en nuestras instancias de RDS. El problema es que según
+&lt;a href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/rds.html#RDS.Client.describe_pending_maintenance_actions" target="_blank" rel="noopener">la documentación de Boto3&lt;/a>, el método &lt;code>describe_pending_maintenance_actions&lt;/code> devuelve la fecha de aplicación de la actualización en el campo &lt;code>CurrentApplyDate&lt;/code>, pero esto siempre viene vacío:&lt;/p>
+&lt;pre>&lt;code class="language-bash">$ aws rds describe-pending-maintenance-actions
+&lt;/code>&lt;/pre>
+&lt;p>El apaño que hemos hecho, es que cuando detectamos que una instancia de RDS tiene una operación de mantenimiento pendiente, obtenemos la fecha a partir del campo &lt;code>PreferredMaintenanceWindow&lt;/code> de la propia instancia.&lt;/p>
+&lt;pre>&lt;code class="language-python">from pprint import pprint
+from datetime import datetime, timedelta
+def parse_rds_maintenance(maintenance_str: str):
+if not maintenance_str:
+return None, None
+start_str, end_str = maintenance_str.split(&amp;quot;-&amp;quot;)
+start_day, start_hour, start_minute = start_str.split(&amp;quot;:&amp;quot;)
+end_day, end_hour, end_minute = end_str.split(&amp;quot;:&amp;quot;)
+start = get_next_date_for(start_day, start_hour, start_minute)
+end = get_next_date_for(end_day, end_hour, end_minute)
+return start, end
+def get_next_date_for(day, hour, minute):
+days_mappings = {
+&amp;quot;mon&amp;quot;: 1,
+&amp;quot;tue&amp;quot;: 2,
+&amp;quot;wed&amp;quot;: 3,
+&amp;quot;thu&amp;quot;: 4,
+&amp;quot;fri&amp;quot;: 5,
+&amp;quot;sat&amp;quot;: 6,
+&amp;quot;sun&amp;quot;: 7,
+}
+now = datetime.utcnow()
+day_int = days_mappings.get(day)
+add_days = 0
+if now.isoweekday() &amp;lt; day_int:
+add_days = day_int - now.isoweekday()
+elif now.isoweekday() &amp;gt; day_int:
+add_days = 7 + day_int - now.isoweekday()
+date = (now + timedelta(days=add_days)).replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
+if date &amp;lt; now:
+date = date + timedelta(days=7)
+return date
+if __name__ == '__main__':
+pprint(parse_rds_maintenance(&amp;quot;tue:07:00-tue:07:30&amp;quot;))
+&lt;/code>&lt;/pre>
+&lt;p>Y esto devuelve (depende de la fecha en la que se ejecute, claro&amp;hellip;):&lt;/p>
+&lt;pre>&lt;code>(datetime.datetime(2019, 5, 21, 7, 0), datetime.datetime(2019, 5, 21, 7, 30))
+&lt;/code>&lt;/pre>
+&lt;!--more--></description></item></channel></rss>

@@ -1,0 +1,36 @@
+[build.environment]
+  HUGO_VERSION = "0.64.1"
+
+[[redirects]]
+  from = "/archives.html"
+  to = "/posts/"
+
+[[redirects]]
+  from = "/archives.html"
+  to = "/posts/"
+
+[[redirects]]
+  from = "/categories.html"
+  to = "/tags/"
+
+[[redirects]]
+  from = "/tags.html"
+  to = "/tags/"
+
+[[redirects]]
+  from = "/feeds/all.atom.xml"
+  to = "/index.xml"
+
+[[redirects]]
+  from = "/atom.xml"
+  to = "/index.xml"
+
+[[headers]]
+  for = "*.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json; charset=UTF-8"
+
+[[headers]]
+  for = "index.xml"
+  [headers.values]
+    Content-Type = "application/rss+xml"
