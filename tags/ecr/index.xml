@@ -1,0 +1,254 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>ECR on
+Mis notas</title><link>https://okelet.netlify.com/tags/ecr/</link><description>Recent content in ECR
+on Mis notas</description><language>es</language><managingEditor>okelet@gmail.com (Juan Asensio)</managingEditor><webMaster>okelet@gmail.com (Juan Asensio)</webMaster><lastBuildDate>Tue, 11 Feb 2020 13:01:00 +0000</lastBuildDate><generator>Hugo -- gohugo.io</generator><docs>https://validator.w3.org/feed/docs/rss2.html</docs><atom:link href="https://okelet.netlify.com/tags/ecr/index.xml" rel="self" type="application/rss+xml"/><item><title>Configurar Microk8s para usar repositorios de AWS ECR</title><link>https://okelet.netlify.com/posts/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</link><description>&lt;p>Continuando con un post anterior de cómo &lt;a href="https://okelet.netlify.com/posts/2019/06/probando-ansible-awx-con-microk8s/">probar Ansible AWX con Microk8s&lt;/a> (en AWS EC2). Bueno, pues resulta que me creé una imagen personalizada para el contener &lt;code>awx_task&lt;/code> para instalar una serie de librerías y comandos que necesitaba para lanzar unos playbooks; el fichero &lt;code>Dockerfile&lt;/code> es similar a éste:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-text" data-lang="text">FROM ansible/awx_task:9.1.1
+# Switch user to become root
+USER 0
+# Additional software
+RUN cd &amp;amp;&amp;amp; \
+set -x &amp;amp;&amp;amp; \
+dnf install -y nmap-ncat htop &amp;amp;&amp;amp; \
+dnf clean all
+# Ansible venv additional dependencies
+RUN cd &amp;amp;&amp;amp; \
+source /var/lib/awx/venv/ansible/bin/activate &amp;amp;&amp;amp; \
+umask 0022 &amp;amp;&amp;amp; \
+pip install --upgrade pypsrp pysocks &amp;amp;&amp;amp; \
+deactivate
+# Restore the original user
+# https://github.com/ansible/awx/blob/devel/installer/roles/image_build/templates/Dockerfile.task.j2
+USER 1000
+&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Y me creé un repositorio en &lt;a href="https://aws.amazon.com/es/ecr/">AWS ECR&lt;/a>. Después generé la imagen y la subí al repositorio (siendo &lt;code>xxxxxxxxxxx&lt;/code> el ID de la cuenta de AWS):&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="k">$(&lt;/span>aws ecr get-login --no-include-email&lt;span class="k">)&lt;/span>
+docker build --force-rm --pull --no-cache -t xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1 .
+docker push xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1
+&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Tras esto modifiqué el fichero de inventario que usa el instalador de AWX para hacer referencia a la imagen que acabo de subir y crear.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-yaml" data-lang="yaml">kubernetes_task_image=xxxxxxxxxxx.dkr.ecr.eu-west&lt;span class="m">-1.&lt;/span>amazonaws.com/ansible/awx_task&lt;span class="w">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Pero cuando el cluster de Kubernetes intenta obtener la imagen para crear el pod, se queda en estado &lt;code>ErrImagePull&lt;/code> con el mensaje:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-text" data-lang="text"> Normal Pulling 2s (x3 over 46s) kubelet, pcjuan Pulling image &amp;#34;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;#34;
+Warning Failed 2s (x3 over 45s) kubelet, pcjuan Failed to pull image &amp;#34;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;#34;: rpc error: code = Unknown desc = failed to resolve image &amp;#34;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;#34;: no available registry endpoint: unexpected status code https://xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/v2/ansible/awx_task/manifests/9.1.1: 401 Unauthorized
+Warning Failed 2s (x3 over 45s) kubelet, pcjuan Error: ErrImagePull
+&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Esto se debe a que Kubernetes no tiene las credenciales necesarias para acceder al repositorio. Pero después de investigar, es fácil solucionarlo. Lo primero que tenemos que hacer es crear un &lt;code>cronjob&lt;/code> en Kubernetes (lo haremos con un crojob porque realmente lo que usa Docker es un token, que tiene caducidad, y hay que renovarlo cada cierto tiempo), para que haga login en el repositorio, y cree una credencial para obtener de forma correcta la imagen; para esto, crearemos un fichero llamado &lt;code>ecr-cred-refresh.yml&lt;/code> con el siguiente contenido:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;span class="lnt">43
+&lt;/span>&lt;span class="lnt">44
+&lt;/span>&lt;span class="lnt">45
+&lt;/span>&lt;span class="lnt">46
+&lt;/span>&lt;span class="lnt">47
+&lt;/span>&lt;span class="lnt">48
+&lt;/span>&lt;span class="lnt">49
+&lt;/span>&lt;span class="lnt">50
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="k">apiVersion&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>batch/v1beta1&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="k">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>CronJob&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="k">metadata&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">name&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>ecr-cred-helper&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="k">spec&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">concurrencyPolicy&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>Allow&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">schedule&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="m">0&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="cp">*/6&lt;/span>&lt;span class="w"> &lt;/span>*&lt;span class="w"> &lt;/span>*&lt;span class="w"> &lt;/span>*&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">failedJobsHistoryLimit&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="m">1&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">successfulJobsHistoryLimit&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="m">3&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">suspend&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">false&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">jobTemplate&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">spec&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">template&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">spec&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">containers&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="w"> &lt;/span>- &lt;span class="k">command&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="w"> &lt;/span>- /bin/sh&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>- -c&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>- |&lt;span class="sd">-
+&lt;/span>&lt;span class="sd"> &lt;/span>&lt;span class="sd"> &lt;/span>&lt;span class="sd">NAMESPACE=awx&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>SERVICE_ACCOUNT=awx&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>ACCOUNT=$(aws&lt;span class="w"> &lt;/span>sts&lt;span class="w"> &lt;/span>get-caller-identity&lt;span class="w"> &lt;/span>--query&lt;span class="w"> &lt;/span>&lt;span class="s1">&amp;#39;Account&amp;#39;&lt;/span>&lt;span class="w"> &lt;/span>--output&lt;span class="w"> &lt;/span>text)&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>REGION=$(curl&lt;span class="w"> &lt;/span>-s&lt;span class="w"> &lt;/span>http&lt;span class="p">:&lt;/span>//&lt;span class="m">169.254&lt;/span>&lt;span class="m">.169&lt;/span>&lt;span class="m">.254&lt;/span>/latest/dynamic/instance-identity/document&lt;span class="w"> &lt;/span>|&lt;span class="w"> &lt;/span>python&lt;span class="w"> &lt;/span>-c&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;import json,sys; print(json.loads(sys.stdin.read())[&amp;#39;region&amp;#39;])&amp;#34;&lt;/span>)&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>SECRET_NAME=${REGION}-ecr-registry&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>EMAIL=anymail.doesnt.matter@email.com&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>TOKEN=$(aws&lt;span class="w"> &lt;/span>ecr&lt;span class="w"> &lt;/span>get-login&lt;span class="w"> &lt;/span>--region&lt;span class="w"> &lt;/span>${REGION}&lt;span class="w"> &lt;/span>--registry-ids&lt;span class="w"> &lt;/span>${ACCOUNT}&lt;span class="w"> &lt;/span>|&lt;span class="w"> &lt;/span>cut&lt;span class="w"> &lt;/span>-d&lt;span class="s1">&amp;#39; &amp;#39;&lt;/span>&lt;span class="w"> &lt;/span>-f6)&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>echo&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;ENV variables setup done.&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>kubectl&lt;span class="w"> &lt;/span>-n&lt;span class="w"> &lt;/span>${NAMESPACE}&lt;span class="w"> &lt;/span>delete&lt;span class="w"> &lt;/span>secret&lt;span class="w"> &lt;/span>--ignore-not-found&lt;span class="w"> &lt;/span>$SECRET_NAME&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>kubectl&lt;span class="w"> &lt;/span>-n&lt;span class="w"> &lt;/span>${NAMESPACE}&lt;span class="w"> &lt;/span>create&lt;span class="w"> &lt;/span>secret&lt;span class="w"> &lt;/span>docker-registry&lt;span class="w"> &lt;/span>$SECRET_NAME&lt;span class="w"> &lt;/span>\&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>--docker-server=https&lt;span class="p">:&lt;/span>//${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com&lt;span class="w"> &lt;/span>\&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>--docker-username=AWS&lt;span class="w"> &lt;/span>\&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>--docker-password=&lt;span class="s2">&amp;#34;${TOKEN}&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>\&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>--docker-email=&lt;span class="s2">&amp;#34;${EMAIL}&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>echo&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;Secret created by name $SECRET_NAME&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>kubectl&lt;span class="w"> &lt;/span>-n&lt;span class="w"> &lt;/span>${NAMESPACE}&lt;span class="w"> &lt;/span>patch&lt;span class="w"> &lt;/span>serviceaccount&lt;span class="w"> &lt;/span>${SERVICE_ACCOUNT}&lt;span class="w"> &lt;/span>-p&lt;span class="w"> &lt;/span>&lt;span class="s1">&amp;#39;{&amp;#34;imagePullSecrets&amp;#34;:[{&amp;#34;name&amp;#34;:&amp;#34;&amp;#39;&lt;/span>$SECRET_NAME&lt;span class="s1">&amp;#39;&amp;#34;}]}&amp;#39;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>echo&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;All done.&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">image&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>odaniait/aws-kubectl&lt;span class="p">:&lt;/span>latest&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">imagePullPolicy&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>IfNotPresent&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">name&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>ecr-cred-helper&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">resources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>{}&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">securityContext&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w">&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">capabilities&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>{}&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">terminationMessagePath&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>/dev/termination-log&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">terminationMessagePolicy&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>File&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">dnsPolicy&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>Default&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">hostNetwork&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">restartPolicy&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>Never&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">schedulerName&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>default-scheduler&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">securityContext&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>{}&lt;span class="w">
+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">terminationGracePeriodSeconds&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="m">30&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>En el fichero anterior, dependiendo de nuestra configuración particular, podremos cambiar el valor de las variables &lt;code>NAMESPACE&lt;/code> y &lt;code>SERVICE_ACCOUNT&lt;/code>, y también especificar manualmente las variables &lt;code>ACCOUNT&lt;/code> y &lt;code>REGION&lt;/code> si no queremos que el script las auto-detecte porque usamos otras en concreto.&lt;/p>
+&lt;p>Básicamente, lo que hace esto, es crear un trabajo de cron, que lanza un contenedor y ejecuta el script en Bash definido en la especificación del pod. En resumen:&lt;/p>
+&lt;ul>
+&lt;li>Obtiene las credenciales de acceso a ECR utilizando la cli de AWS&lt;/li>
+&lt;li>Elimina, si existe, el secreto llamado &lt;code>${REGION}-ecr-registry&lt;/code>&lt;/li>
+&lt;li>Lo crea de nuevo, con el token obtenido de ECR&lt;/li>
+&lt;li>Actualiza la service account de AWX indicándole que para obtener las imágenes (&lt;code>imagePullSecrets&lt;/code>) tiene usar las credenciales del secreto recién creado&lt;/li>
+&lt;/ul>
+&lt;p>Tras esto, importamos la definición del job en Kubernetes:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-bash" data-lang="bash">kubectl -n awx apply -f ecr-cred-refresh.yml
+&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Este job se ejecuta cada 6 horas; si queremos forzar la ejecución, podemos hacerlo con los siguientes comandos:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="nv">JOB_NAME&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>&lt;span class="s2">manual-&lt;/span>&lt;span class="k">$(&lt;/span>date --utc +%Y%m%d-%H%M%S&lt;span class="k">)&lt;/span>&lt;span class="s2">&amp;#34;&lt;/span>
+kubectl -n awx create job --from&lt;span class="o">=&lt;/span>cronjob/ecr-cred-helper &lt;span class="si">${&lt;/span>&lt;span class="nv">JOB_NAME&lt;/span>&lt;span class="si">}&lt;/span>
+kubectl -n awx &lt;span class="nb">wait&lt;/span> --for&lt;span class="o">=&lt;/span>&lt;span class="nv">condition&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="nb">complete&lt;/span> job.batch/&lt;span class="si">${&lt;/span>&lt;span class="nv">JOB_NAME&lt;/span>&lt;span class="si">}&lt;/span>
+kubectl -n awx logs job.batch/&lt;span class="si">${&lt;/span>&lt;span class="nv">JOB_NAME&lt;/span>&lt;span class="si">}&lt;/span>
+&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Pero esto por sí solo no nos vale&amp;hellip; porque ¿dónde le decimos las crendenciales para acceder a AWS (es decir, para que desde dentro del cronjob se pueda hacer &lt;code>aws ecr get-login&lt;/code>)? Es decir, el access key y el secret. Para esto, no le pasaremos una key y un secret, sino que crearemos un rol y se lo asignaremos a la instancia EC2 de AWS donde estemos ejecutando Microk8s. El rol debe tener una policy que permita a la instancia acceder al repositorio; podemos usar la policy predefinida &lt;code>AmazonEC2ContainerRegistryReadOnly&lt;/code> o crear una manualmente.&lt;/p>
+&lt;p>Tras crear el rol y la policy, y asignar el rol a la instancia, podemos ejecutar manualmente el &lt;code>cronjob&lt;/code>, y ejecutar de nuevo el instalador de AWX, que ya debería obtener la imagen de Docker sin problemas.&lt;/p>
+&lt;p>Comandos útiles:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="c1"># Ver información de la service account de awx&lt;/span>
+kubectl -n awx describe serviceaccounts awx
+&lt;span class="c1"># Ver información de los secretos (cuándo se actualizó/obtuvo el token por última vez)&lt;/span>
+kubectl -n awx get secrets
+&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Probar manualmente el script:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-bash" data-lang="bash">kubectl run -i --tty --rm debug --image&lt;span class="o">=&lt;/span>odaniait/aws-kubectl:latest --restart&lt;span class="o">=&lt;/span>Never -- sh
+kubectl run --generator&lt;span class="o">=&lt;/span>run-pod/v1 -n awx --rm -i --tty compass-tmp --image&lt;span class="o">=&lt;/span>odaniait/aws-kubectl:latest -- sh
+&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Referencias:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://medium.com/@damitj07/how-to-configure-and-use-aws-ecr-with-kubernetes-rancher2-0-6144c626d42c">How to configure and use AWS ECR with kubernetes &amp;amp; Rancher2.0&lt;/a>&lt;/li>
+&lt;/ul></description><category domain="https://okelet.netlify.com/tags/ansible">Ansible</category><category domain="https://okelet.netlify.com/tags/awx">AWX</category><category domain="https://okelet.netlify.com/tags/kubernetes">Kubernetes</category><category domain="https://okelet.netlify.com/tags/microk8s">MicroK8s</category><category domain="https://okelet.netlify.com/tags/ecr">ECR</category><guid>https://okelet.netlify.com/posts/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</guid><pubDate>Sat, 18 Jan 2020 00:00:00 +0000</pubDate></item></channel></rss>

@@ -1,0 +1,23 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>MariaDB on
+Mis notas</title><link>https://okelet.netlify.com/tags/mariadb/</link><description>Recent content in MariaDB
+on Mis notas</description><language>es</language><managingEditor>okelet@gmail.com (Juan Asensio)</managingEditor><webMaster>okelet@gmail.com (Juan Asensio)</webMaster><lastBuildDate>Tue, 11 Feb 2020 13:01:00 +0000</lastBuildDate><generator>Hugo -- gohugo.io</generator><docs>https://validator.w3.org/feed/docs/rss2.html</docs><atom:link href="https://okelet.netlify.com/tags/mariadb/index.xml" rel="self" type="application/rss+xml"/><item><title>Crear usuario y base de datos en MySQL y dar permisos</title><link>https://okelet.netlify.com/posts/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/</link><description>&lt;p>Una cosa que siempre se me olvida y tengo que buscar: cómo crear un usuario en MySQL (o MariaDB o Aurora MySQL), crear una base de datos, y dar permisos al usuario sobre esa base de datos:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="k">CREATE&lt;/span> &lt;span class="k">DATABASE&lt;/span> &lt;span class="n">wordpress&lt;/span> &lt;span class="nb">CHARACTER&lt;/span> &lt;span class="k">SET&lt;/span> &lt;span class="n">utf8mb4&lt;/span> &lt;span class="k">COLLATE&lt;/span> &lt;span class="n">utf8mb4_unicode_ci&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;span class="k">CREATE&lt;/span> &lt;span class="k">USER&lt;/span> &lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="s1">wpuser&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="o">@&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="s1">localhost&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span> &lt;span class="n">IDENTIFIED&lt;/span> &lt;span class="k">BY&lt;/span> &lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="s1">pickApassword&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;span class="k">GRANT&lt;/span> &lt;span class="k">ALL&lt;/span> &lt;span class="k">PRIVILEGES&lt;/span> &lt;span class="k">ON&lt;/span> &lt;span class="n">wordpress&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="o">*&lt;/span> &lt;span class="k">TO&lt;/span> &lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="s1">wpuser&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="o">@&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="s1">localhost&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;span class="n">FLUSH&lt;/span> &lt;span class="k">PRIVILEGES&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;span class="n">exit&lt;/span>
+&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>Referencias:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://dba.stackexchange.com/questions/76788/create-a-mysql-database-with-charset-utf-8">Stack Exchange DBA - Create a MySQL database with charset UTF-8&lt;/a>&lt;/li>
+&lt;/ul></description><category domain="https://okelet.netlify.com/tags/mysql">MySQL</category><category domain="https://okelet.netlify.com/tags/mariadb">MariaDB</category><guid>https://okelet.netlify.com/posts/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/</guid><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate></item></channel></rss>
