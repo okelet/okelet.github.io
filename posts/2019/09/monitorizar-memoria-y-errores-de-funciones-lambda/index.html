@@ -1,26 +1,32 @@
-<!doctype html><html lang=es><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>Monitorizar memoria y errores de funciones Lambda - Mis notas</title><meta name=renderer content="webkit"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv=cache-control content="no-transform"><meta http-equiv=cache-control content="no-siteapp"><meta name=theme-color content="#f8f5ec"><meta name=msapplication-navbutton-color content="#f8f5ec"><meta name=apple-mobile-web-app-capable content="yes"><meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec"><meta name=author content="Juan Asensio"><meta name=description content="A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas builtin como:
- Cantidad de throttles Número de invocaciones Número de errores &amp;ldquo;genéricos&amp;rdquo; Duración (media y total)  Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto."><meta name=keywords content="okelet,linux,bash,python,aws,google,cloud,gcloud"><meta name=generator content="Hugo 0.64.1 with even 4.0.0"><link rel=canonical href=https://okelet.netlify.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/><link href=https://okelet.netlify.com/atom.xml type=application/atom+xml rel=alternate title="Mis notas - Atom"><link href=https://okelet.netlify.com/index.xml type=application/rss+xml rel=alternate title="Mis notas - RSS"><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/manifest.json><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link href=/dist/even.c2a46f00.min.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous><link rel=stylesheet href=https://okelet.netlify.com/css/custom.css><link rel=stylesheet href=https://use.fontawesome.com/releases/v5.9.0/css/all.css><meta property="og:title" content="Monitorizar memoria y errores de funciones Lambda"><meta property="og:description" content="A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas builtin como:
+<!doctype html><html lang=es><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>Monitorizar memoria y errores de funciones Lambda - Mis notas</title><meta name=renderer content=webkit><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv=cache-control content=no-transform><meta http-equiv=cache-control content=no-siteapp><meta name=theme-color content=#f8f5ec><meta name=msapplication-navbutton-color content=#f8f5ec><meta name=apple-mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-status-bar-style content=#f8f5ec><meta name=author content="Juan Asensio"><meta name=description content="A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas builtin como:
+ Cantidad de throttles Número de invocaciones Número de errores &amp;ldquo;genéricos&amp;rdquo; Duración (media y total)  Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto."><meta name=keywords content=okelet,linux,bash,python,aws,google,cloud,gcloud><meta name=generator content="Hugo 0.54.0 with even 4.0.0"><link rel=canonical href=https://okelet.netlify.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/><link href=https://okelet.netlify.com/atom.xml type=application/atom+xml rel=alternate title="Mis notas - Atom"><link href=https://okelet.netlify.com/index.xml type=application/rss+xml rel=alternate title="Mis notas - RSS"><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/manifest.json><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link href=/dist/even.c2a46f00.min.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous><link rel=stylesheet href=https://okelet.netlify.com/css/custom.css><link rel=stylesheet href=https://use.fontawesome.com/releases/v5.9.0/css/all.css><meta property=og:title content="Monitorizar memoria y errores de funciones Lambda"><meta property=og:description content="A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas builtin como:
+
 
 Cantidad de throttles
 Número de invocaciones
 Número de errores &ldquo;genéricos&rdquo;
 Duración (media y total)
 
-Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto."><meta property="og:type" content="article"><meta property="og:url" content="https://okelet.netlify.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/"><meta property="article:published_time" content="2019-09-01T00:00:00+00:00"><meta property="article:modified_time" content="2019-09-01T00:00:00+00:00"><meta itemprop=name content="Monitorizar memoria y errores de funciones Lambda"><meta itemprop=description content="A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas builtin como:
+
+Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto."><meta property=og:type content=article><meta property=og:url content=https://okelet.netlify.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/><meta property=article:published_time content=2019-09-01T00:00:00&#43;00:00><meta property=article:modified_time content=2019-09-01T00:00:00&#43;00:00><meta itemprop=name content="Monitorizar memoria y errores de funciones Lambda"><meta itemprop=description content="A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas builtin como:
+
 
 Cantidad de throttles
 Número de invocaciones
 Número de errores &ldquo;genéricos&rdquo;
 Duración (media y total)
 
-Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto."><meta itemprop=datePublished content="2019-09-01T00:00:00+00:00"><meta itemprop=dateModified content="2019-09-01T00:00:00+00:00"><meta itemprop=wordCount content="556"><meta itemprop=keywords content="AWS,Lambda,Cloudwatch,"><meta name=twitter:card content="summary"><meta name=twitter:title content="Monitorizar memoria y errores de funciones Lambda"><meta name=twitter:description content="A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas builtin como:
+
+Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto."><meta itemprop=datePublished content=2019-09-01T00:00:00&#43;00:00><meta itemprop=dateModified content=2019-09-01T00:00:00&#43;00:00><meta itemprop=wordCount content=556><meta itemprop=keywords content=AWS,Lambda,Cloudwatch,><meta name=twitter:card content=summary><meta name=twitter:title content="Monitorizar memoria y errores de funciones Lambda"><meta name=twitter:description content="A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas builtin como:
+
 
 Cantidad de throttles
 Número de invocaciones
 Número de errores &ldquo;genéricos&rdquo;
 Duración (media y total)
 
-Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto."><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script><script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]--><link rel=stylesheet type=text/css href=https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.css><script src=https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.js></script><script>window.addEventListener("load",function(){window.cookieconsent.initialise({"palette":{"popup":{"background":"#000"},"button":{"background":"#f1d600"}},"theme":"classic"})});</script></head><body><div id=mobile-navbar class=mobile-navbar><div class=mobile-header-logo><a href=/ class=logo>Mis notas</a></div><div class=mobile-navbar-icon><span></span><span></span><span></span></div></div><nav id=mobile-menu class="mobile-menu slideout-menu"><ul class=mobile-menu-list><a href=/><li class=mobile-menu-item>Inicio</li></a><a href=/posts/><li class=mobile-menu-item>Archivos</li></a><a href=/tags/><li class=mobile-menu-item>Tags</li></a><a href=/pages/projects/><li class=mobile-menu-item>Proyectos</li></a><a href=/pages/about/><li class=mobile-menu-item>Acerca de</li></a></ul></nav><div class=container id=mobile-panel><header id=header class=header><div class=logo-wrapper><a href=/ class=logo>Mis notas</a></div><nav class=site-navbar><ul id=menu class=menu><li class=menu-item><a class=menu-item-link href=/>Inicio</a></li><li class=menu-item><a class=menu-item-link href=/posts/>Archivos</a></li><li class=menu-item><a class=menu-item-link href=/tags/>Tags</a></li><li class=menu-item><a class=menu-item-link href=/pages/projects/>Proyectos</a></li><li class=menu-item><a class=menu-item-link href=/pages/about/>Acerca de</a></li></ul></nav></header><main id=main class=main><div class=content-wrapper><div id=content class=content><article class=post><header class=post-header><h1 class=post-title>Monitorizar memoria y errores de funciones Lambda</h1><div class=post-meta><span class=post-time>2019-09-01</span></div></header><div class=post-toc id=post-toc><h2 class=post-toc-title>Contenidos</h2><div class="post-toc-content always-active"><nav id=TableOfContents></nav></div></div><div class=post-content><p>A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas <em>builtin</em> como:</p><ul><li>Cantidad de <em>throttles</em></li><li>Número de invocaciones</li><li>Número de errores &ldquo;genéricos&rdquo;</li><li>Duración (media y total)</li></ul><p>Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto.</p><p>Para conseguir información de este tipo de errores, tendremos que recurrir a crear <a href=https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringPolicyExamples.html>filtros de métricas (<em>metric filters</em>)</a> de los LOGs que deja Lambda en Cloudwatch. Por ejemplo, con el siguiente script, recorremos todas los grupos de LOGs de Lambda (aquellos que empiezan por <code>/aws/lambda/</code>) y creamos unas cuantas métricas en cada uno de ellos, para poder después obtener estadísticas:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+
+Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto."><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script><script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]--><link rel=stylesheet type=text/css href=https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.css><script src=https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.js></script><script>window.addEventListener("load",function(){window.cookieconsent.initialise({"palette":{"popup":{"background":"#000"},"button":{"background":"#f1d600"}},"theme":"classic"})});</script></head><body><div id=mobile-navbar class=mobile-navbar><div class=mobile-header-logo><a href=/ class=logo>Mis notas</a></div><div class=mobile-navbar-icon><span></span><span></span><span></span></div></div><nav id=mobile-menu class="mobile-menu slideout-menu"><ul class=mobile-menu-list><a href=/><li class=mobile-menu-item>Inicio</li></a><a href=/posts/><li class=mobile-menu-item>Archivos</li></a><a href=/tags/><li class=mobile-menu-item>Tags</li></a><a href=/pages/projects/><li class=mobile-menu-item>Proyectos</li></a><a href=/pages/about/><li class=mobile-menu-item>Acerca de</li></a></ul></nav><div class=container id=mobile-panel><header id=header class=header><div class=logo-wrapper><a href=/ class=logo>Mis notas</a></div><nav class=site-navbar><ul id=menu class=menu><li class=menu-item><a class=menu-item-link href=/>Inicio</a></li><li class=menu-item><a class=menu-item-link href=/posts/>Archivos</a></li><li class=menu-item><a class=menu-item-link href=/tags/>Tags</a></li><li class=menu-item><a class=menu-item-link href=/pages/projects/>Proyectos</a></li><li class=menu-item><a class=menu-item-link href=/pages/about/>Acerca de</a></li></ul></nav></header><main id=main class=main><div class=content-wrapper><div id=content class=content><article class=post><header class=post-header><h1 class=post-title>Monitorizar memoria y errores de funciones Lambda</h1><div class=post-meta><span class=post-time>2019-09-01</span></div></header><div class=post-toc id=post-toc><h2 class=post-toc-title>Contenidos</h2><div class="post-toc-content always-active"></div></div><div class=post-content><p>A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas <em>builtin</em> como:</p><ul><li>Cantidad de <em>throttles</em></li><li>Número de invocaciones</li><li>Número de errores &ldquo;genéricos&rdquo;</li><li>Duración (media y total)</li></ul><p>Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto.</p><p>Para conseguir información de este tipo de errores, tendremos que recurrir a crear <a href=https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringPolicyExamples.html>filtros de métricas (<em>metric filters</em>)</a> de los LOGs que deja Lambda en Cloudwatch. Por ejemplo, con el siguiente script, recorremos todas los grupos de LOGs de Lambda (aquellos que empiezan por <code>/aws/lambda/</code>) y creamos unas cuantas métricas en cada uno de ellos, para poder después obtener estadísticas:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -69,32 +75,30 @@ Pero si queremos ver estadísticas sobre memoria o errores según sean por consu
 </span><span class=se></span>		  --log-group-name <span class=s2>&#34;</span><span class=nv>$log_group</span><span class=s2>&#34;</span> <span class=se>\
 </span><span class=se></span>		  --filter-name lambda-memory-usage <span class=se>\
 </span><span class=se></span>		  --filter-pattern <span class=s1>&#39;[ x=&#34;REPORT&#34;, x=&#34;RequestId:&#34;, request_id, x=&#34;Duration:&#34;, duration, x=&#34;ms&#34;, x=&#34;Billed&#34;, x=&#34;Duration:&#34;, billed_duration, x=&#34;ms&#34;, x=&#34;Memory&#34;, x=&#34;Size:&#34;, memory_size, x=&#34;MB&#34;, x=&#34;Max&#34;, x=&#34;Memory&#34;, x=&#34;Used:&#34;, memory_used, x=&#34;MB&#34;]&#39;</span> <span class=se>\
-</span><span class=se></span>		  --metric-transformations <span class=s2>&#34;</span><span class=s2>metricNamespace=Custom/Lambda,metricName=</span><span class=si>${</span><span class=nv>fn_name</span><span class=si>}</span><span class=s2>-MemoryUsed,metricValue=\$memory_used</span><span class=s2>&#34;</span>
+</span><span class=se></span>		  --metric-transformations <span class=s2>&#34;metricNamespace=Custom/Lambda,metricName=</span><span class=si>${</span><span class=nv>fn_name</span><span class=si>}</span><span class=s2>-MemoryUsed,metricValue=\$memory_used&#34;</span>
 
     aws logs put-metric-filter <span class=se>\
 </span><span class=se></span>		  --log-group-name <span class=s2>&#34;</span><span class=nv>$log_group</span><span class=s2>&#34;</span> <span class=se>\
 </span><span class=se></span>		  --filter-name lambda-memory-size <span class=se>\
 </span><span class=se></span>		  --filter-pattern <span class=s1>&#39;[ x=&#34;REPORT&#34;, x=&#34;RequestId:&#34;, request_id, x=&#34;Duration:&#34;, duration, x=&#34;ms&#34;, x=&#34;Billed&#34;, x=&#34;Duration:&#34;, billed_duration, x=&#34;ms&#34;, x=&#34;Memory&#34;, x=&#34;Size:&#34;, memory_size, x=&#34;MB&#34;, x=&#34;Max&#34;, x=&#34;Memory&#34;, x=&#34;Used:&#34;, memory_used, x=&#34;MB&#34;]&#39;</span> <span class=se>\
-</span><span class=se></span>		  --metric-transformations <span class=s2>&#34;</span><span class=s2>metricNamespace=Custom/Lambda,metricName=</span><span class=si>${</span><span class=nv>fn_name</span><span class=si>}</span><span class=s2>-MemorySize,metricValue=\$memory_size</span><span class=s2>&#34;</span>
+</span><span class=se></span>		  --metric-transformations <span class=s2>&#34;metricNamespace=Custom/Lambda,metricName=</span><span class=si>${</span><span class=nv>fn_name</span><span class=si>}</span><span class=s2>-MemorySize,metricValue=\$memory_size&#34;</span>
 
     <span class=c1># Errores que se dan cuando la ejecución se pasa del máximo de memoria permitido</span>
     aws logs put-metric-filter <span class=se>\
 </span><span class=se></span>      --log-group-name <span class=s2>&#34;</span><span class=si>${</span><span class=nv>log_group</span><span class=si>}</span><span class=s2>&#34;</span> <span class=se>\
 </span><span class=se></span>      --filter-name lambda-memory-errors <span class=se>\
 </span><span class=se></span>      --filter-pattern <span class=s1>&#39;Process exited before completing request&#39;</span> <span class=se>\
-</span><span class=se></span>      --metric-transformations <span class=s2>&#34;</span><span class=s2>metricNamespace=Custom/Lambda,metricName=</span><span class=si>${</span><span class=nv>fn_name</span><span class=si>}</span><span class=s2>-MemoryErrors,metricValue=1,defaultValue=0</span><span class=s2>&#34;</span>
+</span><span class=se></span>      --metric-transformations <span class=s2>&#34;metricNamespace=Custom/Lambda,metricName=</span><span class=si>${</span><span class=nv>fn_name</span><span class=si>}</span><span class=s2>-MemoryErrors,metricValue=1,defaultValue=0&#34;</span>
 
     <span class=c1># Errores que se dan cuando la ejecución se pasa del máximo de tiempo permitido</span>
     aws logs put-metric-filter <span class=se>\
 </span><span class=se></span>      --log-group-name <span class=s2>&#34;</span><span class=si>${</span><span class=nv>log_group</span><span class=si>}</span><span class=s2>&#34;</span> <span class=se>\
 </span><span class=se></span>      --filter-name lambda-timeout-errors <span class=se>\
 </span><span class=se></span>      --filter-pattern <span class=s1>&#39;Task timed out after&#39;</span> <span class=se>\
-</span><span class=se></span>      --metric-transformations <span class=s2>&#34;</span><span class=s2>metricNamespace=Custom/Lambda,metricName=</span><span class=si>${</span><span class=nv>fn_name</span><span class=si>}</span><span class=s2>-TimeoutErrors,metricValue=1,defaultValue=0</span><span class=s2>&#34;</span>
+</span><span class=se></span>      --metric-transformations <span class=s2>&#34;metricNamespace=Custom/Lambda,metricName=</span><span class=si>${</span><span class=nv>fn_name</span><span class=si>}</span><span class=s2>-TimeoutErrors,metricValue=1,defaultValue=0&#34;</span>
 
-<span class=k>done</span>
-</code></pre></td></tr></table></div></div><p>Una vez creados, y pasados cierto tiempo para poder obtener datos, en la sección de métricas de Cloudwatch, tendremos una nueva categoría, <code>Custom/Lambda</code>, donde tendremos el listado de nuevas métricas, por cada función Lambda:</p><p><img src=cloudwatch_lambda_custom_namespace.png alt></p><p>Podremos seleccionar estas estadísticas para poder visualizar los datos en un gráfico:</p><p><img src=cloudwatch_lambda_memory_used_graph.png alt></p><p>También podremos consultar estos datos desde la CLI:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
-</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash>aws cloudwatch get-metric-statistics --namespace Custom/Lambda --metric-name my_function_name-MemoryUsed --start-time <span class=k>$(</span>date --date <span class=s2>&#34;1 day ago&#34;</span> +%s<span class=k>)</span> --end-time <span class=k>$(</span>date +%s<span class=k>)</span>  --period <span class=m>300</span> --statistics Average
-</code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+<span class=k>done</span></code></pre></td></tr></table></div></div><p>Una vez creados, y pasados cierto tiempo para poder obtener datos, en la sección de métricas de Cloudwatch, tendremos una nueva categoría, <code>Custom/Lambda</code>, donde tendremos el listado de nuevas métricas, por cada función Lambda:</p><p><img src=cloudwatch_lambda_custom_namespace.png alt></p><p>Podremos seleccionar estas estadísticas para poder visualizar los datos en un gráfico:</p><p><img src=cloudwatch_lambda_memory_used_graph.png alt></p><p>También podremos consultar estos datos desde la CLI:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-bash data-lang=bash>aws cloudwatch get-metric-statistics --namespace Custom/Lambda --metric-name my_function_name-MemoryUsed --start-time <span class=k>$(</span>date --date <span class=s2>&#34;1 day ago&#34;</span> +%s<span class=k>)</span> --end-time <span class=k>$(</span>date +%s<span class=k>)</span>  --period <span class=m>300</span> --statistics Average</code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code class=language-json data-lang=json><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -166,65 +170,64 @@ Pero si queremos ver estadísticas sobre memoria o errores según sean por consu
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-29T04:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>84.32894736842105</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-28T18:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>82.94736842105263</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-29T08:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>83.72368421052632</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-28T22:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>84.63157894736842</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-29T12:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>83.59210526315789</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-29T02:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>83.17105263157895</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-28T16:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>84.35526315789474</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-29T06:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>83.85526315789474</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-29T10:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>84.48684210526316</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-28T20:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>85.0657894736842</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-29T00:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>84.97368421052632</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
-        <span class=p>}</span><span class=p>,</span>
+        <span class=p>},</span>
         <span class=p>{</span>
             <span class=nt>&#34;Timestamp&#34;</span><span class=p>:</span> <span class=s2>&#34;2019-08-29T14:10:00Z&#34;</span><span class=p>,</span>
             <span class=nt>&#34;Average&#34;</span><span class=p>:</span> <span class=mf>82.57894736842105</span><span class=p>,</span>
             <span class=nt>&#34;Unit&#34;</span><span class=p>:</span> <span class=s2>&#34;None&#34;</span>
         <span class=p>}</span>
     <span class=p>]</span>
-<span class=p>}</span>
-</code></pre></td></tr></table></div></div></div><footer class=post-footer><div class=post-tags><a href=/tags/aws/>AWS</a>
+<span class=p>}</span></code></pre></td></tr></table></div></div></div><footer class=post-footer><div class=post-tags><a href=/tags/aws/>AWS</a>
 <a href=/tags/lambda/>Lambda</a>
 <a href=/tags/cloudwatch/>Cloudwatch</a></div><nav class=post-nav><a class=prev href=/posts/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/><i class="iconfont icon-left"></i><span class="prev-text nav-default">Configurar Microk8s para usar repositorios de AWS ECR</span>
 <span class="prev-text nav-mobile">Previo</span></a>

@@ -1,2 +1,2401 @@
 <feed xmlns="http://www.w3.org/2005/Atom"><generator>Hugo -- gohugo.io</generator><title>
-Mis notas</title><link href="https://okelet.netlify.com/atom.xml" rel="self" type="application/atom+xml"/><link href="https://okelet.netlify.com/"/><updated>2020-02-11T13:25:52+00:00</updated><author><name>Juan Asensio</name><email>okelet@gmail.com</email></author><id>https://okelet.netlify.com/</id></feed>
+Mis notas</title><link href="https://okelet.netlify.com/atom.xml" rel="self" type="application/atom&#43;xml"/><link href="https://okelet.netlify.com/"/><updated>2020-02-11T13:37:29+00:00</updated><author><name>Juan Asensio</name><email>okelet@gmail.com</email></author><id>https://okelet.netlify.com/</id><entry><title type="html">Configurar Microk8s para usar repositorios de AWS ECR</title><link href="https://okelet.netlify.com/posts/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/"/><id>https://okelet.netlify.com/posts/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</id><published>2020-01-18T00:00:00+00:00</published><updated>2020-01-18T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Continuando con un post anterior de cómo <a href="/posts/2019/06/probando-ansible-awx-con-microk8s/">probar Ansible AWX con Microk8s</a> (en AWS EC2). Bueno, pues resulta que me creé una imagen personalizada para el contener <code>awx_task</code> para instalar una serie de librerías y comandos que necesitaba para lanzar unos playbooks; el fichero <code>Dockerfile</code> es similar a éste:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text">FROM ansible/awx_task:9.1.1
+
+# Switch user to become root
+USER 0
+
+# Additional software
+RUN cd &amp;&amp; \
+    set -x &amp;&amp; \
+    dnf install -y nmap-ncat htop &amp;&amp; \
+    dnf clean all
+
+# Ansible venv additional dependencies
+RUN cd &amp;&amp; \
+    source /var/lib/awx/venv/ansible/bin/activate &amp;&amp; \
+    umask 0022 &amp;&amp; \
+    pip install --upgrade pypsrp pysocks &amp;&amp; \
+    deactivate
+
+# Restore the original user
+# https://github.com/ansible/awx/blob/devel/installer/roles/image_build/templates/Dockerfile.task.j2
+USER 1000</code></pre></td></tr></table>
+</div>
+</div>
+<p>Y me creé un repositorio en <a href="https://aws.amazon.com/es/ecr/">AWS ECR</a>. Después generé la imagen y la subí al repositorio (siendo <code>xxxxxxxxxxx</code> el ID de la cuenta de AWS):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="k">$(</span>aws ecr get-login --no-include-email<span class="k">)</span>
+docker build --force-rm --pull --no-cache -t xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1 .
+docker push xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1</code></pre></td></tr></table>
+</div>
+</div>
+<p>Tras esto modifiqué el fichero de inventario que usa el instalador de AWX para hacer referencia a la imagen que acabo de subir y crear.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">kubernetes_task_image=xxxxxxxxxxx.dkr.ecr.eu-west-<span class="m">1.</span>amazonaws.com/ansible/awx_task</code></pre></td></tr></table>
+</div>
+</div>
+<p>Pero cuando el cluster de Kubernetes intenta obtener la imagen para crear el pod, se queda en estado <code>ErrImagePull</code> con el mensaje:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text">  Normal   Pulling            2s (x3 over 46s)   kubelet, pcjuan    Pulling image &#34;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&#34;
+  Warning  Failed             2s (x3 over 45s)   kubelet, pcjuan    Failed to pull image &#34;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&#34;: rpc error: code = Unknown desc = failed to resolve image &#34;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&#34;: no available registry endpoint: unexpected status code https://xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/v2/ansible/awx_task/manifests/9.1.1: 401 Unauthorized
+  Warning  Failed             2s (x3 over 45s)   kubelet, pcjuan    Error: ErrImagePull</code></pre></td></tr></table>
+</div>
+</div>
+<p>Esto se debe a que Kubernetes no tiene las credenciales necesarias para acceder al repositorio. Pero después de investigar, es fácil solucionarlo. Lo primero que tenemos que hacer es crear un <code>cronjob</code> en Kubernetes (lo haremos con un crojob porque realmente lo que usa Docker es un token, que tiene caducidad, y hay que renovarlo cada cierto tiempo), para que haga login en el repositorio, y cree una credencial para obtener de forma correcta la imagen; para esto, crearemos un fichero llamado <code>ecr-cred-refresh.yml</code> con el siguiente contenido:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">apiVersion<span class="p">:</span><span class="w"> </span>batch/v1beta1<span class="w">
+</span><span class="w"></span>kind<span class="p">:</span><span class="w"> </span>CronJob<span class="w">
+</span><span class="w"></span>metadata<span class="p">:</span><span class="w">
+</span><span class="w">  </span>name<span class="p">:</span><span class="w"> </span>ecr-cred-helper<span class="w">
+</span><span class="w"></span>spec<span class="p">:</span><span class="w">
+</span><span class="w">  </span>concurrencyPolicy<span class="p">:</span><span class="w"> </span>Allow<span class="w">
+</span><span class="w">  </span>schedule<span class="p">:</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="cp">*/6</span><span class="w"> </span>*<span class="w"> </span>*<span class="w"> </span>*<span class="w">
+</span><span class="w">  </span>failedJobsHistoryLimit<span class="p">:</span><span class="w"> </span><span class="m">1</span><span class="w">
+</span><span class="w">  </span>successfulJobsHistoryLimit<span class="p">:</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="w">  </span>suspend<span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+</span><span class="w">  </span>jobTemplate<span class="p">:</span><span class="w">
+</span><span class="w">    </span>spec<span class="p">:</span><span class="w">
+</span><span class="w">      </span>template<span class="p">:</span><span class="w">
+</span><span class="w">        </span>spec<span class="p">:</span><span class="w">
+</span><span class="w">          </span>containers<span class="p">:</span><span class="w">
+</span><span class="w">          </span>-<span class="w"> </span>command<span class="p">:</span><span class="w">
+</span><span class="w">            </span>-<span class="w"> </span>/bin/sh<span class="w">
+</span><span class="w">            </span>-<span class="w"> </span>-c<span class="w">
+</span><span class="w">            </span>-<span class="w"> </span>|<span class="sd">-
+</span><span class="sd">              NAMESPACE=awx</span><span class="w">
+</span><span class="w">              </span>SERVICE_ACCOUNT=awx<span class="w">
+</span><span class="w">              </span>ACCOUNT=$(aws<span class="w"> </span>sts<span class="w"> </span>get-caller-identity<span class="w"> </span>--query<span class="w"> </span><span class="s1">&#39;Account&#39;</span><span class="w"> </span>--output<span class="w"> </span>text)<span class="w">
+</span><span class="w">              </span>REGION=$(curl<span class="w"> </span>-s<span class="w"> </span>http<span class="p">:</span>//<span class="m">169.254</span>.<span class="m">169.254</span>/latest/dynamic/instance-identity/document<span class="w"> </span>|<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&#34;import json,sys; print(json.loads(sys.stdin.read())[&#39;region&#39;])&#34;</span>)<span class="w">
+</span><span class="w">              </span>SECRET_NAME=${REGION}-ecr-registry<span class="w">
+</span><span class="w">              </span>EMAIL=anymail.doesnt.matter@email.com<span class="w">
+</span><span class="w">              </span>TOKEN=$(aws<span class="w"> </span>ecr<span class="w"> </span>get-login<span class="w"> </span>--region<span class="w"> </span>${REGION}<span class="w"> </span>--registry-ids<span class="w"> </span>${ACCOUNT}<span class="w"> </span>|<span class="w"> </span>cut<span class="w"> </span>-d<span class="s1">&#39; &#39;</span><span class="w"> </span>-f6)<span class="w">
+</span><span class="w">              </span>echo<span class="w"> </span><span class="s2">&#34;ENV variables setup done.&#34;</span><span class="w">
+</span><span class="w">              </span>kubectl<span class="w"> </span>-n<span class="w"> </span>${NAMESPACE}<span class="w"> </span>delete<span class="w"> </span>secret<span class="w"> </span>--ignore-not-found<span class="w"> </span>$SECRET_NAME<span class="w">
+</span><span class="w">              </span>kubectl<span class="w"> </span>-n<span class="w"> </span>${NAMESPACE}<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>docker-registry<span class="w"> </span>$SECRET_NAME<span class="w"> </span>\<span class="w">
+</span><span class="w">                  </span>--docker-server=https<span class="p">:</span>//${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com<span class="w"> </span>\<span class="w">
+</span><span class="w">                  </span>--docker-username=AWS<span class="w"> </span>\<span class="w">
+</span><span class="w">                  </span>--docker-password=<span class="s2">&#34;${TOKEN}&#34;</span><span class="w"> </span>\<span class="w">
+</span><span class="w">                  </span>--docker-email=<span class="s2">&#34;${EMAIL}&#34;</span><span class="w">
+</span><span class="w">              </span>echo<span class="w"> </span><span class="s2">&#34;Secret created by name $SECRET_NAME&#34;</span><span class="w">
+</span><span class="w">              </span>kubectl<span class="w"> </span>-n<span class="w"> </span>${NAMESPACE}<span class="w"> </span>patch<span class="w"> </span>serviceaccount<span class="w"> </span>${SERVICE_ACCOUNT}<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;{&#34;imagePullSecrets&#34;:[{&#34;name&#34;:&#34;&#39;</span>$SECRET_NAME<span class="s1">&#39;&#34;}]}&#39;</span><span class="w">
+</span><span class="w">              </span>echo<span class="w"> </span><span class="s2">&#34;All done.&#34;</span><span class="w">
+</span><span class="w">            </span>image<span class="p">:</span><span class="w"> </span>odaniait/aws-kubectl<span class="p">:</span>latest<span class="w">
+</span><span class="w">            </span>imagePullPolicy<span class="p">:</span><span class="w"> </span>IfNotPresent<span class="w">
+</span><span class="w">            </span>name<span class="p">:</span><span class="w"> </span>ecr-cred-helper<span class="w">
+</span><span class="w">            </span>resources<span class="p">:</span><span class="w"> </span>{}<span class="w">
+</span><span class="w">            </span>securityContext<span class="p">:</span><span class="w">
+</span><span class="w">              </span>capabilities<span class="p">:</span><span class="w"> </span>{}<span class="w">
+</span><span class="w">            </span>terminationMessagePath<span class="p">:</span><span class="w"> </span>/dev/termination-log<span class="w">
+</span><span class="w">            </span>terminationMessagePolicy<span class="p">:</span><span class="w"> </span>File<span class="w">
+</span><span class="w">          </span>dnsPolicy<span class="p">:</span><span class="w"> </span>Default<span class="w">
+</span><span class="w">          </span>hostNetwork<span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+</span><span class="w">          </span>restartPolicy<span class="p">:</span><span class="w"> </span>Never<span class="w">
+</span><span class="w">          </span>schedulerName<span class="p">:</span><span class="w"> </span>default-scheduler<span class="w">
+</span><span class="w">          </span>securityContext<span class="p">:</span><span class="w"> </span>{}<span class="w">
+</span><span class="w">          </span>terminationGracePeriodSeconds<span class="p">:</span><span class="w"> </span><span class="m">30</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>En el fichero anterior, dependiendo de nuestra configuración particular, podremos cambiar el valor de las variables <code>NAMESPACE</code> y <code>SERVICE_ACCOUNT</code>, y también especificar manualmente las variables <code>ACCOUNT</code> y <code>REGION</code> si no queremos que el script las auto-detecte porque usamos otras en concreto.</p>
+
+<p>Básicamente, lo que hace esto, es crear un trabajo de cron, que lanza un contenedor y ejecuta el script en Bash definido en la especificación del pod. En resumen:</p>
+
+<ul>
+<li>Obtiene las credenciales de acceso a ECR utilizando la cli de AWS</li>
+<li>Elimina, si existe, el secreto llamado <code>${REGION}-ecr-registry</code></li>
+<li>Lo crea de nuevo, con el token obtenido de ECR</li>
+<li>Actualiza la service account de AWX indicándole que para obtener las imágenes (<code>imagePullSecrets</code>) tiene usar las credenciales del secreto recién creado</li>
+</ul>
+
+<p>Tras esto, importamos la definición del job en Kubernetes:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">kubectl -n awx apply -f ecr-cred-refresh.yml</code></pre></td></tr></table>
+</div>
+</div>
+<p>Este job se ejecuta cada 6 horas; si queremos forzar la ejecución, podemos hacerlo con los siguientes comandos:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nv">JOB_NAME</span><span class="o">=</span><span class="s2">&#34;manual-</span><span class="k">$(</span>date --utc +%Y%m%d-%H%M%S<span class="k">)</span><span class="s2">&#34;</span>
+kubectl -n awx create job --from<span class="o">=</span>cronjob/ecr-cred-helper <span class="si">${</span><span class="nv">JOB_NAME</span><span class="si">}</span>
+kubectl -n awx <span class="nb">wait</span> --for<span class="o">=</span><span class="nv">condition</span><span class="o">=</span><span class="nb">complete</span> job.batch/<span class="si">${</span><span class="nv">JOB_NAME</span><span class="si">}</span>
+kubectl -n awx logs job.batch/<span class="si">${</span><span class="nv">JOB_NAME</span><span class="si">}</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Pero esto por sí solo no nos vale&hellip; porque ¿dónde le decimos las crendenciales para acceder a AWS (es decir, para que desde dentro del cronjob se pueda hacer <code>aws ecr get-login</code>)? Es decir, el access key y el secret. Para esto, no le pasaremos una key y un secret, sino que crearemos un rol y se lo asignaremos a la instancia EC2 de AWS donde estemos ejecutando Microk8s. El rol debe tener una policy que permita a la instancia acceder al repositorio; podemos usar la policy predefinida <code>AmazonEC2ContainerRegistryReadOnly</code> o crear una manualmente.</p>
+
+<p>Tras crear el rol y la policy, y asignar el rol a la instancia, podemos ejecutar manualmente el <code>cronjob</code>, y ejecutar de nuevo el instalador de AWX, que ya debería obtener la imagen de Docker sin problemas.</p>
+
+<p>Comandos útiles:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="c1"># Ver información de la service account de awx</span>
+kubectl -n awx describe serviceaccounts awx
+
+<span class="c1"># Ver información de los secretos (cuándo se actualizó/obtuvo el token por última vez)</span>
+kubectl -n awx get secrets</code></pre></td></tr></table>
+</div>
+</div>
+<p>Probar manualmente el script:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">kubectl run -i --tty --rm debug --image<span class="o">=</span>odaniait/aws-kubectl:latest --restart<span class="o">=</span>Never -- sh
+kubectl run --generator<span class="o">=</span>run-pod/v1 -n awx --rm -i --tty compass-tmp --image<span class="o">=</span>odaniait/aws-kubectl:latest -- sh</code></pre></td></tr></table>
+</div>
+</div>
+<p>Referencias:</p>
+
+<ul>
+<li><a href="https://medium.com/@damitj07/how-to-configure-and-use-aws-ecr-with-kubernetes-rancher2-0-6144c626d42c">How to configure and use AWS ECR with kubernetes &amp; Rancher2.0</a></li>
+</ul>
+]]></content><category scheme="https://okelet.netlify.com/tags/ansible" term="ansible" label="Ansible"/><category scheme="https://okelet.netlify.com/tags/awx" term="awx" label="AWX"/><category scheme="https://okelet.netlify.com/tags/kubernetes" term="kubernetes" label="Kubernetes"/><category scheme="https://okelet.netlify.com/tags/microk8s" term="microk8s" label="MicroK8s"/><category scheme="https://okelet.netlify.com/tags/ecr" term="ecr" label="ECR"/></entry><entry><title type="html">Monitorizar memoria y errores de funciones Lambda</title><link href="https://okelet.netlify.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/"/><id>https://okelet.netlify.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</id><published>2019-09-01T00:00:00+00:00</published><updated>2019-09-01T00:00:00+00:00</updated><content type="html"><![CDATA[<p>A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas <em>builtin</em> como:</p>
+
+<ul>
+<li>Cantidad de <em>throttles</em></li>
+<li>Número de invocaciones</li>
+<li>Número de errores &ldquo;genéricos&rdquo;</li>
+<li>Duración (media y total)</li>
+</ul>
+
+<p>Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto.</p>
+
+<p>Para conseguir información de este tipo de errores, tendremos que recurrir a crear <a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringPolicyExamples.html">filtros de métricas (<em>metric filters</em>)</a>  de los LOGs que deja Lambda en Cloudwatch. Por ejemplo, con el siguiente script, recorremos todas los grupos de LOGs de Lambda (aquellos que empiezan por <code>/aws/lambda/</code>) y creamos unas cuantas métricas en cada uno de ellos, para poder después obtener estadísticas:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="cp">#!/bin/bash
+</span><span class="cp"></span>
+<span class="c1"># Based on https://gist.github.com/sandfox/337129afa5555af6372d4eae536b20f0</span>
+<span class="nv">prefix</span><span class="o">=</span><span class="s2">&#34;/aws/lambda/&#34;</span>
+
+<span class="k">for</span> log_group in <span class="k">$(</span>aws logs describe-log-groups --log-group-name-prefix <span class="nv">$prefix</span> --query <span class="s2">&#34;logGroups[].logGroupName&#34;</span> --output text<span class="k">)</span> <span class="p">;</span> <span class="k">do</span>
+
+    <span class="nv">fn_name</span><span class="o">=</span><span class="si">${</span><span class="nv">log_group</span><span class="p">#</span><span class="nv">$prefix</span><span class="si">}</span><span class="p">;</span>
+
+    aws logs put-metric-filter <span class="se">\
+</span><span class="se"></span>		  --log-group-name <span class="s2">&#34;</span><span class="nv">$log_group</span><span class="s2">&#34;</span> <span class="se">\
+</span><span class="se"></span>		  --filter-name lambda-memory-usage <span class="se">\
+</span><span class="se"></span>		  --filter-pattern <span class="s1">&#39;[ x=&#34;REPORT&#34;, x=&#34;RequestId:&#34;, request_id, x=&#34;Duration:&#34;, duration, x=&#34;ms&#34;, x=&#34;Billed&#34;, x=&#34;Duration:&#34;, billed_duration, x=&#34;ms&#34;, x=&#34;Memory&#34;, x=&#34;Size:&#34;, memory_size, x=&#34;MB&#34;, x=&#34;Max&#34;, x=&#34;Memory&#34;, x=&#34;Used:&#34;, memory_used, x=&#34;MB&#34;]&#39;</span> <span class="se">\
+</span><span class="se"></span>		  --metric-transformations <span class="s2">&#34;metricNamespace=Custom/Lambda,metricName=</span><span class="si">${</span><span class="nv">fn_name</span><span class="si">}</span><span class="s2">-MemoryUsed,metricValue=\$memory_used&#34;</span>
+
+    aws logs put-metric-filter <span class="se">\
+</span><span class="se"></span>		  --log-group-name <span class="s2">&#34;</span><span class="nv">$log_group</span><span class="s2">&#34;</span> <span class="se">\
+</span><span class="se"></span>		  --filter-name lambda-memory-size <span class="se">\
+</span><span class="se"></span>		  --filter-pattern <span class="s1">&#39;[ x=&#34;REPORT&#34;, x=&#34;RequestId:&#34;, request_id, x=&#34;Duration:&#34;, duration, x=&#34;ms&#34;, x=&#34;Billed&#34;, x=&#34;Duration:&#34;, billed_duration, x=&#34;ms&#34;, x=&#34;Memory&#34;, x=&#34;Size:&#34;, memory_size, x=&#34;MB&#34;, x=&#34;Max&#34;, x=&#34;Memory&#34;, x=&#34;Used:&#34;, memory_used, x=&#34;MB&#34;]&#39;</span> <span class="se">\
+</span><span class="se"></span>		  --metric-transformations <span class="s2">&#34;metricNamespace=Custom/Lambda,metricName=</span><span class="si">${</span><span class="nv">fn_name</span><span class="si">}</span><span class="s2">-MemorySize,metricValue=\$memory_size&#34;</span>
+
+    <span class="c1"># Errores que se dan cuando la ejecución se pasa del máximo de memoria permitido</span>
+    aws logs put-metric-filter <span class="se">\
+</span><span class="se"></span>      --log-group-name <span class="s2">&#34;</span><span class="si">${</span><span class="nv">log_group</span><span class="si">}</span><span class="s2">&#34;</span> <span class="se">\
+</span><span class="se"></span>      --filter-name lambda-memory-errors <span class="se">\
+</span><span class="se"></span>      --filter-pattern <span class="s1">&#39;Process exited before completing request&#39;</span> <span class="se">\
+</span><span class="se"></span>      --metric-transformations <span class="s2">&#34;metricNamespace=Custom/Lambda,metricName=</span><span class="si">${</span><span class="nv">fn_name</span><span class="si">}</span><span class="s2">-MemoryErrors,metricValue=1,defaultValue=0&#34;</span>
+
+    <span class="c1"># Errores que se dan cuando la ejecución se pasa del máximo de tiempo permitido</span>
+    aws logs put-metric-filter <span class="se">\
+</span><span class="se"></span>      --log-group-name <span class="s2">&#34;</span><span class="si">${</span><span class="nv">log_group</span><span class="si">}</span><span class="s2">&#34;</span> <span class="se">\
+</span><span class="se"></span>      --filter-name lambda-timeout-errors <span class="se">\
+</span><span class="se"></span>      --filter-pattern <span class="s1">&#39;Task timed out after&#39;</span> <span class="se">\
+</span><span class="se"></span>      --metric-transformations <span class="s2">&#34;metricNamespace=Custom/Lambda,metricName=</span><span class="si">${</span><span class="nv">fn_name</span><span class="si">}</span><span class="s2">-TimeoutErrors,metricValue=1,defaultValue=0&#34;</span>
+
+<span class="k">done</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Una vez creados, y pasados cierto tiempo para poder obtener datos, en la sección de métricas de Cloudwatch, tendremos una nueva categoría, <code>Custom/Lambda</code>, donde tendremos el listado de nuevas métricas, por cada función Lambda:</p>
+
+<p><img src="cloudwatch_lambda_custom_namespace.png" alt="" /></p>
+
+<p>Podremos seleccionar estas estadísticas para poder visualizar los datos en un gráfico:</p>
+
+<p><img src="cloudwatch_lambda_memory_used_graph.png" alt="" /></p>
+
+<p>También podremos consultar estos datos desde la CLI:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">aws cloudwatch get-metric-statistics --namespace Custom/Lambda --metric-name my_function_name-MemoryUsed --start-time <span class="k">$(</span>date --date <span class="s2">&#34;1 day ago&#34;</span> +%s<span class="k">)</span> --end-time <span class="k">$(</span>date +%s<span class="k">)</span>  --period <span class="m">300</span> --statistics Average</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-json" data-lang="json"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
+    <span class="nt">&#34;Label&#34;</span><span class="p">:</span> <span class="s2">&#34;my_function_name-MemoryUsed&#34;</span><span class="p">,</span>
+    <span class="nt">&#34;Datapoints&#34;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-29T04:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">84.32894736842105</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-28T18:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">82.94736842105263</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-29T08:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">83.72368421052632</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-28T22:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">84.63157894736842</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-29T12:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">83.59210526315789</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-29T02:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">83.17105263157895</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-28T16:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">84.35526315789474</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-29T06:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">83.85526315789474</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-29T10:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">84.48684210526316</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-28T20:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">85.0657894736842</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-29T00:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">84.97368421052632</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;Timestamp&#34;</span><span class="p">:</span> <span class="s2">&#34;2019-08-29T14:10:00Z&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;Average&#34;</span><span class="p">:</span> <span class="mf">82.57894736842105</span><span class="p">,</span>
+            <span class="nt">&#34;Unit&#34;</span><span class="p">:</span> <span class="s2">&#34;None&#34;</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span></code></pre></td></tr></table>
+</div>
+</div>]]></content><category scheme="https://okelet.netlify.com/tags/aws" term="aws" label="AWS"/><category scheme="https://okelet.netlify.com/tags/lambda" term="lambda" label="Lambda"/><category scheme="https://okelet.netlify.com/tags/cloudwatch" term="cloudwatch" label="Cloudwatch"/></entry><entry><title type="html">Usando caddy para desarollo local en PHP</title><link href="https://okelet.netlify.com/posts/2019/07/usando-caddy-para-desarollo-local-en-php/"/><id>https://okelet.netlify.com/posts/2019/07/usando-caddy-para-desarollo-local-en-php/</id><published>2019-07-15T00:00:00+00:00</published><updated>2019-07-15T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Durante el desarrollo en local de nuestra aplicación en PHP (con el framework <a href="https://cakephp.org/">CakePHP</a>) solíamos usar el servidor que venía por defecto:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">bin/cake server</code></pre></td></tr></table>
+</div>
+</div>
+<p>El problema de esto (que por debajo usa el <a href="https://www.php.net/manual/en/features.commandline.webserver.php">servidor <em>embedido</em> de PHP</a>), es que es mono-hilo, es decir, que sirve sólo una petición a la vez, por lo que a veces la carga de la web se hacía bastante pesada.</p>
+
+<p>Para evitar esto, podemos usar <a href="https://caddyserver.com/">Caddy</a>, que básicamente es un servidor web en un único ejecutable, sin necesidad de instalar un servidor web completo como Apache o nginx, ni tener que gestionar servidores con permisos de root.</p>
+
+<p>Para poder utilizar Caddy con CakePHP, primero lo instalaremos:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">mkdir -p ~/bin
+curl -sSfL <span class="s2">&#34;https://caddyserver.com/download/linux/amd64?license=personal&amp;telemetry=off&#34;</span> <span class="p">|</span> tar -C ~/bin -zx caddy
+chmod +x ~/bin/caddy</code></pre></td></tr></table>
+</div>
+</div>
+<p>A continuación, instalaremos el paquete <code>php7.2-cgi</code>, de tal forma que Caddy, cuando arranque, inicie también un proceso PHP que gestionará las peticiones:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo apt install php7.2-cgi</code></pre></td></tr></table>
+</div>
+</div>
+<p>Tras esto, generaremos un fichero de configuración <code>Caddyfile</code> con los siguientes parámetros:</p>
+
+<ul>
+<li>Levantará el servidor web en <a href="http://127.0.0.1:8765">http://127.0.0.1:8765</a></li>
+<li>Levanta un servidor php-cgi que escucha en el puerto 9000</li>
+<li>Redirigirá todas las peticiones al servidor php-cgi anterior, excepto las que empiecen por:
+
+<ul>
+<li>/static</li>
+<li>/img</li>
+<li>/js</li>
+<li>/css</li>
+<li>/favicon.ico</li>
+</ul></li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text">:8765
+bind 127.0.0.1
+root webroot
+index index.php index.html index.htm
+gzip
+fastcgi / 127.0.0.1:9000 php
+rewrite {
+    if {uri} not_starts_with /static
+    if {uri} not_starts_with /img
+    if {uri} not_starts_with /js
+    if {uri} not_starts_with /css
+    if {uri} not_starts_with /favicon.ico
+    to /index.php?{query}
+}
+
+log stdout
+errors stdout
+on startup php-cgi -b 127.0.0.1:9000</code></pre></td></tr></table>
+</div>
+</div>
+<p>Ya sólo nos queda arrancar el entorno de desarrollo (a mi me gusta por limpieza eliminar temporales y cache), ejecutando este comando desde la raíz del proyecto de CakePHP (o similar para otros frameworks):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">rm -Rf tmp/* logs/* <span class="o">&amp;&amp;</span> ~/bin/caddy</code></pre></td></tr></table>
+</div>
+</div>
+<p>Y acceder a nuestra web usando la URL <a href="http://127.0.0.1:8765">http://127.0.0.1:8765</a>.</p>]]></content></entry><entry><title type="html">Crear usuario y base de datos en Postgres y dar permisos</title><link href="https://okelet.netlify.com/posts/2019/06/crear-usuario-y-base-de-datos-en-postgres-y-dar-permisos/"/><id>https://okelet.netlify.com/posts/2019/06/crear-usuario-y-base-de-datos-en-postgres-y-dar-permisos/</id><published>2019-06-23T00:00:00+00:00</published><updated>2019-06-23T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Una cosa que siempre se me olvida y tengo que buscar (como con <a href="/posts/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/">MySQL</a>): cómo crear un usuario en Postgres, crear una base de datos, y dar permisos al usuario sobre esa base de datos:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">psql -U postgres</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sql" data-lang="sql"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sql" data-lang="sql"><span class="k">create</span> <span class="k">database</span> <span class="n">mydb</span> <span class="k">ENCODING</span> <span class="s1">&#39;UTF8&#39;</span><span class="p">;</span>
+<span class="k">create</span> <span class="k">user</span> <span class="n">myuser</span> <span class="k">with</span> <span class="k">encrypted</span> <span class="n">password</span> <span class="s1">&#39;mypass&#39;</span><span class="p">;</span>
+<span class="k">grant</span> <span class="k">all</span> <span class="k">privileges</span> <span class="k">on</span> <span class="k">database</span> <span class="n">mydb</span> <span class="k">to</span> <span class="n">myuser</span><span class="p">;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Nos conectaremos entonces:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">psql -U myuser -W mydb</code></pre></td></tr></table>
+</div>
+</div>
+<p>Comandos rápidos:</p>
+
+<ul>
+<li>Listar bases de datos: <code>\l</code></li>
+<li>Crear tabla de ejemplo: <code>CREATE TABLE mytable (id INTEGER PRIMARY KEY, name VARCHAR);</code></li>
+<li>Listar tablas: <code>\dt</code></li>
+<li>Listar usuarios: <code>\du</code></li>
+</ul>
+
+<p>Referencias:</p>
+
+<ul>
+<li><a href="https://medium.com/coding-blocks/creating-user-database-and-adding-access-on-postgresql-8bfcd2f4a91e">Creating user, database and adding access on PostgreSQL</a></li>
+<li><a href="https://support.helpspot.com/index.php?pg=kb.page&amp;id=467">Creating a UTF-8 Database</a></li>
+<li><a href="https://www.postgresql.org/docs/current/app-psql.html">PostgreSQL: Documentation: 11: psql</a></li>
+</ul>]]></content><category scheme="https://okelet.netlify.com/tags/postgres" term="postgres" label="Postgres"/></entry><entry><title type="html">Probando Ansible AWX con MicroK8s</title><link href="https://okelet.netlify.com/posts/2019/06/probando-ansible-awx-con-microk8s/"/><id>https://okelet.netlify.com/posts/2019/06/probando-ansible-awx-con-microk8s/</id><published>2019-06-19T00:00:00+00:00</published><updated>2020-01-18T00:00:00+00:00</updated><content type="html"><![CDATA[<p>AVISO: Post largo (intro a Ansible, AWX, MicroK8s)</p>
+
+<p>Actualización 2020-01-14: Actualizado a <a href="https://groups.google.com/forum/#!topic/awx-project/aYYtuAuHMzY">Ansible AWX 9.1.1</a></p>
+
+<p>Ansible (<em>/ánsibol/</em>) es el gestor de configuración de moda, y por méritos propios. Aunque no es perfecto (en determinadas ocasiones se puede preferir un modelo cliente/servidor en lugar de una conexión SSH <em>ad-hoc</em>), ofrece una buena combinación entre funcionalidad y simplicidad. Siempre y cuando tengamos conectividad SSH con la máquina a gestionar (o no, a través de <a href="https://docs.aws.amazon.com/es_es/quickstart/latest/linux-bastion/architecture.html">bastiones</a>), en el caso de equipos Linux, o conectividad WinRM o o PSRP para equipos Windows, podremos realizar infinidad de acciones o tareas sobre las máquinas a gestionar.</p>
+
+<p>Uno de los problemas de Ansible (hablando correctamente, <a href="https://www.ansible.com/blog/red-hat-ansible-automation-engine-vs-tower">Ansible Engine</a>) es que no tiene una forma de ejecutar de forma automatizada playbooks, para mantener la configuración sincronizada de forma periódica, ejecutar tareas planificadas o incluso auto-provisionar equipos. Aquí es donde entra Ansible Tower, que es la versión con soporte de <a href="https://github.com/ansible/awx">Ansible AWX</a>, al estilo de lo que Red Hat hace con Wildfly y JBoss. Ansible Tower/AWX en básicamente una API REST con una interfaz web que se comunica con ella. Utilizando esta API, se pueden definir inventarios, credenciales, equipos, plantillas de trabajo, flujos de trabajo, etc. así como asignar permisos por usarios/grupos mediante su sistema RBAC.</p>
+
+<p>He de reconocer que al principio cuesta un poco, pero cuando se le pilla el truco, uno se da cuenta de lo potente que es. Pero lo que no me explico es la complejidad de instalación del software. Creo que Red Hat se está empeñando en poner las cosas difíciles a quienes usan sus productos sin suscripción (que al final son los que en gran medida depuran el software, contribuyen de forma gratuita, etc.); en este caso, se nos obliga a hacer una instalación mediante Docker, que aunque está de moda, que lo veo muy bien, creo que deberían dar alternativas (que sí que las dan con la versión con soporte, por lo que impedimentos técnicos no los hay, simplemente es intencionalidad). Para la versión libre (AWX) se soportan los siguientes <a href="https://github.com/ansible/awx/blob/devel/INSTALL.md">métodos de instalación</a>:</p>
+
+<ul>
+<li>Openshift (claramente enfocado a utilizar un stack completo de Red Hat)</li>
+<li>Docker Compose</li>
+<li>Kubernetes</li>
+</ul>
+
+<p>En cambio, para Tower, la versión con soporte, es básicamente un script de instalación, que la verdad no he probado, aunque me imagino que lo que hace es provisionar los nodos con el software necesario, a la antigua usanza (no sé si por debajo creará un cluster de K8s u Openshift, o directamente lo hace sobre el sistema operativo).</p>
+
+<p>Básicamente, la forma de instalación de AWX es crear una serie de contenedores en el orquestador en cuestión (AWX task, AWX web, RabbitMQ, Postgres, Memcached).</p>
+
+<p>Con ideas de probar AWX para un proyecto interno, empecé a analizar las 3 opciones de instalación; la primera de ellas, Openshift, la descarté desde el principio por ser una tecnología no muy extendida, en favor, en todo caso, de Kubernetes. Ya que esto era una <a href="https://es.wikipedia.org/wiki/Prueba_de_concepto">PoC</a>, no quería complicarme mucho con Kubernetes, por lo que empecé a probar con Docker Compose, pero a la hora de escalar, lanzando la instalación en varios nodos, me di cuenta de que el modo de funcionar de AWX requiere un cluster de <a href="https://www.rabbitmq.com/">RabbitMQ</a>, que es difícil de configurar dinámicamente con Docker Compose. Con Kubernetes y su <a href="https://github.com/ansible/awx/blob/devel/installer/roles/kubernetes/templates/deployment.yml.j2#L38">&ldquo;magia&rdquo;</a> hace que el cluster de RabbitMQ se configure y escale automáticamente.</p>
+
+<p>Siendo mi única opción Kubernetes, no quería montarme un cluster por mi cuenta, ni tener que montar un cluster de EKS, que <a href="https://aws.amazon.com/es/eks/pricing/">de base ya son 144$ al mes</a> más los nodos de computación, al final tuve que buscar alternativas más simples.</p>
+
+<p>Mi primera intención fue probar <a href="https://kubernetes.io/es/docs/tasks/tools/install-minikube/">Minikube</a> en mi máquina local, pero cada pod de AWX consume 6 GB de RAM, por lo que mínimo a la MV de Minikube le tenía que dar 7 GB, y teniendo mi portátil 8 GB, murió varias veces en el intento&hellip; Me planteé montar Minikube en una instancia EC2, pero esto sería montar Virtualbox, sobre un entorno ya virtualizado (EC2), y sobre el que correría Kubernetes&hellip; Aunque factible, me parecía un poco engorroso. Así que gracias a mi compañero Roque, que me recordó la existencia de <a href="https://microk8s.io/">MicroK8s</a>, me decidí a probar.</p>
+
+<p>Partiendo de una EC2 con Ubuntu 18.04 limpia, estos son los comandos a ejecutar para montar un entorno de Ansible AWX con MicroK8s (forzamos la versión 1.15, ya que AWX no es compatible con una versión mayor, por ahora):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo snap refresh microk8s --channel <span class="m">1</span>.15/stable
+sudo snap install helm --channel<span class="o">=</span><span class="m">2</span>.16/stable --classic
+
+<span class="o">(</span>grep <span class="s2">&#34;^--allow-privileged</span>$<span class="s2">&#34;</span> /var/snap/microk8s/current/args/kube-apiserver &gt; /dev/null<span class="o">)</span> <span class="o">||</span> <span class="o">(</span><span class="nb">echo</span> <span class="s2">&#34;--allow-privileged&#34;</span> <span class="p">|</span> sudo tee -a /var/snap/microk8s/current/args/kube-apiserver<span class="o">)</span>
+<span class="o">(</span>grep <span class="s2">&#34;^--allow-privileged</span>$<span class="s2">&#34;</span> /var/snap/microk8s/current/args/kubelet &gt; /dev/null<span class="o">)</span> <span class="o">||</span> <span class="o">(</span><span class="nb">echo</span> <span class="s2">&#34;--allow-privileged&#34;</span> <span class="p">|</span> sudo tee -a /var/snap/microk8s/current/args/kubelet<span class="o">)</span>
+sudo microk8s.stop
+sudo microk8s.start
+
+microk8s.enable ingress
+microk8s.enable dns
+microk8s.enable storage
+sudo snap <span class="nb">alias</span> microk8s.kubectl kubectl
+microk8s.config &gt; <span class="nv">$HOME</span>/.kube/config
+helm init</code></pre></td></tr></table>
+</div>
+</div>
+<p><a href="https://helm.sh/">Helm</a> es necesario para instalación de Postgres; si vamos a utilizar una BBDD externa, no es necesario.</p>
+
+<p>Tras esto, ya tenemos el entorno de MicroK8s disponible; ahora nos bajamos AWX y lo configuramos:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="c1"># Actualizar e instalar dependencias mínimas</span>
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y python3-pip vim
+pip3 install docker docker-compose --user
+
+<span class="c1"># Instalar Ansible, necesario para instalar AWX</span>
+sudo add-apt-repository ppa:ansible/ansible -y
+sudo apt update
+sudo apt install -y ansible
+
+<span class="c1"># Nos bajamos la release 9.1.1 de AWX</span>
+curl -sLO https://github.com/ansible/awx/archive/9.1.1.tar.gz
+tar zxf <span class="m">9</span>.1.1.tar.gz
+<span class="nb">cd</span> awx-9.1.1/installer
+cp -a inventory<span class="o">{</span>,.original<span class="o">}</span>
+
+<span class="c1"># Configuramos el fichero de inventario para que use Kubernetes</span>
+sed -i -e <span class="s1">&#39;s/#* *kubernetes_context.*/kubernetes_context=microk8s/&#39;</span> inventory
+sed -i -e <span class="s1">&#39;s/#* *kubernetes_namespace.*/kubernetes_namespace=awx/&#39;</span> inventory
+
+<span class="c1"># Y lanzamos la instalación</span>
+ansible-playbook -i inventory install.yml</code></pre></td></tr></table>
+</div>
+</div>
+<p>Variables interesantes en el fichero <code>inventory</code>:</p>
+
+<ul>
+<li><code>kubernetes_context</code>: el contexto del cliente de Kubernetes que usaremos para conectarnos al cluster; para MicroK8s, en general será <code>microk8s</code>.</li>
+<li><code>kubernetes_namespace</code>: el <em>namespace</em> del cluster de Kubernetes que se usará para crear todos los elementos de AWX; por defecto es <code>awx</code>.</li>
+<li><code>kubernetes_deployment_name</code>: es un prefijo que se usa para generar los nombres de los recursos dentro del <em>namespace</em>; por defecto es <code>awx</code>.</li>
+<li><code>pg_hostname</code>: es el host remoto donde debemos tener instalado un servidor de Postgres; si esta variable está comentada, el instalador creará un servidor de Postgres en Kubernetes usando Helm; si está definida, se usará el servidor indicado (habrá que configurar adecuadamente el resto de parámetros de conexión a la BBDD: <code>pg_username</code>, <code>pg_password</code>, <code>pg_database</code>, etc.).</li>
+</ul>
+
+<p>También se pueden especificar las siguientes variables para indicar imágenes y versiones alternativas a las oficiales (por ejemplo, si hemos creado unas propias para añadir software, etc.):</p>
+
+<ul>
+<li><code>kubernetes_task_version</code> (por defecto: <code>9.1.1</code>)</li>
+<li><code>kubernetes_task_image</code> (por defecto: <code>ansible/awx_task</code>)</li>
+<li><code>kubernetes_web_version</code> (por defecto: <code>9.1.1</code>)</li>
+<li><code>kubernetes_web_image</code> (por defecto: <code>ansible/awx_web</code>)</li>
+</ul>
+
+<p>Esto nos creará un namespace llamado <code>awx</code> en MicroK8s, y desplegará en él 2 <code>statefulsets</code>: 1 para Postgres y uno para AWX. Cada <code>statefulset/pod</code> de AWX contiene los siguientes contenedores:</p>
+
+<ul>
+<li>memcached</li>
+<li>rabbitmq</li>
+<li>awx-celery (awx_task)</li>
+<li>awx-web</li>
+</ul>
+
+<p>Cada vez que se escala el <code>statefulset</code> se crean estos 4 contenedores. Gracias al plugin <a href="https://github.com/rabbitmq/rabbitmq-peer-discovery-k8s"><code>rabbitmq_peer_discovery_k8s</code></a> (<a href="https://github.com/ansible/awx/blob/devel/installer/roles/kubernetes/templates/deployment.yml.j2#L38">aquí</a> se puede ver fichero YAML de configuración) los contenedores de rabbitmq forman un cluster de forma automática.</p>
+
+<p>Para volver a empezar desde 0, tenemos 2 posibilidades; o bien borrar el <em>namespace</em>:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">kubectl delete namespaces awx</code></pre></td></tr></table>
+</div>
+</div>
+<p>O bien con el comando <code>microk8s.reset</code>, aunque con este comando, frecuentemente se queda &ldquo;colgado&rdquo;:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">microk8s.reset</code></pre></td></tr></table>
+</div>
+</div>
+<p>Después del reset, es necesario volver a configurar los complementos (dns, storage, ingress), y configurar el cliente:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">microk8s.enable ingress
+microk8s.enable dns
+microk8s.enable storage
+sudo snap <span class="nb">alias</span> microk8s.kubectl kubectl
+microk8s.config &gt; <span class="nv">$HOME</span>/.kube/config
+helm init</code></pre></td></tr></table>
+</div>
+</div>
+<p>Y podemos lanzar de nuevo la instalación:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">ansible-playbook -i inventory install.yml</code></pre></td></tr></table>
+</div>
+</div>
+<p>Si por delante del servidor vamos a poner un balanceador (por ejemplo, un ELB o ALB), debemos configurar el <code>ingress</code> de Nginx para que reenvíe las cabeceras <code>X-Forwarded-*</code>:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">kubectl -n default edit configmaps nginx-load-balancer-microk8s-conf</code></pre></td></tr></table>
+</div>
+</div>
+<p>Añadiendo/modificando la sección data con este valor:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">data<span class="p">:</span><span class="w">
+</span><span class="w">    </span>use-forwarded-headers<span class="p">:</span><span class="w"> </span><span class="s2">&#34;true&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Esto es necesario, por ejemplo, si se usa un balanceador con HTTPS, y configuramos la autentificación de Azure, ya que sin el reenvío de estas cabeceras, AWX se cree que vamos por HTTP en lugar de HTTPS, y la URL de callback para el login de Azure se genera incorrectamente.</p>
+
+<p>Una vez realizados los pasos de la instalación, lo único que nos queda es acceder a la aplicación, usando el puerto 80 de la máquina, por ejemplo, <a href="http://localhost">http://localhost</a>, que es donde publica los servicios el <em>ingress controller</em> de nginx.</p>]]></content><category scheme="https://okelet.netlify.com/tags/ansible" term="ansible" label="Ansible"/><category scheme="https://okelet.netlify.com/tags/awx" term="awx" label="AWX"/><category scheme="https://okelet.netlify.com/tags/kubernetes" term="kubernetes" label="Kubernetes"/><category scheme="https://okelet.netlify.com/tags/microk8s" term="microk8s" label="MicroK8s"/></entry><entry><title type="html">Crear un rol personalizado en Google Cloud para encendido y apagado de máquinas</title><link href="https://okelet.netlify.com/posts/2019/06/crear-un-rol-personalizado-en-google-cloud-para-encendido-y-apagado-de-m%C3%A1quinas/"/><id>https://okelet.netlify.com/posts/2019/06/crear-un-rol-personalizado-en-google-cloud-para-encendido-y-apagado-de-m%C3%A1quinas/</id><published>2019-06-18T00:00:00+00:00</published><updated>2019-06-18T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Es posible que queramos delegar ciertas tareas de administración sobre elementos de Google
+Cloud a usuarios o departamentos, y que no existan roles predefinidos que hagan exactamente
+lo que necesitamos. Para eso están los roles personalizados, similar a las políticas de IAM
+de AWS.</p>
+
+<p>Por ejemplo, para crear un rol que permita a un usuario apagar, encender y reinicar máquinas
+virtuales, podemos crear un rol como el siguiente:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">gcloud iam roles create StartStopVms --project <span class="si">${</span><span class="nv">GOOGLE_CLOUD_PROJECT</span><span class="si">}</span> <span class="se">\
+</span><span class="se"></span>    --title StartStopVms --description <span class="s2">&#34;Can start, stop, suspend, resume and reset VMs&#34;</span> <span class="se">\
+</span><span class="se"></span>    --stage GA --permissions compute.instances.start,compute.instances.stop,compute.instances.suspend,compute.instances.resume,compute.instances.reset</code></pre></td></tr></table>
+</div>
+</div>
+<p>Una vez creado el rol, se lo podemos asignar a un usuario con el siguiente comando:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">gcloud projects add-iam-policy-binding <span class="si">${</span><span class="nv">GOOGLE_CLOUD_PROJECT</span><span class="si">}</span> <span class="se">\
+</span><span class="se"></span>    --member user@domain.com <span class="se">\
+</span><span class="se"></span>    --role projects/<span class="si">${</span><span class="nv">GOOGLE_CLOUD_PROJECT</span><span class="si">}</span>/roles/StartStopVms</code></pre></td></tr></table>
+</div>
+</div>
+<p>En el caso que nos aplica, también sería conveniente dar permisos de sólo lectura (en este
+ejemplo damos permisos de visor sobre el proyecto completo, aunque se podría afinar más para sólo
+permitir al acceso a la parte de computación):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">gcloud projects add-iam-policy-binding <span class="si">${</span><span class="nv">GOOGLE_CLOUD_PROJECT</span><span class="si">}</span> <span class="se">\
+</span><span class="se"></span>    --member user@domain.com <span class="se">\
+</span><span class="se"></span>    --role roles/viewer</code></pre></td></tr></table>
+</div>
+</div>
+<p>NOTA: La variable <code>GOOGLE_CLOUD_PROJECT</code> se establece automáticamente en la consola de Cloud Shell;
+si se ejecuta desde otro tipo de consola, se debe establecer manualmente esta variable, cuyo
+valor es el ID del proyecto sobre el que se están dando permisos.</p>
+
+<p>Referencias:</p>
+
+<ul>
+<li><a href="https://cloud.google.com/iam/docs/understanding-custom-roles">Understanding IAM custom roles</a></li>
+<li><a href="https://cloud.google.com/iam/docs/creating-custom-roles">Creating and managing custom roles</a></li>
+</ul>]]></content></entry><entry><title type="html">Python es el lenguaje más popular hoy por hoy</title><link href="https://okelet.netlify.com/posts/2019/06/python-es-el-lenguaje-m%C3%A1s-popular-hoy-por-hoy/"/><id>https://okelet.netlify.com/posts/2019/06/python-es-el-lenguaje-m%C3%A1s-popular-hoy-por-hoy/</id><published>2019-06-17T00:00:00+00:00</published><updated>2019-06-17T00:00:00+00:00</updated><content type="html">&lt;p>Existe una medida, llamada índice TIOBE, que valora qué lenguajes de programación son más populares. Los datos salen de los foros de discusión técnicos en donde se observan cuantos internautas cambian impresiones sobre los diferentes lenguajes de programación. Ahora, en junio, el índica TIOBE ha sido publicado y revela que Python es el lenguaje más popular.&lt;/p></content></entry><entry><title type="html">Crear custom runtime para PHP en AWS Lambda</title><link href="https://okelet.netlify.com/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/"/><id>https://okelet.netlify.com/posts/2019/06/crear-custom-runtime-para-php-en-aws-lambda/</id><published>2019-06-11T00:00:00+00:00</published><updated>2019-06-27T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Actualización 2019-06-27: Añadida extensión para MongoDB.</p>
+
+<p>En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con <a href="https://docs.pipenv.org/en/latest/">pipenv</a>.</p>
+
+<p>Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de <a href="https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/"><em>custom runtimes</em></a>, que básicamente consiste en subir el ejecutable con un determinado nombre.</p>
+
+<p>En resumen, lo que el post anterior viene a decir es que:</p>
+
+<ul>
+<li>Tenemos que compilar PHP</li>
+<li>Tenemos que crear un script llamado <code>bootstrap</code> que será al que llame Lambda; este script será el encargado de conectarse a un endpoint &ldquo;mágico&rdquo; (<code>http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next</code>), que nos devolverá un JSON con las propiedades de la petición a procesar. Este JSON se lo podemos pasar entonces a una función PHP de nuestra elección.</li>
+</ul>
+
+<p>Un ejemplo de fichero <code>bootstrap</code> se encuentra en <a href="https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae">este gist</a>.</p>
+
+<p>El motivo de este post, es que <a href="https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/">AWS ha publicado una noticia</a> diciendo que va a cambiar la imagen base donde se ejecutan los <em>custom runtimes</em>. Hasta ahora se basaba en una Amazon Linux 2017.03, pero a partir de ahora se van a ejecutar sobre una Amazon Linux 2018.03; esto puede causar que determinados <em>runtimes</em> dejen de funcionar, si están compilados con versiones determinadas de librerías del sistema operativo.</p>
+
+<p>Ya tenía hecho un scriptillo para la versión antigua del runtime, pero como tenía que revisarlo, he decidido &ldquo;ponerlo bonito&rdquo; y publicarlo en el blog. Manos a la obra.</p>
+
+<p>Lo primero que tenemos que hacer es determinar una imagen de Docker válida para la imagen donde se ejecutaría el <em>runtime</em>; en nuestro caso, <a href="https://docs.aws.amazon.com/es_es/lambda/latest/dg/current-supported-versions.html">según la documentación</a> sería una AMI Linux 2018.03, y yendo al Docker Hub, podemos ver la versión de la <a href="https://hub.docker.com/_/amazonlinux">imagen Docker equivalente</a>.</p>
+
+<p>Una vez que sabemos la imagen Docker, lanzamos un contenedor:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">docker run -it --name php-lambda-layer --rm amazonlinux:2018.03.0.20190514 bash</code></pre></td></tr></table>
+</div>
+</div>
+<p>Una vez lanzado, lo primero que haremos será actualizar el sistema e instalar una serie de librerías necesarias para compilar PHP y las dependencias que queremos:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nb">cd</span>
+yum update -y
+yum install autoconf bison gcc gcc-c++ libcurl-devel libxml2-devel openssl-devel git tree zip vim python36 python36-pip libicu-devel unzip diff libpng-devel -y</code></pre></td></tr></table>
+</div>
+</div>
+<p>A continuación, nos bajamos la última versión de PHP y la compilamos, indicando los módulos que queremos incluir:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nb">cd</span>
+git clone https://github.com/mongodb/mongo-php-driver.git mongodb
+<span class="nb">cd</span> mongodb
+git checkout <span class="m">1</span>.5.5
+git submodule update --init
+
+<span class="nb">cd</span>
+mkdir ~/php-7-bin
+curl -sL https://github.com/php/php-src/archive/php-7.3.6.tar.gz <span class="p">|</span> tar -xz
+<span class="nb">cd</span> ~/php-src-php-7.3.6
+mv ~/mongodb ext/mongodb
+./buildconf --force
+./configure --prefix<span class="o">=</span>/root/php-7-bin/ --with-openssl --enable-intl --enable-mbstring --with-pdo-mysql --with-curl --with-zlib --with-gd --enable-bcmath --enable-mongodb --without-pear
+make
+make install
+~/php-7-bin/bin/php -v
+~/php-7-bin/bin/php -m
+rm -Rf ~/php-7-bin/<span class="o">{</span>include,lib,php,var<span class="o">}</span>
+rm -Rf ~/php-7-bin/bin/<span class="o">{</span>php-cgi,phpdbg<span class="o">}</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Con los parámetros anteriores al compilar, tendremos PHP con los siguientes módulos:</p>
+
+<ul>
+<li>openssl</li>
+<li>curl</li>
+<li>intl</li>
+<li>mbstring</li>
+<li>pdo/mysql</li>
+<li>gd</li>
+<li>bcmath</li>
+<li>mongodb</li>
+<li><del>zip</del> (<a href="https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer">https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer</a>)</li>
+</ul>
+
+<p>Tras esto, nos bajamos <a href="https://getcomposer.org/">composer</a>; lo utilizaremos para utilizar la librería <a href="https://packagist.org/packages/guzzlehttp/guzzle">guzzlehttp/guzzle</a> para facilitar la manera en la que obtenemos el evento y reportar el estado (y no estar peleando con llamadas a <code>curl</code>):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nb">cd</span>
+curl -sS https://getcomposer.org/installer <span class="p">|</span> ~/php-7-bin/bin/php</code></pre></td></tr></table>
+</div>
+</div>
+<p>Lo siguiente sería crear un proyecto de <code>composer</code> e instalar la dependencia mencionada antes; al mismo tiempo, también nos bajamos el fichero <code>bootstrap</code> que será el punto de entrada de nuestro <em>runtime</em>.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">mkdir ~/php-runtime
+<span class="nb">cd</span> ~/php-runtime
+curl -qL https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae/raw &gt; bootstrap
+chmod <span class="m">755</span> bootstrap
+~/php-7-bin/bin/php ~/composer.phar require guzzlehttp/guzzle</code></pre></td></tr></table>
+</div>
+</div>
+<p>Por último, lo metemos todo en un fichero ZIP comprimido</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">rm -f ~/runtime.zip
+<span class="nb">cd</span> ~/php-7-bin
+zip -r ~/runtime.zip bin/php
+<span class="nb">cd</span> ~/php-runtime
+zip -r ~/runtime.zip .</code></pre></td></tr></table>
+</div>
+</div>
+<p>La estructura final de este fichero ZIP es la siguiente:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">├── bin
+│   └── php
+├── bootstrap
+├── composer.json
+├── composer.lock
+└── vendor
+    ├── autoload.php
+    ├── composer
+    ├── guzzlehttp
+    ├── psr
+    └── ralouphie</pre></td></tr></table>
+</div>
+</div>
+<p>Antes de finalizar el contenedor, desde una shell externa, copiaremos el fichero generado:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">docker cp php-lambda-layer:/root/runtime.zip .</code></pre></td></tr></table>
+</div>
+</div>
+<p>Ahora subimos la capa (<code>layer</code>) a AWS:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">aws lambda publish-layer-version --layer-name php-cake-amzlx201803 --zip-file fileb://runtime.zip --compatible-runtimes provided --region eu-west-1</code></pre></td></tr></table>
+</div>
+</div>
+<p>Lo único que nos quedaría sería subir la función en PHP, indicando que queremos usar un <em>custom runtime</em> y añadirle este <code>layer</code> que hemos subido.</p>
+
+<p>Hay que tener en cuenta que el script <code>bootstrap</code> hace un mapeo entre el directorio <code>src</code> y el <code>namespace</code> <code>App</code>, de modo que si especificamos <code>App\Lambda\MyFunction::handler</code> como <code>handler</code> (en la configuración de la función Lambda), buscaría un fichero <code>src/Lambda/MyFunction.php</code>, que debería contener una función estática <code>handler</code>, que aceptaría un único parámetro, que sería el evento; algo así como:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-php" data-lang="php"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-php" data-lang="php"><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Lambda</span><span class="p">;</span>
+
+<span class="k">require</span> <span class="nx">dirname</span><span class="p">(</span><span class="no">__DIR__</span><span class="p">)</span> <span class="o">.</span> <span class="s1">&#39;/../vendor/autoload.php&#39;</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">MyFunction</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">handler</span><span class="p">(</span><span class="nv">$event</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="s2">&#34;Hello &#34;</span> <span class="o">.</span> <span class="nv">$event</span><span class="p">[</span><span class="s2">&#34;name&#34;</span><span class="p">]</span> <span class="o">.</span> <span class="s2">&#34;!; full event is &#34;</span> <span class="o">.</span> <span class="nx">json_encode</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">runner</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">self</span><span class="o">::</span><span class="na">handler</span><span class="p">([</span>
+            <span class="s2">&#34;name&#34;</span> <span class="o">=&gt;</span> <span class="s2">&#34;Foo&#34;</span><span class="p">,</span>
+            <span class="s2">&#34;email&#34;</span> <span class="o">=&gt;</span> <span class="s2">&#34;no@reply.com&#34;</span><span class="p">,</span>
+            <span class="s2">&#34;groups&#34;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+                <span class="p">[</span>
+                    <span class="s2">&#34;id&#34;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="s2">&#34;name&#34;</span> <span class="o">=&gt;</span> <span class="s2">&#34;admin&#34;</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="s2">&#34;id&#34;</span> <span class="o">=&gt;</span> <span class="mi">8</span><span class="p">,</span>
+                    <span class="s2">&#34;name&#34;</span> <span class="o">=&gt;</span> <span class="s2">&#34;bar&#34;</span>
+                <span class="p">]</span>
+            <span class="p">]</span>
+        <span class="p">]);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div>
+<p>La función <code>runner</code> es una función de ayuda para desarrollar en local, de tal forma que podamos indicar dentro de ella el evento al llamar a la función <code>handler</code>, ejecutándolo de la siguiente forma:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">php -r <span class="s2">&#34;require &#39;src/Lambda/MyFunction.php&#39; ; print_r(call_user_func(&#39;App\Lambda\MyFunction::runner&#39;));&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Referencias:</p>
+
+<ul>
+<li><a href="https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/">https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/</a></li>
+<li><a href="https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/">https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/</a></li>
+<li><a href="https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/">https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/</a></li>
+<li><a href="https://developpaper.com/aliyun-centos-7-6-install-php7-3/">https://developpaper.com/aliyun-centos-7-6-install-php7-3/</a></li>
+</ul>]]></content><category scheme="https://okelet.netlify.com/tags/aws" term="aws" label="AWS"/><category scheme="https://okelet.netlify.com/tags/php" term="php" label="PHP"/><category scheme="https://okelet.netlify.com/tags/lambda" term="lambda" label="Lambda"/><category scheme="https://okelet.netlify.com/tags/runtime" term="runtime" label="runtime"/><category scheme="https://okelet.netlify.com/tags/custom" term="custom" label="custom"/><category scheme="https://okelet.netlify.com/tags/layer" term="layer" label="layer"/></entry><entry><title type="html">Crear usuario y base de datos en MySQL y dar permisos</title><link href="https://okelet.netlify.com/posts/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/"/><id>https://okelet.netlify.com/posts/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/</id><published>2019-06-11T00:00:00+00:00</published><updated>2019-06-11T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Una cosa que siempre se me olvida y tengo que buscar: cómo crear un usuario en MySQL (o MariaDB o Aurora MySQL), crear una base de datos, y dar permisos al usuario sobre esa base de datos:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sql" data-lang="sql"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sql" data-lang="sql"><span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">wordpress</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">utf8mb4</span> <span class="k">COLLATE</span> <span class="n">utf8mb4_unicode_ci</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;wpuser&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">&#39;pickApassword&#39;</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="k">ALL</span> <span class="k">PRIVILEGES</span> <span class="k">ON</span> <span class="n">wordpress</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;wpuser&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+<span class="n">FLUSH</span> <span class="k">PRIVILEGES</span><span class="p">;</span>
+<span class="n">exit</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Referencias:</p>
+
+<ul>
+<li><a href="https://dba.stackexchange.com/questions/76788/create-a-mysql-database-with-charset-utf-8">Stack Exchange DBA - Create a MySQL database with charset UTF-8</a></li>
+</ul>]]></content><category scheme="https://okelet.netlify.com/tags/mysql" term="mysql" label="MySQL"/><category scheme="https://okelet.netlify.com/tags/mariadb" term="mariadb" label="MariaDB"/></entry><entry><title type="html">Parsear MaintenanceWindow de RDS en Python</title><link href="https://okelet.netlify.com/posts/2019/05/parsear-maintenancewindow-de-rds-en-python/"/><id>https://okelet.netlify.com/posts/2019/05/parsear-maintenancewindow-de-rds-en-python/</id><published>2019-05-20T00:00:00+00:00</published><updated>2019-05-20T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Para una aplicación que estamos desarrollando, necesitábamos saber cuándo se van a aplicar los mantenimientos en nuestras instancias de RDS. El problema es que según <a href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/rds.html#RDS.Client.describe_pending_maintenance_actions">la documentación de Boto3</a>, el método <code>describe_pending_maintenance_actions</code> devuelve la fecha de aplicación de la actualización en el campo <code>CurrentApplyDate</code>, pero esto siempre viene vacío:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ aws rds describe-pending-maintenance-actions</code></pre></td></tr></table>
+</div>
+</div>
+<p>El apaño que hemos hecho, es que cuando detectamos que una instancia de RDS tiene una operación de mantenimiento pendiente, obtenemos la fecha a partir del campo <code>PreferredMaintenanceWindow</code> de la propia instancia.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+
+<span class="k">def</span> <span class="nf">parse_rds_maintenance</span><span class="p">(</span><span class="n">maintenance_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">maintenance_str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="n">start_str</span><span class="p">,</span> <span class="n">end_str</span> <span class="o">=</span> <span class="n">maintenance_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;-&#34;</span><span class="p">)</span>
+
+    <span class="n">start_day</span><span class="p">,</span> <span class="n">start_hour</span><span class="p">,</span> <span class="n">start_minute</span> <span class="o">=</span> <span class="n">start_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;:&#34;</span><span class="p">)</span>
+    <span class="n">end_day</span><span class="p">,</span> <span class="n">end_hour</span><span class="p">,</span> <span class="n">end_minute</span> <span class="o">=</span> <span class="n">end_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;:&#34;</span><span class="p">)</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">get_next_date_for</span><span class="p">(</span><span class="n">start_day</span><span class="p">,</span> <span class="n">start_hour</span><span class="p">,</span> <span class="n">start_minute</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">get_next_date_for</span><span class="p">(</span><span class="n">end_day</span><span class="p">,</span> <span class="n">end_hour</span><span class="p">,</span> <span class="n">end_minute</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span>
+
+
+<span class="k">def</span> <span class="nf">get_next_date_for</span><span class="p">(</span><span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">):</span>
+
+    <span class="n">days_mappings</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&#34;mon&#34;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&#34;tue&#34;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&#34;wed&#34;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&#34;thu&#34;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&#34;fri&#34;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="s2">&#34;sat&#34;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s2">&#34;sun&#34;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+
+    <span class="n">day_int</span> <span class="o">=</span> <span class="n">days_mappings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">day</span><span class="p">)</span>
+    <span class="n">add_days</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">now</span><span class="o">.</span><span class="n">isoweekday</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">day_int</span><span class="p">:</span>
+        <span class="n">add_days</span> <span class="o">=</span> <span class="n">day_int</span> <span class="o">-</span> <span class="n">now</span><span class="o">.</span><span class="n">isoweekday</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">now</span><span class="o">.</span><span class="n">isoweekday</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">day_int</span><span class="p">:</span>
+        <span class="n">add_days</span> <span class="o">=</span> <span class="mi">7</span> <span class="o">+</span> <span class="n">day_int</span> <span class="o">-</span> <span class="n">now</span><span class="o">.</span><span class="n">isoweekday</span><span class="p">()</span>
+
+    <span class="n">date</span> <span class="o">=</span> <span class="p">(</span><span class="n">now</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">add_days</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">hour</span><span class="p">),</span> <span class="n">minute</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">minute</span><span class="p">),</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">date</span> <span class="o">&lt;</span> <span class="n">now</span><span class="p">:</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">date</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="n">pprint</span><span class="p">(</span><span class="n">parse_rds_maintenance</span><span class="p">(</span><span class="s2">&#34;tue:07:00-tue:07:30&#34;</span><span class="p">))</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Y esto devuelve (depende de la fecha en la que se ejecute, claro&hellip;):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">(datetime.datetime(2019, 5, 21, 7, 0), datetime.datetime(2019, 5, 21, 7, 30))</pre></td></tr></table>
+</div>
+</div>
+<!--more-->]]></content><category scheme="https://okelet.netlify.com/tags/aws" term="aws" label="AWS"/><category scheme="https://okelet.netlify.com/tags/rds" term="rds" label="RDS"/><category scheme="https://okelet.netlify.com/tags/python" term="python" label="Python"/></entry><entry><title type="html">Instalar Ansible en Cygwin</title><link href="https://okelet.netlify.com/posts/2016/04/instalar-ansible-en-cygwin/"/><id>https://okelet.netlify.com/posts/2016/04/instalar-ansible-en-cygwin/</id><published>2016-04-30T00:00:00+00:00</published><updated>2016-04-30T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete <code>wget</code> en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">setup-x86_64.exe --download --site http://mirrors.fe.up.pt/pub/cygwin/ --upgrade-also --no-admin --root %LOCALAPPDATA%/cygwin64 --packages wget</code></pre></td></tr></table>
+</div>
+</div>
+<p>Tras esto, instalamos <a href="https://github.com/transcode-open/apt-cyg"><code>apt-cyg</code></a>, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg
+install apt-cyg /bin
+apt-cyg install curl gcc-core make nano vim git openssh python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml</code></pre></td></tr></table>
+</div>
+</div>
+<p>Por último, instalamos Ansible desde <a href="https://pypi.python.org/pypi">PyPi</a> (se podría instalar <code>ansible</code> directamente con <code>easy_install</code>, pero prefiero hacerlo con <code>pip</code>, y así ya lo tengo para el futuro):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">easy_install-2.7 pip
+pip install ansible</code></pre></td></tr></table>
+</div>
+</div>
+<p>Para probar el correcto funcionamiento:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">ansible --version
+ansible -i localhost, -c <span class="nb">local</span> all -m ping
+ansible -i localhost, -c <span class="nb">local</span> all -m setup</code></pre></td></tr></table>
+</div>
+</div>
+<!-- PELICAN_END_SUMMARY -->]]></content><category scheme="https://okelet.netlify.com/tags/linux" term="linux" label="Linux"/><category scheme="https://okelet.netlify.com/tags/cygwin" term="cygwin" label="Cygwin"/><category scheme="https://okelet.netlify.com/tags/ansible" term="ansible" label="Ansible"/></entry><entry><title type="html">Enviar salida éstandar y de error al mismo tiempo</title><link href="https://okelet.netlify.com/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/"/><id>https://okelet.netlify.com/posts/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/</id><published>2016-04-20T00:00:00+00:00</published><updated>2016-04-20T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Normalmente, en Bash, redirigimos la salida estándar a un fichero o la entrada de otro comando con la siguiente sintaxis:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">ls -l mifichero.txt noexiste &gt; salida.txt
+ls -l mifichero.txt noexiste <span class="p">|</span> tee salida.txt</code></pre></td></tr></table>
+</div>
+</div>
+<p>Y la salida de error así:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">ls -l mifichero.txt noexiste <span class="m">2</span>&gt; salida.txt
+ls -l mifichero.txt noexiste <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> &gt;/dev/null <span class="p">|</span> tee salida.txt</code></pre></td></tr></table>
+</div>
+</div>
+<p>Podemos redirigir la salida estándar y de error al mismo tiempo:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">ls -l mifichero.txt noexiste &gt; salida.txt <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+ls -l mifichero.txt noexiste <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">|</span> tee salida.txt</code></pre></td></tr></table>
+</div>
+</div>
+<p>O de esta otra forma más simplificada (<code>&amp;|</code> no funciona):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">ls -l mifichero.txt noexiste <span class="p">&amp;</span>&gt; salida.txt</code></pre></td></tr></table>
+</div>
+</div>]]></content><category scheme="https://okelet.netlify.com/tags/linux" term="linux" label="Linux"/><category scheme="https://okelet.netlify.com/tags/bash" term="bash" label="Bash"/></entry><entry><title type="html">La forma más corta y simple de crear o vaciar un archivo en Linux</title><link href="https://okelet.netlify.com/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/"/><id>https://okelet.netlify.com/posts/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</id><published>2016-04-19T00:00:00+00:00</published><updated>2016-04-19T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Pues eso, la forma más corta y simple de crear o vaciar un archivo en Linux:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">&gt; fichero</code></pre></td></tr></table>
+</div>
+</div>
+<p>Otras formas:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">touch fichero
+<span class="nb">echo</span> <span class="s2">&#34;&#34;</span> &gt; fichero
+cat /dev/null &gt; fichero</code></pre></td></tr></table>
+</div>
+</div>]]></content><category scheme="https://okelet.netlify.com/tags/linux" term="linux" label="Linux"/><category scheme="https://okelet.netlify.com/tags/bash" term="bash" label="Bash"/></entry><entry><title type="html">Ansible sin root</title><link href="https://okelet.netlify.com/posts/2016/04/ansible-sin-root/"/><id>https://okelet.netlify.com/posts/2016/04/ansible-sin-root/</id><published>2016-04-05T00:00:00+00:00</published><updated>2016-04-05T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Cuando se instala Ansible, por defecto va a usar la configuración y fichero de hosts del directorio <code>/etc/ansible</code>. Si queremos poder ejecutar Ansible sin necesidad de estar tocando continuamente ficheros de configuración con root, podemos crear un archivo de configuración y otro de hosts en nuestro directorio personal, que prevalecerán sobre los que hay en <code>/etc/ansible</code>.</p>
+
+<p>Para ello, crearemos el <a href="http://docs.ansible.com/ansible/intro_configuration.html#configuration-file">fichero de configuración</a> <code>~/.ansible.cfg</code> con el siguiente contenido:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text">[defaults]
+inventory = ~/.ansible_hosts</code></pre></td></tr></table>
+</div>
+</div>
+<p>Y tras esto, crear el <a href="http://docs.ansible.com/ansible/intro_inventory.html">archivo de hosts</a> al que hacemos referencia:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text">localhost</code></pre></td></tr></table>
+</div>
+</div>
+<p>Para probar que Ansible está cogiendo esta configuración, ejecutaremos el siguiente comando (muestra los <a href="http://docs.ansible.com/ansible/intro_inventory.html"><code>facts</code> del servidor</a> que cumplan el filtro <code>ansible_eth[0-2]</code>):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">ansible localhost -m setup -a <span class="s1">&#39;filter=ansible_eth[0-2]&#39;</span></code></pre></td></tr></table>
+</div>
+</div>]]></content></entry><entry><title type="html">Instalar OpenStack PackStack detrás de un proxy</title><link href="https://okelet.netlify.com/posts/2016/02/instalar-openstack-packstack-detras-de-un-proxy/"/><id>https://okelet.netlify.com/posts/2016/02/instalar-openstack-packstack-detras-de-un-proxy/</id><published>2016-02-18T00:00:00+00:00</published><updated>2016-02-18T00:00:00+00:00</updated><content type="html"><![CDATA[<p>Trasteando con Openstack, con ganas desde hace tiempo, y después de la <a href="http://www.meetup.com/es-ES/MAD-for-OpenStack/events/227554166/">Mini-Conf</a> del grupo <a href="http://www.meetup.com/es-ES/MAD-for-OpenStack/">MAD for OpenStack</a>, me animé a probarlo usando <a href="https://wiki.openstack.org/wiki/Packstack">PackStack</a>, que te lo configura todo en una única máquina (no tengo claro si se puede considerar una instalación productiva o sólo para pruebas), aunque luego puedes ir añadiendo nodos adicionales. Dado que no tengo acceso a ningún host físico, instalé un RH 7.2 (también vale <a href="https://getfedora.org">Fedora</a> o <a href="https://www.centos.org">CentOS</a>) en una máquina virtual de VMware (el rendimiento dependerá en gran medida si se tiene habilitado o no la <em><a href="http://www.josemariagonzalez.es/2012/10/01/como-virtualizar-un-vmware-esxi-en-modo-nested.html">nested virtualization</a></em>). Empecé con una máquina con 2 procesadores y 2 GB de RAM, pero enseguida me di cuenta que se quedaba muy corta, incluso sin ninguna instancia arrancada. La versión final tiene 8 procesadores y 8 GB de RAM.</p>
+
+<p>El siguiente problema que me surgió es que me daba un error al instalar el paquete de Cinder, ya que le faltaba una dependencia. Y no me lo explicaba, porque esa dependencia está en el repositorio de EPEL, que lo tenía configurado y habilitado. Después de varias pruebas, me di cuenta que el instalador deshabilita ese repositorio, y hay que forzar a que lo utilice con un parámetro adicional (<code>--use-epel=y</code>).</p>
+
+<p>Después, me daba fallo al descargar la imagen de <a href="https://launchpad.net/cirros">CirrOS</a> para ponerla como disponible para nuevas instancias, y es que esta imagen se la descarga de Internet, así que tenía que utilizar el proxy, por lo que me creé un <code>/etc/profile.d/proxy.sh</code> donde se establecía, pero el proxy hacía que fallaran las peticiones REST que se realizan durante la instalación para registrar componentes, configuración, etc. Así que encontré una opción que lo que hace es utilizar una imagen descargada localmente, en lugar de descargársela de Internet. Por tanto, borré el profile.d del proxy, y me bajé la imagen a mano:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nb">export</span> <span class="nv">https_proxy</span><span class="o">=</span>http://mi.proxy:8080
+wget --no-check-certificate https://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img</code></pre></td></tr></table>
+</div>
+</div>
+<p>Una vez hecho esto, hay que tener configurado el proxy en Yum, ya que se descarga bastantes paquetes de Internet. Una vez hechas todas estas comprobaciones, se puede lanzar la instalación de PackStack:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">packstack --use-epel<span class="o">=</span>y --provision-image-url<span class="o">=</span>/root/cirros-0.3.4-x86_64-disk.img --allinone</code></pre></td></tr></table>
+</div>
+</div>]]></content></entry><entry><title type="html">Red Hat, licencias y suscripciones (y una pequeña reflexión sobre el software libre)</title><link href="https://okelet.netlify.com/posts/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/"/><id>https://okelet.netlify.com/posts/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/</id><published>2014-09-23T10:54:17+00:00</published><updated>2014-09-23T10:54:17+00:00</updated><content type="html"><![CDATA[<p><em>Nota</em>: No soy un experto en licencias o suscripciones, así que todo lo que diga en este post, no se debe tomar al pie de la letra. Si algún concepto está mal, comentádmelo y lo corrijo.</p>
+
+<p>En un anterior cliente (de cuyo nombre no quiero acordarme), supongo que al igual que en muchos otros que os habréis encontrado, tienen la mala costumbre de instalar software sin licencia o suscripción. En este caso, voy a hablar de Red Hat, y su distribución Linux (Red Hat Enterprise Linux o RHEL). Aunque GNU/Linux siempre se ha caracterizado por sus licencias abiertas, quien modifique dicho software está obligado a publicar dicho fuente modificado (realmente depende de la licencia de cada pieza software que compone la distribución, pero aunque no se deba en general, en este post generalizaremos&hellip;). Éste es, en parte, el negocio de Red Hat. Ellos hace una recopilación de software, le hacen una serie de modificacionesy mejoras si procede, publican ese código fuente (<a href="http://ftp.redhat.com/pub/redhat/linux/enterprise/">SRPMs</a>), y finalmente generar unos binarios que los meten en un CD, además de dar actualizaciones y soporte de ese software. ¿Y qué es lo que pasa? Pues esos CDs &ldquo;no te los puedes bajar gratis&rdquo; (dependiendo de la licencia se puede permitir cobrar por el trabajo realizado, o incluso no liberar las modificaciones hechas). Esos CDs sólo los puedes conseguir si tienes una suscripción con Red Hat (previo pago), o bien si te has registrado para una evaluación. Esta demo incluye lo siguiente:</p>
+
+<ul>
+<li>Actualizaciones durante 30 días</li>
+<li>NO se incluye soporte técnico</li>
+</ul>
+
+<p>De acuerdo con el <a href="http://www.redhat.com/licenses/es/Enterprise_Agr_Spain.pdf">acuerdo de licencia de Red Hat Enterprise Linux</a>:</p>
+
+<blockquote>
+<p>Beneficios de las Suscripciones de Software: Por cada Suscripción de Software que compra, Red Hat le proporciona uno o más de los siguientes beneficios:</p>
+
+<ul>
+<li>Acceso al Software: Acceso al Software.</li>
+<li>Mantenimiento del Software: Acceso a actualizaciones, nuevas versiones, correcciones, advertencias de seguridad y corrección de defectos para el Software, cuando y en caso de que estuvieran disponibles.</li>
+<li>Asistencia: Acceso a la asistencia de Red Hat para cuestiones relacionadas con el Software usado para fines de desarrollo y/o fines de producción (cada uno de los cuales se define a continuación).</li>
+<li>Open Source Assurance: Las compras en virtud de este Apéndice de las Suscripciones de Software pueden darle derecho a participar en el Programa de Open Source Assurance de Red Hat conforme a un contrato por separado, que se puede consultar (en inglés) en www.redhat.com/legal/open_source_assurance_agreement.html.</li>
+</ul>
+</blockquote>
+
+<p>Vale, me he registrado para una evaluación y me lo he bajado (o bien lo he conseguido por otros medios, ejem), me lo he instalado, y se han pasado los 30 días de evaluación, ¿ahora qué? Pues en principio podrías seguir usándolo. Y entonces, ¿por qué pagar una suscripción? Pues básicamente porque no tendrás acceso a las actualizaciones (algo muy peligroso), pero allá cada uno, y a mayores no tendrías el soporte que te daría una suscripción.</p>
+
+<p>¿Y por qué no usar suscripciones de evaluación indefinidamente (siempre en caso de que sólo queramos actualizaciones y no soporte)? Básicamente porque es una chapuza y no puedes. Tras solicitar una suscripción de prueba, no puedes volver a solicitar otra del mismo producto hasta 90 días después, con la misma cuenta. Podrías usar cuentas de correo falsas para crear nuevas cuentas en Red Hat, y prolongar la agonía indefinidamente&hellip;. Pero en resumen, chapuzas y ñapas, y aparte puede que te &ldquo;pillen&rdquo;.</p>
+
+<p>Y entonces, ¿por qué no usa todo el mundo CentOS, si es igual que Red Hat? Bueno, si eres administrador de sistemas, y estos no son muy críticos, pues puedes pasar. Pero si eres un pinchaiconos, y no te quieres calentar mucho la cabeza, o eres una gran organización, y necesitas que haya una empresa por detrás que te resuelva los problemas o te aconseje en el despliegue de los sistemas, pues deberías plantearte la suscripción. Si bien es cierto que las suscripciones no son baratas para una pequeña o mediana empresa, en ciertos casos pueden salir rentables.</p>
+
+<p>¿Y cuándo sí que es imprescindible una suscripción? Por ejemplo, si queremos instalar el servidor de base de datos Oracle, éste sólo está soportado oficialmente en Red Hat (y no en CentOS), y además, en muchos casos requieren unas versiones de paquetes que sólo están disponibles en los repositorios de actualizaciones. ¿Y no es posible instalar una versión mayor o menor? Pues sí que es posible, pero Oracle no daría soporte si no se cumplen sus requerimientos. ¿Y si instalo el paquete de actualizado pero de CentOS? Pues eso se ve fácil con un <code>rpm -q</code>, y se vería que no es la versión compilada para Red Hat, sino la de CentOS. ¿Y no podría compilar yo mismo el SRPM? Podrías, pero volvemos a lo de antes: chapuza, ñapa.</p>
+
+<p>Y volviendo a este cliente que os comentaba, la razón que alegaba para instalar Red Hat sin suscripciones es &ldquo;por si algún día tenemos un problema, compramos una suscripción para esa máquina, y listo&rdquo;. Qué queréis que os diga, me reservo la opinión. Así no. Así no se avanza con el software libre. Y &ldquo;promover&rdquo; el software libre no es simplemente usarlo, que también. Si no se contribuye, se colabora, se hacen donaciones, etc. al final esto no creo que salga bien. Por ejemplo, en las administraciones públicas, pongamos que sustituyen Microsoft Office (cuyo coste en licencias fuera, por ejemplo, de 600.000 euros) y lo cambian por <a href="https://es.libreoffice.org/">LibreOffice</a>. Qué les costaría, ya que se están ahorrando ese dineral, donar, yo qué sé, un 10% a la <a href="http://www.documentfoundation.org/">Document Foundation</a>, que se encarga del desarrollo; es algo nimio para la administración, pero un gran aporte para la fundación. Si todas las administraciones públicas hicieran esto, no habría, seguramente, tantas <a href="http://lamiradadelreplicante.com/2014/09/16/el-alcalde-de-munich-advierte-de-debilidades-significativas-en-limux/">quejas sobre la calidad del software</a> (no por LibreOffice, sino por muchas otras aplicaciones que, en mi opinión, se incluyen en muchas distribuciones y que no son alternativas válidas para otras aplicaciones ya consolidadas). Por ejemplo, <a href="http://www.linuxmint.com/">Linux Mint</a> (para mi la mejor distribución Linux actualmente, en cualquiera de sus entornos), tiene una <a href="http://www.linuxmint.com/donors.php">lista de donantes</a> (la mayoría son particulares), y casi todas son donaciones pequeñas. Pero muchas pequeñas donaciones hacen que se avance.</p>
+
+<ul>
+<li><a href="https://access.redhat.com/articles/1616">What access and functionality do I lose when the support contract expires for a Red Hat Enterprise Linux product?</a></li>
+<li><a href="http://jehurst.wordpress.com/2011/01/14/rhel-6-and-trial-subscription-keeping-it-alive/">RHEL 6 and Trial Subscription: Keeping It Alive</a></li>
+<li><a href="http://www.linuxforums.org/forum/red-hat-fedora-linux/139625-why-cant-i-find-free-download-red-hat.html">Why can&rsquo;t I find a free download of Red Hat?</a></li>
+</ul>]]></content><category scheme="https://okelet.netlify.com/tags/redhat" term="redhat" label="redhat"/><category scheme="https://okelet.netlify.com/tags/licencias" term="licencias" label="licencias"/></entry><entry><title type="html">Compilar NXLOG en Red Hat/CentOS 5</title><link href="https://okelet.netlify.com/posts/2014/09/compilar-nxlog-en-red-hatcentos-5/"/><id>https://okelet.netlify.com/posts/2014/09/compilar-nxlog-en-red-hatcentos-5/</id><published>2014-09-15T14:24:26+00:00</published><updated>2014-09-15T14:24:26+00:00</updated><content type="html"><![CDATA[<p><a href="http://nxlog-ce.sourceforge.net">NXLOG</a> es un sustituto revitalizado para <a href="http://es.wikipedia.org/wiki/Syslog">Syslog</a>. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión.</p>
+
+<p>Tras leer la documentación, indicaban que lo único que hay que hacer es bajarse el código fuente y ejecutar el comando <code>./make_rpm.sh</code>. El caso es que esto tampoco funcionaba, pero después de dar 20000 vueltas, y de pura casulalidad, vi que había 2 ficheros <a href="http://www.rpm.org/max-rpm/ch-rpm-inside.html">SPEC</a>: uno llamado <code>nxlog.spec</code> y otro llamado <code>nxlog.spec.RHEL5</code>. Mirando el código del script <code>make_rpm.sh</code> he visto que si no se especifica ningún fichero mediante entorno de variable, automáticamente coge el <code>nxlog.spec</code>, así que lo único que hay que hacer es indicarle mediante una variable de entorno el otro fichero SPEC. Fácil y sencillo (después de darle muchas vueltas)&hellip;</p>
+
+<p>Aquí el <a href="http://es.wikipedia.org/wiki/Cortar,_copiar_y_pegar">copy-paste</a>:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nv">NXLOG_VERSION</span><span class="o">=</span><span class="m">2</span>.8.1248
+yum install rpm-build apr-devel pcre-devel openssl-devel libdbi-devel libcap-devel expat-devel libtool
+wget http://sourceforge.net/projects/nxlog-ce/files/nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>.tar.gz
+tar zxvf nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>.tar.gz
+<span class="nb">cd</span> nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>/packaging/redhat
+<span class="nv">SPEC_FILE</span><span class="o">=</span>nxlog.spec.RHEL5 ./make_rpm.sh
+rpm -Uvh rpmbuild/RPMS/x86_64/nxlog-ce-<span class="si">${</span><span class="nv">NXLOG_VERSION</span><span class="si">}</span>-1.x86_64.rpm</code></pre></td></tr></table>
+</div>
+</div>]]></content></entry><entry><title type="html">Guía rápida de KVM</title><link href="https://okelet.netlify.com/posts/2014/08/guia-rapida-de-kvm/"/><id>https://okelet.netlify.com/posts/2014/08/guia-rapida-de-kvm/</id><published>2014-08-12T13:12:48+02:00</published><updated>2014-08-12T13:12:48+02:00</updated><content type="html"><![CDATA[<p>De la <a href="http://es.wikipedia.org/wiki/Kernel-based_Virtual_Machine">Wikipedia</a>:</p>
+
+<blockquote>
+<p>Kernel-based Virtual Machine o KVM, (en español, Máquina virtual basada en el núcleo) es una solución para implementar virtualización completa con Linux. Está formada por un módulo del núcleo (con el nombre kvm.ko) y herramientas en el espacio de usuario, siendo en su totalidad software libre. El componente KVM para el núcleo está incluido en Linux desde la versión 2.6.20.</p>
+
+<p>KVM permite ejecutar máquinas virtuales utilizando imágenes de disco que contienen sistemas operativos sin modificar. Cada máquina virtual tiene su propio hardware virtualizado: una tarjeta de red, discos duros, tarjeta gráfica, etc.</p>
+</blockquote>
+
+<p>En primer lugar, debemos comprobar si nuestro equipo es compatible con KVM:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">egrep --color <span class="s1">&#39;(svm|vmx)&#39;</span> /proc/cpuinfo</code></pre></td></tr></table>
+</div>
+</div>
+<p>Si la salida anterior muestra algo, podremos seguir adelante. Si no muestra nada, también podremos seguir, pero no se aprovecharán las capacidades de virtualización del equipo (se hará un <a href="http://blog.vmsplice.net/2011/03/should-i-use-qemu-or-kvm.html"><em>fallback</em></a> a emulación en lugar de virtualización).</p>
+
+<h2 id="instalación-en-debian-ubuntu">Instalación en Debian/Ubuntu</h2>
+
+<p>Para Debian/Ubuntu, deberemos instalar los siguientes paquetes:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo apt-get install cpu-checker qemu-kvm libvirt-bin bridge-utils virt-manager virt-viewer libguestfs-tools</code></pre></td></tr></table>
+</div>
+</div>
+<p>También tendremos que añadir nuestro usuario al grupo <code>libvirtd</code> para poder gestionar máquinas virtuales en el sistema con nuestro propio usuario (sin ser root):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo adduser <span class="si">${</span><span class="nv">USER</span><span class="si">}</span> libvirtd</code></pre></td></tr></table>
+</div>
+</div>
+<p>Por último, deberemos reiniciar la sesión para que se recarguen nuestros permisos de usuario.</p>
+
+<h2 id="instalación-en-red-hat-centos">Instalación en Red Hat/CentOS</h2>
+
+<p>Para Red Hat/CentOS, deberemos instalar los siguientes paquetes:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo yum install kvm libvirt virt-viewer virt-manager virt-sysprep</code></pre></td></tr></table>
+</div>
+</div>
+<p>Para poder gestionar máquinas virtuales sin necesidad de ser root, deberemos crear un grupo, agregar nuestro usuario a ese grupo, y configurar ese grupo en KVM para permitirle la gestión (básicamente, estamos simulando el comportamiento que Ubuntu ya hace por sí solo, <a href="http://n40lab.wordpress.com/2012/10/03/installing-kvm-with-yum-and-compiling-libvirt-and-virtmanager/">referencia 1</a> y <a href="http://www.opennet.ru/openforum/vsluhforumID1/93974.html">referencia 2</a>):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo groupadd libvirtd
+sudo usermod -a -G libvirtd <span class="si">${</span><span class="nv">USER</span><span class="si">}</span>
+sudo sed -r -i -e <span class="s1">&#39;s/^#?unix_sock_group = .*/unix_sock_group = &#34;libvirtd&#34;/&#39;</span> <span class="se">\
+</span><span class="se"></span>               -e <span class="s1">&#39;s/^#?unix_sock_rw_perms = .*/unix_sock_rw_perms = &#34;0770&#34;/&#39;</span> <span class="se">\
+</span><span class="se"></span>               -e <span class="s1">&#39;s/^#?auth_unix_rw = .*/auth_unix_rw = &#34;none&#34;/&#39;</span> <span class="se">\
+</span><span class="se"></span>               /etc/libvirt/libvirtd.conf
+sudo service libvirtd restart</code></pre></td></tr></table>
+</div>
+</div>
+<p>Por último, deberemos reiniciar la sesión para que se recarguen nuestros permisos de usuario.</p>
+
+<h2 id="herramientas-principales-de-gestión">Herramientas principales de gestión</h2>
+
+<p>Con KVM disponemos de varias herramientas para gestionar tanto el sistema como las propias máquinas virtuales:</p>
+
+<ul>
+<li><code>virsh</code>: nos permite gestionar el sistema y las máquinas virtuales a un nivel medio-bajo.</li>
+<li><code>virt-install</code>: nos permite crear máquinas virtuales de una forma sencilla.</li>
+</ul>
+
+<h2 id="tipos-de-conexión">Tipos de conexión</h2>
+
+<p>En la instalación por defecto, tenemos dos tipos de conexión:</p>
+
+<ul>
+<li><code>qemu:///system</code>: nos conectamos al servicio de virtualización del sistema. Las máquinas creadas aquí se pueden configurar para que arranquen automáticamente cuando se inicie el host.</li>
+<li><code>quemu:///session</code>: nos conectamos a nuestra propia sesión. Estas máquinas sólo las podrá ver y gestionar el propio usuario, y además, los archivos de imagen (discos duros, etc.), deberán estar en una ubicación donde el usuario pueda leer y escribir (en la ruta por efecto <code>/var/lib/libvirt/images</code> sólo puede escribir cuando nos conectamos a la URL de sistema).</li>
+</ul>
+
+<p>Según las pruebas que he hecho, los comandos <code>virsh</code> y <code>virt-instal</code> (explicados en la siguiente sección) se comportan de manera distinta a la hora de conectarse. <code>virsh</code> por defecto se conecta a <code>quemu:///system</code>, mientras que <code>virt-install</code> se conecta a <code>quemu:///session</code>. Por esto, en los siguientes ejemplos, se especifica siempre como URL de conexión <code>quemu:///system</code>, ya que las imágenes de disco se van a crear en <code>/var/lib/libvirt/images</code>. Si no especificásemos URL de conexión, o pusiéramos la de sesión del usuario, deberíamos establecer una ruta de imagen de disco donde el propio usuario pueda escribir, como <code>${HOME}</code>.</p>
+
+<h2 id="instalación-de-virt-manager-actualizado">Instalación de virt-manager actualizado</h2>
+
+<p>Uso Ubuntu 13.10 y la versión en los repositorios es la 0.9.5. La última versión de <code>virt-manager</code> es la 1.0.1, pero no está en los repositorios para esta versión de Ubuntu (aunque sí a partir de la 14.04); esta última versión tiene bastantes mejoras, entre ellas, la <a href="http://virt-manager.org/download/">gestión de snapshots</a>. Para instalar la nueva versión no hay más que descargarse el fuente (está escrita en Python); no hay que compilar ni instalar como root (se pueden tener las 2 versiones de <code>virt-manager</code>, la de los repositorios y la instalada a mano, pero hay que tener cuidado con cuál ejecutamos para no volverse uno loco).</p>
+
+<p>En primer lugar, tenemos que descargar una serie de dependencias adicionales que necesitamos (referencias <a href="http://www.gravitycomputing.co.nz/virt-manager-1-01-debian/">uno</a> y <a href="http://askubuntu.com/questions/340937/virtmanager-0-95-or-0-10-on-ubuntu-and-cannot-import-name-gtkvnc">dos</a>):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo apt-get install gir1.2-spice-client-gtk-3.0 python-gtk-vnc libglib2.0-bin python-ipaddr libvirt-glib-1.0-dev gir1.2-gtk-vnc-2.0</code></pre></td></tr></table>
+</div>
+</div>
+<p>En principio esto también valdría para Red Hat/CentOS, pero no he encontrado el paquete necesario para la dependencia <code>gi.repository</code> en CentOS 6, y no he podido hacerlo funcionar.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">yum install python-argparse ...</code></pre></td></tr></table>
+</div>
+</div>
+<p>Después de instalar las dependencias, nos bajamos el paquete fuente, lo descomprimimos y lo ejecutamos:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">wget http://virt-manager.org/download/sources/virt-manager/virt-manager-1.0.1.tar.gz -O - <span class="p">|</span> tar -xz
+<span class="nb">cd</span> virt-manager-1.0.1
+./virt-manager</code></pre></td></tr></table>
+</div>
+</div>
+<h2 id="comandos-útiles">Comandos útiles</h2>
+
+<p>Mostrar la lista de máquinas en ejecución en el sistema:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh -c qemu:///system list</code></pre></td></tr></table>
+</div>
+</div>
+<p>Mostrar todas las máquinas configuradas en el sistema:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh -c qemu:///system list --all</code></pre></td></tr></table>
+</div>
+</div>
+<p>En los comandos anteriores, podemos sustituir <code>qemu:///system</code> por <code>quemu:///session</code> para ver las máquinas asociadas a nuestro usuario (ver apartado anterior).</p>
+
+<p>Mostrar lista de tipos de sistemas operativos; esto es necesario saberlo para cuando vayamos a instalar una máquina con <code>virt-install</code>, ya que deberemos especificar el tipo en el momento de la creación:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virt-install --os-variant list</code></pre></td></tr></table>
+</div>
+</div>
+<p>Parar <em>a lo bruto</em> una máquina:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh destroy nombre_maquina</code></pre></td></tr></table>
+</div>
+</div>
+<p>Eliminar una máquina y todos sus ficheros asociados (snapshots, ficheros de disco, etc.):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh undefine --managed-save --snapshots-metadata --remove-all-storage nombre_maquina</code></pre></td></tr></table>
+</div>
+</div>
+<h2 id="creación-rápida-de-máquinas-comunes">Creación rápida de máquinas comunes</h2>
+
+<p>CentOS 5 32 bits:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virt-install --connect qemu:///system -n centos5x32 -r <span class="m">512</span> --vcpus<span class="o">=</span><span class="m">1</span> --os-variant<span class="o">=</span>rhel5.4 <span class="se">\
+</span><span class="se"></span>--graphics spice --disk <span class="nv">path</span><span class="o">=</span>/var/lib/libvirt/images/centos5x32.qcow2,format<span class="o">=</span>qcow2,size<span class="o">=</span><span class="m">8</span> <span class="se">\
+</span><span class="se"></span>-l http://sunsite.rediris.es/mirror/CentOS/5/os/i386 <span class="se">\
+</span><span class="se"></span>-x <span class="s2">&#34;lang=es_ES keyboard=es&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>CentOS 5 64 bits:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virt-install --connect qemu:///system -n centos5x64 -r <span class="m">512</span> --vcpus<span class="o">=</span><span class="m">1</span> --os-variant<span class="o">=</span>rhel5.4 <span class="se">\
+</span><span class="se"></span>--graphics spice --disk <span class="nv">path</span><span class="o">=</span>/var/lib/libvirt/images/centos5x64.qcow2,format<span class="o">=</span>qcow2,size<span class="o">=</span><span class="m">8</span> <span class="se">\
+</span><span class="se"></span>-l http://sunsite.rediris.es/mirror/CentOS/5/os/x86_64 <span class="se">\
+</span><span class="se"></span>-x <span class="s2">&#34;lang=es_ES keyboard=es&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>CentOS 6 32 bits:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virt-install --connect qemu:///system -n centos6x32 -r <span class="m">1024</span> --vcpus<span class="o">=</span><span class="m">1</span> --os-variant<span class="o">=</span>rhel6 <span class="se">\
+</span><span class="se"></span>--graphics spice --disk <span class="nv">path</span><span class="o">=</span>/var/lib/libvirt/images/centos6x32.qcow2,format<span class="o">=</span>qcow2,size<span class="o">=</span><span class="m">8</span> <span class="se">\
+</span><span class="se"></span>-l http://sunsite.rediris.es/mirror/CentOS/6/os/i386 <span class="se">\
+</span><span class="se"></span>-x <span class="s2">&#34;lang=es_ES keyboard=es&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>CentOS 6 64 bits:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virt-install --connect qemu:///system -n centos6x64 -r <span class="m">1024</span> --vcpus<span class="o">=</span><span class="m">1</span> --os-variant<span class="o">=</span>rhel6 <span class="se">\
+</span><span class="se"></span>--graphics spice --disk <span class="nv">path</span><span class="o">=</span>/var/lib/libvirt/images/centos6x64.qcow2,format<span class="o">=</span>qcow2,size<span class="o">=</span><span class="m">8</span> <span class="se">\
+</span><span class="se"></span>-l http://sunsite.rediris.es/mirror/CentOS/6/os/x86_64 <span class="se">\
+</span><span class="se"></span>-x <span class="s2">&#34;lang=es_ES keyboard=es&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>CentOS 7 64 bits (<a href="https://access.redhat.com/solutions/509373">no existe versión de 32 bits</a>):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virt-install --connect qemu:///system -n centos7x64 -r <span class="m">1024</span> --vcpus<span class="o">=</span><span class="m">1</span> --os-variant<span class="o">=</span>rhel7 <span class="se">\
+</span><span class="se"></span>--graphics spice --disk <span class="nv">path</span><span class="o">=</span>/var/lib/libvirt/images/centos7x64.qcow2,format<span class="o">=</span>qcow2,size<span class="o">=</span><span class="m">8</span> <span class="se">\
+</span><span class="se"></span>-l http://sunsite.rediris.es/mirror/CentOS/7/os/x86_64 <span class="se">\
+</span><span class="se"></span>-x <span class="s2">&#34;lang=es_ES keyboard=es&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Debian 7 32 bits:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virt-install --connect qemu:///system -n debian7x32 -r <span class="m">512</span> --vcpus <span class="m">1</span> --os-variant debianwheezy <span class="se">\
+</span><span class="se"></span>--graphics spice --disk <span class="nv">path</span><span class="o">=</span>/var/lib/libvirt/images/debian7x32.qcow2,format<span class="o">=</span>qcow2,size<span class="o">=</span><span class="m">8</span> <span class="se">\
+</span><span class="se"></span>-l http://ftp.debian.org/debian/dists/wheezy/main/installer-i386/ <span class="se">\
+</span><span class="se"></span>-x <span class="s2">&#34;language=es country=ES debian-installer/locale=es_ES.UTF-8 keyboard-configuration/xkb-keymap=es\
+</span><span class="s2">    time/zone=Europe/Madrid passwd/make-user=false&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Debian 7 64 bits:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virt-install --connect qemu:///system -n debian7x64 -r <span class="m">512</span> --vcpus <span class="m">1</span> --os-variant debianwheezy <span class="se">\
+</span><span class="se"></span>--graphics spice --disk <span class="nv">path</span><span class="o">=</span>/var/lib/libvirt/images/debian7x64.qcow2,format<span class="o">=</span>qcow2,size<span class="o">=</span><span class="m">8</span> <span class="se">\
+</span><span class="se"></span>-l http://ftp.debian.org/debian/dists/wheezy/main/installer-amd64/ <span class="se">\
+</span><span class="se"></span>-x <span class="s2">&#34;language=es country=ES debian-installer/locale=es_ES.UTF-8 keyboard-configuration/xkb-keymap=es \
+</span><span class="s2">    time/zone=Europe/Madrid passwd/make-user=false&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Los comandos anteriores tienen el parámetro <code>-x</code> (<code>--extra-args</code>). Estos parámetros se pasan automáticamente al kernel de arranque de instalación del sistema operativo. Con ellos, podemos configurar automáticamente ciertos parámetros que se nos pide durante la instalación (los más usados en los ejemplos anteriores sirven para configurar el idioma, la localización, la distribución del teclado, la zona horaria, o incluso si crear o no un usuario regular en el sistema). También es posible pasar una ruta a un fichero KickStart (Red Hat/CentOS) o Preseed (Debian/Ubuntu) para automatizar completamente la instalación. Más información:</p>
+
+<ul>
+<li>Red Hat/CentOS: parámetros de arranque <a href="https://www.centos.org/docs/5/html/Installation_Guide-en-US/ch-bootopts-x86.html">uno</a> y <a href="https://www.centos.org/docs/5/html/installation_Guide-en-US/s1-kickstart2-options.html">dos</a>, <a href="http://fedoraproject.org/wiki/Anaconda/Kickstart">Kickstart</a></li>
+<li>Debian/Ubuntu: <a href="https://www.debian.org/releases/stable/i386/ch05s03.html.en">parámetros de arranque</a>, <a href="https://wiki.debian.org/DebianInstaller/">Preseed</a></li>
+</ul>
+
+<p>Para especificar un proxy de instalación en los casos anteriores, se deben especificar las siguientes opciones:</p>
+
+<ul>
+<li>Para Debian/Ubuntu: <code>mirror/http/proxy=http://[usuario:contraseña@]proxy.dominio.com:3128/</code></li>
+<li>Para CentOS/Red Hat: <code>proxy=http://[usuario:contraseña@]proxy.dominio.com:3128/</code></li>
+</ul>
+
+<p>La opción <code>--graphics spice</code> especificada en los comandos anteriores permite una mejor calidad y mayor rendimiento de los gráficos en la máquina virtual, usando el driver <code>qxl</code>, así  como una mejor integración con el host a través del protocolo <a href="http://spice-space.org">Spice</a>, permitiendo el cambio de resolución de la máquina virtual según redimensionemos el visor, redirección del sonido, copiar y pegar, etc. En caso de que no se especifique esta opción se usaría una comunicación mediante VNC y un driver Cirrus. Para que el protocolo Spice funcion correctamente en la máquina virtual, deberemos asegurarnos que está instalado el driver gráfico adecuado y el agente de Spice, según lo indicado en el siguiente apartado.</p>
+
+<h2 id="cambiar-cirrus-vnc-por-qxl-spice">Cambiar Cirrus/VNC por QXL/Spice</h2>
+
+<p>Como he comentando antes, el protocolo Spice ofrece un rendimiento mayor y mejor integración con el huésped. Si tenemos alguna máquina virtual creada con las opciones por defecto, podemos actualizarla cambiando las opciones adecuadas. Para ello, con la máquina virtual parada, editaremos su configuración XML y mofificaremos los bloques especificados a continuación:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh edit nombre_maquina</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-xml" data-lang="xml"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-xml" data-lang="xml">    <span class="nt">&lt;channel</span> <span class="na">type=</span><span class="s">&#39;spicevmc&#39;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;target</span> <span class="na">type=</span><span class="s">&#39;virtio&#39;</span> <span class="na">name=</span><span class="s">&#39;com.redhat.spice.0&#39;</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;address</span> <span class="na">type=</span><span class="s">&#39;virtio-serial&#39;</span> <span class="na">controller=</span><span class="s">&#39;0&#39;</span> <span class="na">bus=</span><span class="s">&#39;0&#39;</span> <span class="na">port=</span><span class="s">&#39;1&#39;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/channel&gt;</span>
+    <span class="nt">&lt;graphics</span> <span class="na">type=</span><span class="s">&#39;spice&#39;</span> <span class="na">autoport=</span><span class="s">&#39;yes&#39;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;video&gt;</span>
+      <span class="nt">&lt;model</span> <span class="na">type=</span><span class="s">&#39;qxl&#39;</span> <span class="na">ram=</span><span class="s">&#39;65536&#39;</span> <span class="na">vram=</span><span class="s">&#39;65536&#39;</span> <span class="na">heads=</span><span class="s">&#39;1&#39;</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;address</span> <span class="na">type=</span><span class="s">&#39;pci&#39;</span> <span class="na">domain=</span><span class="s">&#39;0x0000&#39;</span> <span class="na">bus=</span><span class="s">&#39;0x00&#39;</span> <span class="na">slot=</span><span class="s">&#39;0x02&#39;</span> <span class="na">function=</span><span class="s">&#39;0x0&#39;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/video&gt;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Tras esto, ya podemos arrancar la máquina virtual y debemos asegurarnos de tener instalado tanto el driver gráfico correspondiente, como el agente de Spice. Para ello, ejecutaremos los siguientes comandos en distribuciones Debian/Ubuntu:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo apt-get install xserver-xorg-video-qxl spice-vdagent
+sudo update-rc.d spice-vdagent defaults
+sudo service spice-vdagent start</code></pre></td></tr></table>
+</div>
+</div>
+<p>Estos otros en distribuciones Red Hat/CentOS con SysV (versiones 6 y anteriores):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo yum install xorg-x11-drv-qxl spice-vdagent
+sudo chkconfig spice-vdagentd on
+sudo service spice-vdagentd start</code></pre></td></tr></table>
+</div>
+</div>
+<p>Y estos otros en distribuciones Red Hat/CentOS con Systemd (versiones 7 y posteriores):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo yum install xorg-x11-drv-qxl spice-vdagent
+sudo systemctl <span class="nb">enable</span> spice-vdagentd
+sudo systemctl start spice-vdagentd</code></pre></td></tr></table>
+</div>
+</div>
+<p>Para finalizar, deberemos reiniciar la máquina virtual para que se apliquen los cambios.</p>
+
+<h2 id="intercambiar-entre-kvm-y-virtualbox">Intercambiar entre KVM y VirtualBox</h2>
+
+<p>Si se tiene instalado VirtualBox, KVM no se ejecutará con todas las características de virtualización completas, sino que delegará en QEMU (que es mucho más lento), o bien VirtualBox no se ejecutará diciendo que no se han podido cargar sus módulos (<a href="http://www.dedoimedo.com/computers/kvm-virtualbox.html">dependiendo del orden de carga de los módulos de KVM o VirtualBox, será uno u otro el que no funcione</a>). Para solventar esto, o bien debemos desinstalar uno de los dos sistemas, o bien debemos desactivar los módulos del otro cuando vayamos a ejecutar un sistema de virtualización.</p>
+
+<p>Para usar KVM:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo /etc/init.d/vboxdrv stop
+sudo modprobe kvm
+sudo modprobe kvm_intel</code></pre></td></tr></table>
+</div>
+</div>
+<p>Para usar VirtualBox:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo modprobe -r kvm_intel
+sudo modprobe -r kvm
+sudo /etc/init.d/vboxdrv start</code></pre></td></tr></table>
+</div>
+</div>
+<p>En mi caso, que tengo en el trabajo un Dell OptiPlex 755, hay que tocar algunas cosas en la BIOS para que funcione correctamente KVM, ya que cuando intentaba cargar el módulo <code>kvm_intel</code> me daba un error de <code>Operation not supported</code>. En esta <a href="http://serverfault.com/questions/534934/vt-enabled-in-bios-but-kvm-failed-to-detect">pregunta de serverfault</a>, que a su vez <a href="http://reidablog.blogspot.com.es/2008/06/with-correct-bios-settings-enabled-on.html">hace referencia a ésta</a>, indican las opciones de la BIOS que se deben poner para que funcione; en resumen:</p>
+
+<ul>
+<li>Security: Execute Disable should be On</li>
+<li>Performance: Virtualization should be On</li>
+<li>Performance: VT for Direct I/O Access should be On</li>
+<li>Performance: Trusted Execution should be Off</li>
+</ul>
+
+<h2 id="snapshots">Snapshots</h2>
+
+<p>Para poder tomar snapshots, el formato de los discos debe ser alguno que sea compatible; si al crear la máquina, no se especifica uno, se crearán con el formato <code>raw</code>, que no los permite; por eso, en todos los comandos anteriores se usa el formato <code>qcow2</code>.</p>
+
+<p>Mostrar los snapshots de una máquina:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh snapshot-list nombre_maquina</code></pre></td></tr></table>
+</div>
+</div>
+<p>Tomar un snapshot de una máquina:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh snapshot-create-as nombre_maquina <span class="s2">&#34;Nombre del snapshot (opcional)&#34;</span> <span class="s2">&#34;Descripción del snapshot (opcional)&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Revertir a un snapshot anterior:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh snapshot-revert nombre_maquina <span class="o">[</span>nombre_snapshot<span class="p">|</span>--current<span class="o">]</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Eliminar un snapshot:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh snapshot-delete nombre_maquina <span class="o">[</span>nombre_snapshot<span class="p">|</span>--current<span class="o">]</span> <span class="o">[{</span>--children <span class="p">|</span> --children-only<span class="o">}]</span></code></pre></td></tr></table>
+</div>
+</div>
+<h2 id="convertir-imágenes-de-disco-a-qcow2">Convertir imágenes de disco a QCOW2</h2>
+
+<p>En caso de que tengamos una máquina virtual con un disco en formato <code>raw</code>, no podremos utilizar la funcionalidad de snapshots, como hemos comentado antes. Para solucionar esto, deberemos convertir el fichero de imagen de la máquina a formato <code>qcow2</code>, y luego editar la configuración de la máquina virtual para decirle que hemos cambiado el formato del disco.</p>
+
+<p>Para convertir el formato (se debe hacer con la máquina apagada, y con <code>sudo</code> ya que necesita acceder directamente al disco para leerlo y luego poder crear el nuevo):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo qemu-img convert -f raw -O qcow2 /var/lib/libvirt/images/centos7x64.<span class="o">{</span>img,qcow2<span class="o">}</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Tras esto, debemos reconfigurar la máquina virtual para indicar el nuevo nombre del fichero y formato del disco (al igual que antes, con la máquina apagada):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virsh edit centos7x64</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-xml" data-lang="xml"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-xml" data-lang="xml">    <span class="nt">&lt;disk</span> <span class="na">type=</span><span class="s">&#39;file&#39;</span> <span class="na">device=</span><span class="s">&#39;disk&#39;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;driver</span> <span class="na">name=</span><span class="s">&#39;qemu&#39;</span> <span class="na">type=</span><span class="s">&#39;qcow2&#39;</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;source</span> <span class="na">file=</span><span class="s">&#39;/var/lib/libvirt/images/centos7x64.qcow2&#39;</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;target</span> <span class="na">dev=</span><span class="s">&#39;vda&#39;</span> <span class="na">bus=</span><span class="s">&#39;virtio&#39;</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;address</span> <span class="na">type=</span><span class="s">&#39;pci&#39;</span> <span class="na">domain=</span><span class="s">&#39;0x0000&#39;</span> <span class="na">bus=</span><span class="s">&#39;0x00&#39;</span> <span class="na">slot=</span><span class="s">&#39;0x04&#39;</span> <span class="na">function=</span><span class="s">&#39;0x0&#39;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/disk&gt;</span></code></pre></td></tr></table>
+</div>
+</div>
+<h2 id="clonar-máquinas-virtuales">Clonar máquinas virtuales</h2>
+
+<p>A la hora de clonar máquinas virtuales debemos tener en cuenta varias cosas:</p>
+
+<ul>
+<li>Se debe duplicar el disco</li>
+<li>Se debe generar una nueva dirección MAC para cada una de las tarjetas de red</li>
+<li>A nivel de sistema operativo:
+
+<ul>
+<li>Cambiar la dirección MAC con la nueva en los archivos de configuración (<code>/etc/sysconfig/network-scripts/ifcfg-eth*</code> en Red Hat/CentOS)</li>
+<li>Se deben eliminar y regerenerar las claves SSH antiguas</li>
+<li>Se deberían eliminar los usuarios del sistema original</li>
+</ul></li>
+<li>Y cualquier cosa más que se nos ocurra</li>
+</ul>
+
+<p>Para realizar todas estas tareas, disponemos principalmente de 2 herramientas:</p>
+
+<ul>
+<li><code>virt-clone</code>: realiza el clonado en sí de la máquina, copiando el disco, y cambiando las direcciones MAC de las tarjetas (a nivel de KVM sólo, no a nivel del sistema operativo virtual).</li>
+<li><code>virt-sysprep</code>: permite realizar modificaciones en el sistema operativo para configurarlo correctamente con las nuevas especificaciones (MAC, SSH, etc.).</li>
+</ul>
+
+<p>Desde la aplicación <code>virt-manager</code> es bastante sencillo, pues se realiza en apenas 2 clicks por la interfaz gráfica. Para hacerlo por comandos, realizaremos los siguientes pasos. En primer lugar, clonaremos la máquina en sí (si no especificamos manualmente un disco de destino con la opción <code>--file</code>, se nos creará uno automáticamente con el nombre de a nueva máquina; si no especificamos tampoco una MAC manualmente con el parámetro <code>--mac</code>, se generará una aleatoria automáticamente):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">virt-clone --connect qemu:///system --original centos6x32 --auto-clone --name centos6x32-clone</code></pre></td></tr></table>
+</div>
+</div>
+<p>Tras esto, ejecuataremos (<code>virt-sysprep</code> se tiene que ejecutar con <code>sudo</code> o dar permisos de lectura y escritura al usuario actual sobre el archivo de imagen de la máquina virtual, ya que tiene que realizar modificaciones directamente sobre él):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo virt-sysprep --connect qemu:///system --domain centos6x32-clone</code></pre></td></tr></table>
+</div>
+</div>
+<p>El comando anterior lanzará una serie de modificaciónes <em>estándar</em>; estas modificaciones se pueden personalizar con los parámetros <code>--enable</code> y <code>--operations</code>; es posible ver la lista de operaciones posibles con el parámetro <code>--list-operations</code>, y ver lo que se haría sobre la máquina sin realmente hacerlo con el parámetro <code>--dry-run</code>.</p>
+
+<p>NOTA: La versión de Ubuntu que utilizo es la 13.10, que tiene una versión bastante antigua del comando <code>virt-sysprep</code>, y no reconoce varias de las opciones anteriores, y tiene <a href="https://bugzilla.redhat.com/show_bug.cgi?id=1111662">este bug</a>; para solventarlo, lo que hago es pasarle manualmente la lista de operaciones a realizar:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo virt-sysprep --connect qemu:///system -d centos6x32-clone --enable bash-history,logfiles,hostname,machine-id,net-hwaddr,ssh-hostkeys,ssh-userdir</code></pre></td></tr></table>
+</div>
+</div>
+<p>Hay una herramienta adicional (<code>virt-customize</code>) que permite realizar modificaciones sobre el sistema operativo (al estilo de <a href="http://www.ansible.com/home">Ansible</a>, <a href="http://puppetlabs.com/">Puppet</a>, <a href="http://www.saltstack.com/">Salt</a>, <a href="http://www.getchef.com/chef/">Chef</a>, etc. pero más básico), pudiendo establecer la contraseña de root y de usuarios, instalar paquetes, actualizar el sistema, establecer el nombre de host, etc. Lamentablemente, esta aplicación sólo está disponible a partir de la versión 1.26 de <a href="http://libguestfs.org/">libguestfs</a>, que es bastante posterior a la que hay en Ubuntu. Simplemente, a modo de referencia, el comando funcionaría de la siguiente forma:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo virt-customize --connect qemu:///system -d centos6x32-clone --hostname nuevonombre.pruebas.test</code></pre></td></tr></table>
+</div>
+</div>
+<p>Referencias:</p>
+
+<ul>
+<li><a href="http://libguestfs.org/virt-customize.1.html">man virt-customize</a></li>
+<li><a href="http://libguestfs.org/virt-sysprep.1.html">man virt-sysprep</a></li>
+<li><a href="https://rwmj.wordpress.com/tag/virt-sysprep/">Richard WM Jones: virt-sysprep</a></li>
+</ul>]]></content></entry><entry><title type="html">Red NAT privada con salida al exterior en VirtualBox</title><link href="https://okelet.netlify.com/posts/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/"/><id>https://okelet.netlify.com/posts/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/</id><published>2014-08-07T13:49:59+02:00</published><updated>2014-08-07T13:49:59+02:00</updated><content type="html"><![CDATA[<p>Una de las cosas que más echo en falta en <a href="https://www.virtualbox.org">VirtualBox</a> con respecto a cuando trabajaba con <a href="http://www.vmware.com/es/products/workstation">VMware Workstation</a> o <a href="http://www.vmware.com/es/products/player">Player</a>, al trabajar una máquina local para hacer pruebas, es que estas últimas te creaban varios tipos de redes por defecto que VirtualBox no hace. La más útil para mi, sobre todo cuando estás en un cliente en el que es difícil solicitar IPs o cuando quieres crear una red interna de pruebas, es crear una <a href="https://www.vmware.com/support/ws3/doc/ws32_network21.html">red privada de la que formen parte tanto las máquinas virtuales como la propia máquina anfitriona, y que tenga salida al exterior mediante NAT</a>.</p>
+
+<p>En las últimas versiones de VirtualBox (a partir de la 4.3, en modo experimental) existe el llamado <a href="https://www.virtualbox.org/manual/ch06.html#network_nat_service">NAT Service</a>, que simula el comportamiento anterior de VMware, pero que no permite la conexión desde la máquina anfitriona (ya que, al contrario que VMware, VirtualBox no crea una interfaz virtual para esta red) hacia las máquinas virtuales o a la inversa. Esto es muy cómodo cuando quieres hacer SSH hacia las máquinas virtuales, ya que no tienes que estar redirigiendo puertos, que es la única forma de hacerlo con VirtualBox en el modo NAT Service (y no digamos si tienes varias máquinas virtuales, el lío de redirección de puertos y parámetros al SSH para conectar a las diferentes máquinas virtuales).</p>
+
+<p>Buscando una solución alternativa y lo más transparente y sencilla de gestionar, hace tiempo descubrí <a href="http://www.tolaris.com/2012/05/16/using-host-networking-and-nat-with-virtualbox-v2-0">esta página</a> que lo que hace es crear una interfaz virtual en la máquina anfitrión, configurando el reenvío TCP y un servidor <a href="http://www.thekelleys.org.uk/dnsmasq/doc.html">Dnsmasq</a> para servir direcciones por DHCP y la resolución DNS de esa red. De esta forma, si la red de las máquinas virtuales se configura en modo bridge, usando la interfaz creada, todas podrán comunicarse entre sí y con la máquina anfitrión, aparte de tener un servidor DHCP y DNS (por lo que podremos crear asignaciones de direcciones estáticas, entradas DNS para un dominio ficticio interno, etc.). Además, las máquinas virtuales tendrán salida al exterior, ya que la máquina anfitrión realizará NAT del tráfico saliente que se reciba desde esta red. Incluso podemos montar un servidor PXE para arrancar sistemas en red o la instalación automática mediante <a href="http://fedoraproject.org/wiki/Anaconda/Kickstart">Kickstart</a>, <a href="http://www.cobblerd.org">Clobber</a> o <a href="https://wiki.debian.org/DebianInstaller/Preseed">Preseed</a>.</p>
+
+<p>Para rizar aún más el rizo, decidí simplificar la configuración. La anterior está bien, pero es necesario tener bastantes cosas en cuenta (la interfaz, el paquete bridge-utils, el reenvío TCP, la configuración de Dnsmasq, etc.), y se complica a mayores cuando quieres tener varias redes virtuales separadas y que se comuniquen entre sí. Buscando un poco más, descubrí <a href="http://ballardini.com.ar/blog/red-portatil-v-interfaz-tap-en-anfitrion-y-en-huesped-kvm">esta página</a> en la que se combinan todos los pasos anteriores en un único punto. En resumen, lo que se hace es crear una interfaz virtual, y en los precomandos y postcomandos al levantar y apagar la interfaz, se ejecutan todos los pasos necesarios. Para poner en marcha esto, lo primero será instalar Dnsmasq y los paquetes necesarios para crear la interfaz virtual:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">apt-get install dnsmasq vde2 bridge-utils
+update-rc.d dnsmasq disable</code></pre></td></tr></table>
+</div>
+</div>
+<p>[su_box title=&ldquo;Nota&rdquo;]
+Es necesario deshabilitar <code>dnsmasq</code> del arranque ya que la configuración por defecto escucha por todas las interfaces, y al levantar <code>dnsmasq</code> por cada interfaz virtual, da un error diciendo que la dirección ya está en uso.
+[/su_box]</p>
+
+<p>Para no tener que tocar mucho el archivo /etc/network/interfaces, y poder gestionar más fácilmente las interfaces virtuales que creemos, configuraremos el sistema para que <a href="http://askubuntu.com/questions/323566/separate-etc-network-interfaces-file">cargue dinámicamente todos los archivos de configuración desde el directorio /etc/network/interfaces.d</a>; para ello, tendremos que añadir, si no existe ya, esta línea:</p>
+
+<p>{% codeblock /etc/network/interfaces lang:text %}
+auto lo
+iface lo inet loopback</p>
+
+<p>source /etc/network/interfaces.d/*.cfg
+{% endcodeblock %}</p>
+
+<p>Y por supuesto, crear dicho directorio:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">mkdir -p /etc/network/interfaces.d</code></pre></td></tr></table>
+</div>
+</div>
+<p>A continuación, ya podemos definir la interfaz (fichero <code>/etc/network/interfaces.d/vnet0.cfg</code>):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">auto vnet0
+iface vnet0 inet static
+
+  address 192.168.77.253
+  netmask 255.255.255.0
+
+
+  ############################################################################################################
+  # Arranque de la interfaz
+  ############################################################################################################
+
+  # Crear la interfaz virtual
+  pre-up /usr/bin/vde_switch --tap ${IFACE} --daemon --group vde2-net --sock /var/run/${IFACE}.ctl \
+   --mod 775 --mgmtmode 770 --mgmt /var/run/${IFACE}-manage --pidfile /var/run/${IFACE}_vde.pid
+
+  # Comprobamos si existe un archivo de configuración de Dnsmasq, y si no existe, creamos uno vacío
+  # para que no se queje el proceso de Dnsmasq al levantarlo
+  up test -e /etc/dnsmasq_${IFACE}.conf || touch /etc/dnsmasq_${IFACE}.conf
+
+  # Levantar el proceso de Dnsmasq, pasando como interfaz a la que asociarse la propia interfaz y el
+  # rango DHCP para asignar direcciones (la dirección de la interfaz definida arriba debe estar en este
+  # rango); se pueden especificar más parámetros añadiéndolos aquí o creando/modificando un archivo
+  # de configuración según la instrucción anterior.
+  up /usr/sbin/dnsmasq --interface=${IFACE} --except-interface=lo --bind-interfaces --user=nobody \
+     --dhcp-range=${IFACE},192.168.77.101,192.168.77.199,8h \
+     --local=/pruebas.intra/ --domain=pruebas.intra \
+     --pid-file=/var/run/${IFACE}_dnsmasq.pid --conf-file=/etc/dnsmasq_${IFACE}.conf
+
+  # Añadir una regla a iptables para natear el tráfico saliente de esta red
+  post-up iptables -t nat -I POSTROUTING -s 192.168.77.0/24 -j MASQUERADE
+
+
+  ############################################################################################################
+  # Parada de la interfaz
+  ############################################################################################################
+
+  # Eliminar el nateo del tráfico saliente asociada a la red
+  pre-down iptables -t nat -D POSTROUTING -s 192.168.77.0/24 -j MASQUERADE
+
+  # Parar el proceso de Dnsmasq
+  down kill $(cat /var/run/${IFACE}_dnsmasq.pid) &amp;amp;&amp;amp; rm -f /var/run/${IFACE}_dnsmasq.pid
+
+  # Borrar el archivo de configuración de Dnsmasq si está vacío (para mantener limpio el sistema)
+  down test -s /etc/dnsmasq_${IFACE}.conf || rm -f /etc/dnsmasq_${IFACE}.conf
+
+  # Eliminar la interfaz virtual
+  post-down kill $(cat /var/run/${IFACE}_vde.pid) || kill -9 $(cat /var/run/${IFACE}_vde.pid)</pre></td></tr></table>
+</div>
+</div>
+<div class="admonition info">
+  <p>En el post original de donde saqué esta configuración (el segundo referenciado), la regla de <span class="lang:default highlight:0 decode:true crayon-inline ">iptables</span> hacía referencia a la interfaz de salida, y no a la red de origen como he puesto yo. Esto lo he tenido que hacer ya que Ubuntu usa NetworkManager, y parece que levanta esta interfaz antes que las demás (por ejemplo, con la que tengamos configurada como principal como <span class="lang:default highlight:0 decode:true crayon-inline ">eth0</span> o <span class="lang:default highlight:0 decode:true crayon-inline ">wlan0</span>), por lo que no es posible la interfaz de salida de la ruta por defecto (y que además esta interfaz puede cambiarse desde el escritorio). Por tanto, lo que he hecho, es que en la regla de <span class="lang:default highlight:0 decode:true crayon-inline ">iptables</span>, en lugar de hacer NAT a todo lo que salga por la interfaz por defecto tras el enrutado, es hacer NAT a todo lo que venga de la red de la interfaz virtual tras el enrutado.</p>
+
+<p>Esto tiene un problema, que no creo que sea difícil de solucionar, pero que no lo he hecho, y es que si hay varias interfaces virtuales y queremos comunicar máquinas de distintas redes, siempre se hará NAT, aunque no salgan del propio host anfitrión.</p>
+
+</div>
+
+<p>El único paso que he dejado fuera es la configuración del reenvío TCP, ya que no está ligado a una interfaz en concreto, sino que va a nivel de sistema.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text">net.ipv4.ip_forward=1</code></pre></td></tr></table>
+</div>
+</div>
+<p>Recargamos la configuración para que se aplique el cambio anterior:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sysctl -p</code></pre></td></tr></table>
+</div>
+</div>
+<p>Las ventajas de esta configuración sobre la primera es que:</p>
+
+<ul>
+<li>Se levanta un proceso Dnsmasq distinto para cada interfaz, con un archivo de configuración específico, por lo que se pueden agregar en el fichero datos que no se pasan directamente al programa por parámetros, como asignaciones de IPs estáticas, registros DNS, etc.</li>
+<li>Se pueden tener varias interfaces virtuales, cada una con su propia configuración DNS, simplemente creando una nueva interfaz copiando y pegando tantas veces el bloque anterior y modificando los datos mínimos (sobre todo la dirección IP, el rango DHCP y las reglas de iptables), o creando un archivo distinto por cada interfaz en el directorio <code>/etc/network/interfaces.d</code>.</li>
+</ul>
+
+<p>Para finalizar, se puede modificar la configuración de Dnsmasq para personalizar las asignaciones DHCP, la resolución DNS, así como hacer que los sistemas arranquen desde la red con PXE; hay configuraciones de ejemplo en esta página.</p>]]></content></entry><entry><title type="html">Instalar, configurar y securizar MariaDB</title><link href="https://okelet.netlify.com/posts/2014/08/instalar-configurar-y-securizar-mariadb/"/><id>https://okelet.netlify.com/posts/2014/08/instalar-configurar-y-securizar-mariadb/</id><published>2014-08-07T13:49:42+02:00</published><updated>2014-08-07T13:49:42+02:00</updated><content type="html"><![CDATA[<p>La página de <a href="http://www.ibm.com/developerworks">IBM developerWorks</a> no para de sorprenderme. Muchas de las veces que busco documentación técnica, cursos, tutoriales, etc. allí están ellos, y con un material gratuito y de muy alta calidad. La última, fue con la instalación de este blog. Tengo un VPS contratado con Ubuntu, que he ido actualizando poco a poco, y que lo tengo bastante pelado. Me decidí por instalar en él WordPress (tras mucho analizar otros sistemas para publicar artículos tipo <a href="http://dokuwiki.org">Dokuwiki</a>, <a href="http://octopress.org">Octopress</a>, <a href="http://jekyllrb.com">Jekyll</a>, <a href="http://getpelican.com">Pelican</a>, etc.). Lo primero que me sorprendió es que no soporta <a href="http://www.postgresql.org">PostgreSQL</a> de forma oficial (que sería mi primera opción), por mis <a href="http://techcrunch.com/2012/08/18/oracle-makes-more-moves-to-kill-open-source-mysql">reticencias con MySQL</a>, pero más tarde de acordé del fork que se creó hace un tiempo, llamado <a href="http://mariadb.org">MariaDB</a>. Leyendo un poco, parece ser que MariaDB es &ldquo;binariamente&rdquo; (si es que eso existe en castellano) <a href="https://mariadb.com/kb/en/mariadb/mariadb-vs-mysql-compatibility">compatible con MySQL</a> (es decir, que el protocolo de comunicación, los ficheros de base de datos, etc. son totalmente compatibles, si no iguales).</p>
+
+<p>Bueno, a lo que iba. Ya que con PostgreSQL no se puede (o por lo menos, no está oficialmente soportado), opté por instalar MariaDB. Desde su web tienen un <a href="https://downloads.mariadb.org/mariadb/repositories">asistente muy sencillo</a> para configurar los repositorios de las distribuciones Linux más comunes (openSUSE, Debian, Ubuntu, Red Hat, CentOS, etc.). Tienen paquetes precompilados para prácticamente todas las versiones y arquitecturas (la única que echo en falta es Red Hat 7, aunque se lo perdono porque acaba de salir hace nada&hellip;).</p>
+
+<p>Una vez configurados los repositorios, toca la parte de la instalación; sencillísima como siempre:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo apt-get update
+sudo apt-get install mariadb-server php5-mysql</code></pre></td></tr></table>
+</div>
+</div>
+<p>Lo que más miedo me da de estas instalaciones tan &ldquo;sencillísimas&rdquo; es que muchas veces dejan el servidor o el servicio instalado bastante desprotegido. Durante la instalación, se nos pregunta que si queremos ponerle una contraseña al usuario root de MariaDB/MySQL&hellip;. Pero qué cosas, nos permite dejarlo en blanco. MAL MAL MAL. Como decía, gracias a los tutoriales de developerWorks, descubrí que hay un comando muy sencillo que te &ldquo;quita&rdquo; todas esas inseguridades; a saber:</p>
+
+<ul>
+<li>Ponerle una contraseña al usuario root de MariaDB/MySQL en condiciones.</li>
+<li>Eliminar el usuario anonymous</li>
+<li>Deshabilitar el acceso remoto de root</li>
+<li>Eliminar la base de datos test</li>
+<li>Recargar los privilegios</li>
+</ul>
+
+<p>El comando mágico es <code>mysql_secure_installation</code>, aunque parece que no está muy afinado, ya que nada más lanzarlo da un error:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text">/usr/bin/mysql_secure_installation: 379: /usr/bin/mysql_secure_installation: find_mysql_client: not found</code></pre></td></tr></table>
+</div>
+</div>
+<p>También da un error al intentar borrar la base de datos test:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-text" data-lang="text">Remove test database and access to it? [Y/n]
+ - Dropping test database...
+ERROR 1008 (HY000) at line 1: Can&#39;t drop database &#39;test&#39;; database doesn&#39;t exist
+ ... Failed!  Not critical, keep moving...
+ - Removing privileges on test database...
+ ... Success!</code></pre></td></tr></table>
+</div>
+</div>
+<p>Puedes ver la salida completa del comando en este <a href="https://gist.github.com/okelet/b416b13f85831afb98fe">Gist</a>.</p>
+
+<p>Una vez hecho esto, ya podemos decir que nuestra instalación está bastante adecentada. Lo que nos quedaría, si usamos un cortafuegos (que deberíamos), sería limitar el acceso. Si la regla por defecto es denegar las conexiones entrantes, no deberíamos tener problema; si no, deberíamos añadir una regla para denegar las conexiones remotas entrantes al puerto 3306.  El siguiente listado muestra los comandos necesarios para configurar el cortafuegos de manera rápida con <a href="https://help.ubuntu.com/community/UFW">UFW</a>, permitiendo el acceso desde fuera por SSH, HTTP y HTTPS, denegando todo el resto de tráfico entrante, y permitiendo por defecto el tráfico saliente:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">sudo apt-get install ufw
+sudo ufw <span class="nb">enable</span>
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh/tcp
+sudo ufw allow http/tcp
+sudo ufw allow https/tcp
+sudo ufw status</code></pre></td></tr></table>
+</div>
+</div>
+<p>Por último, y como algo particular para WordPress, crearemos una base de datos, un usuario y le daremos permisos al usuario sobre esa base de datos, para lo que ejecutaremos el comando <code>mysql -uroot -p</code>, introduciendo después la contraseña asignada antes al usuario root, y ejecutando los siguientes comandos desde el shell de MariaDB:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sql" data-lang="sql"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sql" data-lang="sql"><span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">wordpress</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;wpuser&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">&#39;pickApassword&#39;</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="k">ALL</span> <span class="k">PRIVILEGES</span> <span class="k">ON</span> <span class="n">wordpress</span> <span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;wpuser&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+<span class="n">FLUSH</span> <span class="k">PRIVILEGES</span><span class="p">;</span>
+<span class="n">exit</span></code></pre></td></tr></table>
+</div>
+</div>
+<h3 id="referencias">Referencias</h3>
+
+<ul>
+<li><a href="http://www.ibm.com/developerworks/cloud/library/cl-softlayer-secure-wordpressblog-trs">IBM developerWorks: Create a secure WordPress blog using SoftLayer</a></li>
+</ul>]]></content></entry></feed>
