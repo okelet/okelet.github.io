@@ -1,9 +1,10 @@
-[build.environment]
-  HUGO_VERSION = "0.64.1"
+[[redirects]]
+  from = "/posts/"
+  to = "/post/"
 
 [[redirects]]
   from = "/archives.html"
-  to = "/posts/"
+  to = "/post/"
 
 [[redirects]]
   from = "/archives.html"
