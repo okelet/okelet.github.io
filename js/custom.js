@@ -12,3 +12,8 @@ $( document ).ready(function() {
     });
 
 });
+
+var actualDomain = "https://blog.okelet.com";
+if (window.location.hostname != "" && window.location.hostname != "localhost" && window.location.hostname != "127.0.0.1" && window.location.origin != actualDomain) {
+    window.location.href = "https://" + actualDomain + "/" + window.location.pathname + window.location.search;
+}
