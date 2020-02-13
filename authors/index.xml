@@ -9,10 +9,32 @@
 &lt;a href="http://www.saludcastillayleon.es" target="_blank" rel="noopener">Gerencia Regional de Salud de Castilla y León&lt;/a>. En 2014 me vine a Madrid, trabajando durante un tiempo en
 &lt;a href="http://www.everis.com" target="_blank" rel="noopener">Everis&lt;/a>, principalmente con
 &lt;a href="https://aws.amazon.com" target="_blank" rel="noopener">Amazon Web Services&lt;/a> y después en
-&lt;a href="http://www.indracompany.com/" target="_blank" rel="noopener">Indra&lt;/a> para un importante cliente de telecomunicaciones. Recientemente he vuelto a Everis como Arquitecto Cloud y DevOps.&lt;/p>
+&lt;a href="http://www.indracompany.com/" target="_blank" rel="noopener">Indra&lt;/a> para un importante cliente de telecomunicaciones. Recientemente he vuelto a
+&lt;a href="http://www.everis.com" target="_blank" rel="noopener">Everis&lt;/a> como Arquitecto Cloud y DevOps.&lt;/p>
 &lt;p>Soy fanático del Software Libre, y en mis ratos libres me gusta programar, de todo un poco: Python, Perl, Java, Groovy, etc.&lt;/p>
 &lt;p>Puedes contactar conmigo mediante
 &lt;a href="https://blog.okelet.com/contact/">el siguiente formulario&lt;/a>.&lt;/p>
-&lt;p>&lt;img src="https://blog.okelet.com/img/JuanAsensioSanchez-AWSCertifiedDevOpsEngineerProfessionalCertificate.png" alt="AWS Certified DevOps Engineer - Professional certificate">&lt;/p>
-&lt;p>&lt;img src="https://blog.okelet.com/img/JuanAsensioSanchez-AWSCertifiedSolutionsArchitectAssociateCertificate.png" alt="AWS Certified Solutions Architect - Associate Certificate">&lt;/p>
-&lt;p>&lt;img src="https://blog.okelet.com/img/JuanAsensioSanchez-GoogleCloudCertifiedProfessionalCloudArchitect.png" alt="Google Cloud Certified - Professional Cloud Architect">&lt;/p></description></item></channel></rss>
+&lt;figure>
+&lt;a data-fancybox="" href="https://blog.okelet.com/img/JuanAsensioSanchez-AWSCertifiedDevOpsEngineerProfessionalCertificate_small.png" data-caption="AWS Certified DevOps Engineer - Professional certificate">
+&lt;img src="https://blog.okelet.com/img/JuanAsensioSanchez-AWSCertifiedDevOpsEngineerProfessionalCertificate_small.png" alt="" >
+&lt;/a>
+&lt;figcaption>
+AWS Certified DevOps Engineer - Professional certificate
+&lt;/figcaption>
+&lt;/figure>
+&lt;figure>
+&lt;a data-fancybox="" href="https://blog.okelet.com/img/JuanAsensioSanchez-AWSCertifiedSolutionsArchitectAssociateCertificate_small.png" data-caption="AWS Certified Solutions Architect - Associate certificate">
+&lt;img src="https://blog.okelet.com/img/JuanAsensioSanchez-AWSCertifiedSolutionsArchitectAssociateCertificate_small.png" alt="" >
+&lt;/a>
+&lt;figcaption>
+AWS Certified Solutions Architect - Associate certificate
+&lt;/figcaption>
+&lt;/figure>
+&lt;figure>
+&lt;a data-fancybox="" href="https://blog.okelet.com/img/JuanAsensioSanchez-GoogleCloudCertifiedProfessionalCloudArchitect_small.png" data-caption="Google Cloud Certified - Professional Cloud Architect">
+&lt;img src="https://blog.okelet.com/img/JuanAsensioSanchez-GoogleCloudCertifiedProfessionalCloudArchitect_small.png" alt="" >
+&lt;/a>
+&lt;figcaption>
+Google Cloud Certified - Professional Cloud Architect
+&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>
