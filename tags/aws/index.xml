@@ -1,4 +1,35 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AWS | Mis notas</title><link>https://blog.okelet.com/tags/aws/</link><atom:link href="https://blog.okelet.com/tags/aws/index.xml" rel="self" type="application/rss+xml"/><description>AWS</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-es</language><lastBuildDate>Sun, 01 Sep 2019 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>AWS</title><link>https://blog.okelet.com/tags/aws/</link></image><item><title>Monitorizar memoria y errores de funciones Lambda</title><link>https://blog.okelet.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</link><pubDate>Sun, 01 Sep 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</guid><description>&lt;p>A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas &lt;em>builtin&lt;/em> como:&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AWS | Mis notas</title><link>https://blog.okelet.com/tags/aws/</link><atom:link href="https://blog.okelet.com/tags/aws/index.xml" rel="self" type="application/rss+xml"/><description>AWS</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-es</language><lastBuildDate>Thu, 13 Feb 2020 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>AWS</title><link>https://blog.okelet.com/tags/aws/</link></image><item><title>Obtener la fecha de creación de las instancias de AWS EC2</title><link>https://blog.okelet.com/posts/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</link><pubDate>Thu, 13 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/posts/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</guid><description>&lt;p>AWS, al listar las instancias de EC2, no devuelve ninguna propiedad que diga cuándo se creó una instancias; esto puede sernos útil en determinadas ocasiones. Podríamos pensar que nos podría valer la propiedad &amp;ldquo;LaunchTime&amp;rdquo;, pero eso en realidad nos indica cuándo se encendió por última vez la instancia, no cuándo se creó.&lt;/p>
+&lt;p>Aunque directamente este dato no lo proporciona directamente AWS, podemos deducirlo indirectamente a través de otros parámetros:&lt;/p>
+&lt;ul>
+&lt;li>La fecha más antigua de vinculación de las tarjetas de red&lt;/li>
+&lt;li>La fecha más antigua de vinculación de los discos&lt;/li>
+&lt;/ul>
+&lt;p>Esto debe ser válido, ya que por ejemplo,
+&lt;a href="https://docs.amazonaws.cn/en_us/vpc/latest/userguide/VPC_ElasticNetworkInterfaces.html" target="_blank" rel="noopener">la tarjeta de red principal no se puede desvincular de la instancia&lt;/a> (&lt;span class="markup-quote">You cannot detach a primary network interface from an instance&lt;/span>), y su fecha de vinculación permanece siempre igual, aún entre reinicios. También suele ser válido que normalmente, el disco principal de una instancia no suele cambiar, aunque esto no siempre es cierto.&lt;/p>
+&lt;p>Con estos datos, podemos lanzar una consulta de la CLI de AWS y mediante el parámetro &lt;code>query&lt;/code> (que es una expresión
+&lt;a href="http://jmespath.org/" target="_blank" rel="noopener">JMESPath&lt;/a>), obtener dichos valores:&lt;/p>
+&lt;pre>&lt;code class="language-bash">aws ec2 describe-instances --output table --query 'sort_by(Reservations[].Instances[?State.Name!=`terminated`][].{Name: Tags[?Key==`Name`].Value | [0], InstanceId: InstanceId, CreationTime: min([min(NetworkInterfaces[].Attachment.AttachTime), min(BlockDeviceMappings[].Ebs.AttachTime)]), State: State.Name, InstanceType: InstanceType, PublicIpAddress: PublicIpAddress, PrivateIpAddress: PrivateIpAddress}, &amp;amp;CreationTime)'
+&lt;/code>&lt;/pre>
+&lt;p>Obtendremos una salida similar a la siguiente:&lt;/p>
+&lt;pre>&lt;code class="language-text">----------------------------------------------------------------------------------------------------------------------------------------------------------
+| DescribeInstances |
++--------------------------+----------------------+---------------+----------------------------------+-------------------+-------------------+-----------+
+| CreationTime | InstanceId | InstanceType | Name | PrivateIpAddress | PublicIpAddress | State |
++--------------------------+----------------------+---------------+----------------------------------+-------------------+-------------------+-----------+
+| 2019-05-16T10:33:52.000Z| i-xxxxxxxxxxxxxxxxx | t3a.2xlarge | yyyyyyyyyyyyy | 10.25.z.z | None | running |
+| 2019-06-03T15:16:31.000Z| i-xxxxxxxxxxxxxxxxx | c5.xlarge | yyyyyyyyyyyyy | 10.25.z.z | None | running |
+| 2019-07-18T12:05:46.000Z| i-xxxxxxxxxxxxxxxxx | t2.small | yyyyyyyyyyyy | 10.25.z.z | 1.2.3.4 | running |
+| 2020-01-13T11:08:03.000Z| i-xxxxxxxxxxxxxxxxx | t2.micro | yyyyyyyyyyyy | 10.25.z.z | None | running |
+| 2020-02-11T15:43:12.000Z| i-xxxxxxxxxxxxxxxxx | c5.large | yyyy | 10.25.z.z | None | running |
+| 2020-02-11T16:46:14.000Z| i-xxxxxxxxxxxxxxxxx | c5.large | yyyyyyyyy | 10.25.z.z | None | running |
+| 2020-02-12T08:33:28.000Z| i-xxxxxxxxxxxxxxxxx | t2.micro | yyyyyyyyyyyyy | 10.25.z.z | None | running |
+| 2020-02-12T14:01:33.000Z| i-xxxxxxxxxxxxxxxxx | c5.large | yyyyyyyyyy | 10.25.z.z | None | running |
+| 2020-02-13T05:30:34.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyyyyyyyyy | 10.25.z.z | None | running |
+| 2020-02-13T05:30:34.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyyyyyyy | 10.25.z.z | None | running |
+| 2020-02-13T05:30:56.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyyyyyyy | 10.25.z.z | None | running |
+| 2020-02-13T05:30:56.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyy | 10.25.z.z | None | running |
++--------------------------+----------------------+---------------+----------------------------------+-------------------+-------------------+-----------+
+&lt;/code>&lt;/pre></description></item><item><title>Monitorizar memoria y errores de funciones Lambda</title><link>https://blog.okelet.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</link><pubDate>Sun, 01 Sep 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/posts/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</guid><description>&lt;p>A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas &lt;em>builtin&lt;/em> como:&lt;/p>
 &lt;ul>
 &lt;li>Cantidad de &lt;em>throttles&lt;/em>&lt;/li>
 &lt;li>Número de invocaciones&lt;/li>
