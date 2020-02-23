@@ -1091,9 +1091,11 @@ sudo /etc/init.d/vboxdrv start
 &lt;pre>&lt;code class="language-bash">apt-get install dnsmasq vde2 bridge-utils
 update-rc.d dnsmasq disable
 &lt;/code>&lt;/pre>
-&lt;p>[su_box title=&amp;quot;Nota&amp;rdquo;]
+&lt;div class="alert alert-note">
+&lt;div>
 Es necesario deshabilitar &lt;code>dnsmasq&lt;/code> del arranque ya que la configuración por defecto escucha por todas las interfaces, y al levantar &lt;code>dnsmasq&lt;/code> por cada interfaz virtual, da un error diciendo que la dirección ya está en uso.
-[/su_box]&lt;/p>
+&lt;/div>
+&lt;/div>
 &lt;p>Para no tener que tocar mucho el archivo &lt;code>/etc/network/interfaces&lt;/code>, y poder gestionar más fácilmente las interfaces virtuales que creemos, configuraremos el sistema para que
 &lt;a href="http://askubuntu.com/questions/323566/separate-etc-network-interfaces-file" target="_blank" rel="noopener">cargue dinámicamente todos los archivos de configuración desde el directorio /etc/network/interfaces.d&lt;/a>; para ello, tendremos que añadir, si no existe ya, esta línea:&lt;/p>
 &lt;pre>&lt;code class="language-text">auto lo
