@@ -15,7 +15,7 @@ collections:
     folder: "content/post"
     create: true
     slug: '{{year}}{{month}}{{day}}-{{slug}}'
-    path: '{{year}}/{{year}}{{month}}{{day}}-{{slug}}'
+    path: '{{year}}/{{slug}}'
     fields:
       - { label: "Title", name: "title", widget: "string" }
       - { label: "Date", name: "date", widget: "date" }
