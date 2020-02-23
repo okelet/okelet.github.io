@@ -16,6 +16,7 @@ collections:
     create: true
     slug: '{{year}}{{month}}{{day}}-{{slug}}'
     path: '{{year}}/{{slug}}'
+    identifier_field: 'Title'
     fields:
       - { label: "Title", name: "Title", widget: "string" }
       - { label: "Date", name: "Date", widget: "date" }
