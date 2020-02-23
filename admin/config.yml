@@ -17,6 +17,6 @@ collections:
     slug: '{{year}}{{month}}{{day}}-{{slug}}'
     path: '{{year}}/{{slug}}'
     fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Date", name: "date", widget: "date" }
+      - { label: "Title", name: "Title", widget: "string" }
+      - { label: "Date", name: "Date", widget: "date" }
       - { label: "Body", name: "body", widget: "markdown" }
