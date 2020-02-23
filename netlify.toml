@@ -35,3 +35,8 @@
   for = "index.xml"
   [headers.values]
     Content-Type = "application/rss+xml"
+
+[build.environment]
+  HUGO_THEME = "repo"
+  HUGO_VERSION = "0.64.1"
+  HUGO_ENABLEGITINFO = "true"
