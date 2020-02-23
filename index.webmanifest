@@ -1,7 +1,7 @@
 {
-  "name": "Mis notas",
-  "short_name": "Mis notas",
-  "lang": "es-es",
+  "name": "Notas de Cloud y DevOps",
+  "short_name": "Notas de Cloud y DevOps",
+  "lang": "es-ES",
   "theme_color": "#2962ff",
   "background_color": "#2962ff",
   "icons": [{
