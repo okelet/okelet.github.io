@@ -1,0 +1,165 @@
+<!doctype html><html lang=es-es><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=generator content="Source Themes Academic 4.7.0"><meta name=author content="Juan Asensio"><meta name=description content="Continuando con un post anterior de cómo 
+probar Ansible AWX con Microk8s (en AWS EC2). Bueno, pues resulta que me creé una imagen personalizada para el contener awx_task para instalar una serie de librerías y comandos que necesitaba para lanzar unos playbooks; el fichero Dockerfile es similar a éste:
+FROM ansible/awx_task:9.1.1
+
+# Switch user to become root
+USER 0
+
+# Additional software
+RUN cd && \
+    set -x && \
+    dnf install -y nmap-ncat htop && \
+    dnf clean all
+
+# Ansible venv additional dependencies
+RUN cd && \
+    source /var/lib/awx/venv/ansible/bin/activate && \
+    umask 0022 && \
+    pip install --upgrade pypsrp pysocks && \
+    deactivate
+
+# Restore the original user
+# https://github.com/ansible/awx/blob/devel/installer/roles/image_build/templates/Dockerfile.task.j2
+USER 1000"><link rel=alternate hreflang=es-es href=https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/><meta name=theme-color content="#2962ff"><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin=anonymous><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin=anonymous><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin=anonymous><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/github.min.css crossorigin=anonymous title=hl-light><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/dracula.min.css crossorigin=anonymous title=hl-dark disabled><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin=anonymous><script src=https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin=anonymous async></script><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap"><link rel=stylesheet href=/css/academic.css><script async src="https://www.googletagmanager.com/gtag/js?id=UA-53728915-2"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+function trackOutboundLink(url,target){gtag('event','click',{'event_category':'outbound','event_label':url,'transport_type':'beacon','event_callback':function(){if(target!=='_blank'){document.location=url;}}});console.debug("Outbound link clicked: "+url);}
+function onClickCallback(event){if((event.target.tagName!=='A')||(event.target.host===window.location.host)){return;}
+trackOutboundLink(event.target,event.target.getAttribute('target'));}
+gtag('js',new Date());gtag('config','UA-53728915-2',{'anonymize_ip':true});document.addEventListener('click',onClickCallback,false);</script><link rel=manifest href=/index.webmanifest><link rel=icon type=image/png href=/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png><link rel=apple-touch-icon type=image/png href=/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png><link rel=canonical href=https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/><meta property="twitter:card" content="summary"><meta property="og:site_name" content="Notas de Cloud y DevOps"><meta property="og:url" content="https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/"><meta property="og:title" content="Configurar Microk8s para usar repositorios de AWS ECR | Notas de Cloud y DevOps"><meta property="og:description" content="Continuando con un post anterior de cómo 
+probar Ansible AWX con Microk8s (en AWS EC2). Bueno, pues resulta que me creé una imagen personalizada para el contener awx_task para instalar una serie de librerías y comandos que necesitaba para lanzar unos playbooks; el fichero Dockerfile es similar a éste:
+FROM ansible/awx_task:9.1.1
+
+# Switch user to become root
+USER 0
+
+# Additional software
+RUN cd && \
+    set -x && \
+    dnf install -y nmap-ncat htop && \
+    dnf clean all
+
+# Ansible venv additional dependencies
+RUN cd && \
+    source /var/lib/awx/venv/ansible/bin/activate && \
+    umask 0022 && \
+    pip install --upgrade pypsrp pysocks && \
+    deactivate
+
+# Restore the original user
+# https://github.com/ansible/awx/blob/devel/installer/roles/image_build/templates/Dockerfile.task.j2
+USER 1000"><meta property="og:image" content="img/map[gravatar:%!s(bool=false) shape:circle]"><meta property="twitter:image" content="img/map[gravatar:%!s(bool=false) shape:circle]"><meta property="og:locale" content="es-ES"><meta property="article:published_time" content="2020-01-18T00:00:00+00:00"><meta property="article:modified_time" content="2020-01-18T00:00:00+00:00"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/"},"headline":"Configurar Microk8s para usar repositorios de AWS ECR","datePublished":"2020-01-18T00:00:00Z","dateModified":"2020-01-18T00:00:00Z","author":{"@type":"Person","name":"Juan Asensio"},"publisher":{"@type":"Organization","name":"Notas de Cloud y DevOps","logo":{"@type":"ImageObject","url":"https://blog.okelet.com/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"}},"description":"\u003cp\u003eContinuando con un post anterior de cómo \n\u003ca href=\"/post/2019/06/probando-ansible-awx-con-microk8s/\"\u003eprobar Ansible AWX con Microk8s\u003c/a\u003e (en AWS EC2). Bueno, pues resulta que me creé una imagen personalizada para el contener \u003ccode\u003eawx_task\u003c/code\u003e para instalar una serie de librerías y comandos que necesitaba para lanzar unos playbooks; el fichero \u003ccode\u003eDockerfile\u003c/code\u003e es similar a éste:\u003c/p\u003e\n\u003cpre\u003e\u003ccode class=\"language-text\"\u003eFROM ansible/awx_task:9.1.1\n\n# Switch user to become root\nUSER 0\n\n# Additional software\nRUN cd \u0026amp;\u0026amp; \\\n    set -x \u0026amp;\u0026amp; \\\n    dnf install -y nmap-ncat htop \u0026amp;\u0026amp; \\\n    dnf clean all\n\n# Ansible venv additional dependencies\nRUN cd \u0026amp;\u0026amp; \\\n    source /var/lib/awx/venv/ansible/bin/activate \u0026amp;\u0026amp; \\\n    umask 0022 \u0026amp;\u0026amp; \\\n    pip install --upgrade pypsrp pysocks \u0026amp;\u0026amp; \\\n    deactivate\n\n# Restore the original user\n# https://github.com/ansible/awx/blob/devel/installer/roles/image_build/templates/Dockerfile.task.j2\nUSER 1000\n\u003c/code\u003e\u003c/pre\u003e"}</script><script src=https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.js integrity="sha256-5VhCqFam2Cn+yjw61zbBNrbHVJ6SRydPeKopYlngbiQ=" crossorigin=anonymous></script><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.1/cookieconsent.min.css integrity="sha256-zQ0LblD/Af8vOppw18+2anxsuaz3pWYyVWi+bTvTH8Q=" crossorigin=anonymous><script>window.addEventListener("load",function(){window.cookieconsent.initialise({"palette":{"popup":{"background":"#2962ff","text":"#fff"},"button":{"background":"#fff","text":"#2962ff"}},"theme":"classic","content":{"message":"Este sitio web utiliza cookies para garantizarle una mejor experiencia.","dismiss":"¡Entendido!","link":"Más información","href":"https://www.cookiesandyou.com"}})});</script><script src=https://identity.netlify.com/v1/netlify-identity-widget.js></script><title>Configurar Microk8s para usar repositorios de AWS ECR | Notas de Cloud y DevOps</title></head><body id=top data-spy=scroll data-offset=70 data-target=#TableOfContents><aside class=search-results id=search><div class=container><section class=search-header><div class="row no-gutters justify-content-between mb-3"><div class=col-6><h1>Buscar</h1></div><div class="col-6 col-search-close"><a class=js-search href=#><i class="fas fa-times-circle text-muted" aria-hidden=true></i></a></div></div><div id=search-box><input name=q id=search-query placeholder=Buscar... autocapitalize=off autocomplete=off autocorrect=off spellcheck=false type=search></div></section><section class=section-search-results><div id=search-hits></div></section></div></aside><nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id=navbar-main><div class=container><div class="d-none d-lg-inline-flex"><a class=navbar-brand href=/>Notas de Cloud y DevOps</a></div><button type=button class=navbar-toggler data-toggle=collapse data-target=#navbar-content aria-controls=navbar aria-expanded=false aria-label="Barra de navegación">
+<span><i class="fas fa-bars"></i></span></button><div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none"><a class=navbar-brand href=/>Notas de Cloud y DevOps</a></div><div class="navbar-collapse main-menu-item collapse justify-content-start" id=navbar-content><ul class="navbar-nav d-md-inline-flex"><li class=nav-item><a class="nav-link active" href=/><span>Inicio</span></a></li><li class=nav-item><a class="nav-link active" href=/post/><span>Archivos</span></a></li><li class=nav-item><a class=nav-link href=/tags/><span>Tags</span></a></li><li class=nav-item><a class=nav-link href=/projects/><span>Proyectos</span></a></li><li class=nav-item><a class=nav-link href=/index.xml><span>RSS</span></a></li><li class=nav-item><a class=nav-link href=/authors/okelet/><span>Acerca de</span></a></li></ul></div><ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2"><li class=nav-item><a class="nav-link js-search" href=#><i class="fas fa-search" aria-hidden=true></i></a></li><li class=nav-item><a class="nav-link js-dark-toggle" href=#><i class="fas fa-moon" aria-hidden=true></i></a></li></ul></div></nav><article class=article><div class="article-container pt-3"><h1>Configurar Microk8s para usar repositorios de AWS ECR</h1><div class=article-metadata><span class=article-date>Sat, 18 Jan 2020</span>
+<span class=middot-divider></span><span class=article-reading-time>5 min de lectura</span>
+<span class=middot-divider></span><a href=/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/#disqus_thread></a></div></div><div class=article-container><div class=article-style><p>Continuando con un post anterior de cómo
+<a href=/post/2019/06/probando-ansible-awx-con-microk8s/>probar Ansible AWX con Microk8s</a> (en AWS EC2). Bueno, pues resulta que me creé una imagen personalizada para el contener <code>awx_task</code> para instalar una serie de librerías y comandos que necesitaba para lanzar unos playbooks; el fichero <code>Dockerfile</code> es similar a éste:</p><pre><code class=language-text>FROM ansible/awx_task:9.1.1
+
+# Switch user to become root
+USER 0
+
+# Additional software
+RUN cd &amp;&amp; \
+    set -x &amp;&amp; \
+    dnf install -y nmap-ncat htop &amp;&amp; \
+    dnf clean all
+
+# Ansible venv additional dependencies
+RUN cd &amp;&amp; \
+    source /var/lib/awx/venv/ansible/bin/activate &amp;&amp; \
+    umask 0022 &amp;&amp; \
+    pip install --upgrade pypsrp pysocks &amp;&amp; \
+    deactivate
+
+# Restore the original user
+# https://github.com/ansible/awx/blob/devel/installer/roles/image_build/templates/Dockerfile.task.j2
+USER 1000
+</code></pre><p>Y me creé un repositorio en
+<a href=https://aws.amazon.com/es/ecr/ target=_blank rel=noopener>AWS ECR</a>. Después generé la imagen y la subí al repositorio (siendo <code>xxxxxxxxxxx</code> el ID de la cuenta de AWS):</p><pre><code class=language-bash>$(aws ecr get-login --no-include-email)
+docker build --force-rm --pull --no-cache -t xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1 .
+docker push xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1
+</code></pre><p>Tras esto modifiqué el fichero de inventario que usa el instalador de AWX para hacer referencia a la imagen que acabo de subir y crear.</p><pre><code class=language-yaml>kubernetes_task_image=xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task
+</code></pre><p>Pero cuando el cluster de Kubernetes intenta obtener la imagen para crear el pod, se queda en estado <code>ErrImagePull</code> con el mensaje:</p><pre><code class=language-text>  Normal   Pulling            2s (x3 over 46s)   kubelet, pcjuan    Pulling image &quot;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&quot;
+  Warning  Failed             2s (x3 over 45s)   kubelet, pcjuan    Failed to pull image &quot;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&quot;: rpc error: code = Unknown desc = failed to resolve image &quot;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&quot;: no available registry endpoint: unexpected status code https://xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/v2/ansible/awx_task/manifests/9.1.1: 401 Unauthorized
+  Warning  Failed             2s (x3 over 45s)   kubelet, pcjuan    Error: ErrImagePull
+</code></pre><p>Esto se debe a que Kubernetes no tiene las credenciales necesarias para acceder al repositorio. Pero después de investigar, es fácil solucionarlo. Lo primero que tenemos que hacer es crear un <code>cronjob</code> en Kubernetes (lo haremos con un crojob porque realmente lo que usa Docker es un token, que tiene caducidad, y hay que renovarlo cada cierto tiempo), para que haga login en el repositorio, y cree una credencial para obtener de forma correcta la imagen; para esto, crearemos un fichero llamado <code>ecr-cred-refresh.yml</code> con el siguiente contenido:</p><pre><code class=language-yaml>apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ecr-cred-helper
+spec:
+  concurrencyPolicy: Allow
+  schedule: 0 */6 * * *
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - command:
+            - /bin/sh
+            - -c
+            - |-
+              NAMESPACE=awx
+              SERVICE_ACCOUNT=awx
+              ACCOUNT=$(aws sts get-caller-identity --query 'Account' --output text)
+              REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | python -c &quot;import json,sys; print(json.loads(sys.stdin.read())['region'])&quot;)
+              SECRET_NAME=${REGION}-ecr-registry
+              EMAIL=anymail.doesnt.matter@email.com
+              TOKEN=$(aws ecr get-login --region ${REGION} --registry-ids ${ACCOUNT} | cut -d' ' -f6)
+              echo &quot;ENV variables setup done.&quot;
+              kubectl -n ${NAMESPACE} delete secret --ignore-not-found $SECRET_NAME
+              kubectl -n ${NAMESPACE} create secret docker-registry $SECRET_NAME \
+                  --docker-server=https://${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com \
+                  --docker-username=AWS \
+                  --docker-password=&quot;${TOKEN}&quot; \
+                  --docker-email=&quot;${EMAIL}&quot;
+              echo &quot;Secret created by name $SECRET_NAME&quot;
+              kubectl -n ${NAMESPACE} patch serviceaccount ${SERVICE_ACCOUNT} -p '{&quot;imagePullSecrets&quot;:[{&quot;name&quot;:&quot;'$SECRET_NAME'&quot;}]}'
+              echo &quot;All done.&quot;
+            image: odaniait/aws-kubectl:latest
+            imagePullPolicy: IfNotPresent
+            name: ecr-cred-helper
+            resources: {}
+            securityContext:
+              capabilities: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          dnsPolicy: Default
+          hostNetwork: true
+          restartPolicy: Never
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+</code></pre><p>En el fichero anterior, dependiendo de nuestra configuración particular, podremos cambiar el valor de las variables <code>NAMESPACE</code> y <code>SERVICE_ACCOUNT</code>, y también especificar manualmente las variables <code>ACCOUNT</code> y <code>REGION</code> si no queremos que el script las auto-detecte porque usamos otras en concreto.</p><p>Básicamente, lo que hace esto, es crear un trabajo de cron, que lanza un contenedor y ejecuta el script en Bash definido en la especificación del pod. En resumen:</p><ul><li>Obtiene las credenciales de acceso a ECR utilizando la cli de AWS</li><li>Elimina, si existe, el secreto llamado <code>${REGION}-ecr-registry</code></li><li>Lo crea de nuevo, con el token obtenido de ECR</li><li>Actualiza la service account de AWX indicándole que para obtener las imágenes (<code>imagePullSecrets</code>) tiene usar las credenciales del secreto recién creado</li></ul><p>Tras esto, importamos la definición del job en Kubernetes:</p><pre><code class=language-bash>kubectl -n awx apply -f ecr-cred-refresh.yml
+</code></pre><p>Este job se ejecuta cada 6 horas; si queremos forzar la ejecución, podemos hacerlo con los siguientes comandos:</p><pre><code class=language-bash>JOB_NAME=&quot;manual-$(date --utc +%Y%m%d-%H%M%S)&quot;
+kubectl -n awx create job --from=cronjob/ecr-cred-helper ${JOB_NAME}
+kubectl -n awx wait --for=condition=complete job.batch/${JOB_NAME}
+kubectl -n awx logs job.batch/${JOB_NAME}
+</code></pre><p>Pero esto por sí solo no nos vale&mldr; porque ¿dónde le decimos las crendenciales para acceder a AWS (es decir, para que desde dentro del cronjob se pueda hacer <code>aws ecr get-login</code>)? Es decir, el access key y el secret. Para esto, no le pasaremos una key y un secret, sino que crearemos un rol y se lo asignaremos a la instancia EC2 de AWS donde estemos ejecutando Microk8s. El rol debe tener una policy que permita a la instancia acceder al repositorio; podemos usar la policy predefinida <code>AmazonEC2ContainerRegistryReadOnly</code> o crear una manualmente.</p><p>Tras crear el rol y la policy, y asignar el rol a la instancia, podemos ejecutar manualmente el <code>cronjob</code>, y ejecutar de nuevo el instalador de AWX, que ya debería obtener la imagen de Docker sin problemas.</p><p>Comandos útiles:</p><pre><code class=language-bash># Ver información de la service account de awx
+kubectl -n awx describe serviceaccounts awx
+
+# Ver información de los secretos (cuándo se actualizó/obtuvo el token por última vez)
+kubectl -n awx get secrets
+</code></pre><p>Probar manualmente el script:</p><pre><code class=language-bash>kubectl run -i --tty --rm debug --image=odaniait/aws-kubectl:latest --restart=Never -- sh
+kubectl run --generator=run-pod/v1 -n awx --rm -i --tty compass-tmp --image=odaniait/aws-kubectl:latest -- sh
+</code></pre><p>Referencias:</p><ul><li><a href=https://medium.com/@damitj07/how-to-configure-and-use-aws-ecr-with-kubernetes-rancher2-0-6144c626d42c target=_blank rel=noopener>How to configure and use AWS ECR with kubernetes & Rancher2.0</a></li></ul></div><div class=article-tags><a class="badge badge-light" href=/tags/ansible/>Ansible</a>
+<a class="badge badge-light" href=/tags/awx/>AWX</a>
+<a class="badge badge-light" href=/tags/kubernetes/>Kubernetes</a>
+<a class="badge badge-light" href=/tags/microk8s/>MicroK8s</a>
+<a class="badge badge-light" href=/tags/ecr/>ECR</a></div><div class=share-box aria-hidden=true><ul class=share><li><a href="https://twitter.com/intent/tweet?url=https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/&text=Configurar%20Microk8s%20para%20usar%20repositorios%20de%20AWS%20ECR" target=_blank rel=noopener class=share-btn-twitter><i class="fab fa-twitter"></i></a></li><li><a href="https://www.facebook.com/sharer.php?u=https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/&t=Configurar%20Microk8s%20para%20usar%20repositorios%20de%20AWS%20ECR" target=_blank rel=noopener class=share-btn-facebook><i class="fab fa-facebook"></i></a></li><li><a href="mailto:?subject=Configurar%20Microk8s%20para%20usar%20repositorios%20de%20AWS%20ECR&body=https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/" target=_blank rel=noopener class=share-btn-email><i class="fas fa-envelope"></i></a></li><li><a href="https://www.linkedin.com/shareArticle?url=https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/&title=Configurar%20Microk8s%20para%20usar%20repositorios%20de%20AWS%20ECR" target=_blank rel=noopener class=share-btn-linkedin><i class="fab fa-linkedin-in"></i></a></li><li><a href="https://web.whatsapp.com/send?text=Configurar%20Microk8s%20para%20usar%20repositorios%20de%20AWS%20ECR%20https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/" target=_blank rel=noopener class=share-btn-whatsapp><i class="fab fa-whatsapp"></i></a></li><li><a href="https://service.weibo.com/share/share.php?url=https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/&title=Configurar%20Microk8s%20para%20usar%20repositorios%20de%20AWS%20ECR" target=_blank rel=noopener class=share-btn-weibo><i class="fab fa-weibo"></i></a></li></ul></div><section id=comments><div id=disqus_thread></div><script>let disqus_config=function(){};(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('disqus_thread').innerHTML='Disqus comments not available by default when the website is previewed locally.';return;}
+var d=document,s=d.createElement('script');s.async=true;s.src='https://'+"okeletgithubio"+'.disqus.com/embed.js';s.setAttribute('data-timestamp',+new Date());(d.head||d.body).appendChild(s);})();</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></section><div class="article-widget content-widget-hr"><h3>Relacionado</h3><ul><li><a href=/post/2019/06/probando-ansible-awx-con-microk8s/>Probando Ansible AWX con MicroK8s</a></li><li><a href=/post/2016/04/instalar-ansible-en-cygwin/>Instalar Ansible en Cygwin</a></li></ul></div></div></article><script src=https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/r.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/powershell.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin=anonymous></script><script>const code_highlighting=true;</script><script>const isSiteThemeDark=false;</script><script>const search_config={"indexURI":"/index.json","minLength":1,"threshold":0.3};const i18n={"no_results":"No se encontraron resultados","placeholder":"Buscar...","results":"resultados encontrados"};const content_type={'post':"Posts",'project':"Proyectos",'publication':"Publicaciones",'talk':"Charlas"};</script><script id=search-hit-fuse-template type=text/x-template>
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script><script src=https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin=anonymous></script><script id=dsq-count-scr src=https://okeletgithubio.disqus.com/count.js async></script><script src=/js/academic.min.dd79eb4b28152684c06162146d4d7421.js></script><div class=container><footer class=site-footer><p class=powered-by><a href=https://creativecommons.org/licenses/by-sa/3.0/>CC BY-SA</a> Juan A. S. 2020 &#183;
+Powered by the
+<a href=https://sourcethemes.com/academic/ target=_blank rel=noopener>Academic theme</a> for
+<a href=https://gohugo.io target=_blank rel=noopener>Hugo</a>.
+<span class=float-right aria-hidden=true><a href=# class=back-to-top><span class=button_icon><i class="fas fa-chevron-up fa-2x"></i></span></a></span></p></footer></div><div id=modal class="modal fade" role=dialog><div class=modal-dialog><div class=modal-content><div class=modal-header><h5 class=modal-title>Citar</h5><button type=button class=close data-dismiss=modal aria-label=Close>
+<span aria-hidden=true>&#215;</span></button></div><div class=modal-body><pre><code class="tex hljs"></code></pre></div><div class=modal-footer><a class="btn btn-outline-primary my-1 js-copy-cite" href=# target=_blank><i class="fas fa-copy"></i>Copiar</a>
+<a class="btn btn-outline-primary my-1 js-download-cite" href=# target=_blank><i class="fas fa-download"></i>Descargar</a><div id=modal-error></div></div></div></div></div></body></html>
