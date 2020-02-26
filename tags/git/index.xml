@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Python | Notas de Cloud y DevOps</title><link>https://blog.okelet.com/tags/python/</link><atom:link href="https://blog.okelet.com/tags/python/index.xml" rel="self" type="application/rss+xml"/><description>Python</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-ES</language><copyright>[CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/) Juan A. S. 2020</copyright><lastBuildDate>Tue, 25 Feb 2020 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>Python</title><link>https://blog.okelet.com/tags/python/</link></image><item><title>Instalación y configuración de Windows Terminal y Powershell</title><link>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</link><pubDate>Tue, 25 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</guid><description>&lt;p>Microsoft se está poniendo un poco las pilas, y entre otros muchos proyectos, lanzó hace unos meses
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Git | Notas de Cloud y DevOps</title><link>https://blog.okelet.com/tags/git/</link><atom:link href="https://blog.okelet.com/tags/git/index.xml" rel="self" type="application/rss+xml"/><description>Git</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-ES</language><copyright>[CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/) Juan A. S. 2020</copyright><lastBuildDate>Tue, 25 Feb 2020 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>Git</title><link>https://blog.okelet.com/tags/git/</link></image><item><title>Instalación y configuración de Windows Terminal y Powershell</title><link>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</link><pubDate>Tue, 25 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</guid><description>&lt;p>Microsoft se está poniendo un poco las pilas, y entre otros muchos proyectos, lanzó hace unos meses
 &lt;a href="https://github.com/microsoft/terminal" target="_blank" rel="noopener">Windows Terminal&lt;/a>, una nueva terminal en Windows con unas funcionalidades que eran necesarias desde hace mucho tiempo (pestañas, perfiles, integración con WSL, soporte Unicode y UTF-8, temas, estilos, etc.).&lt;/p>
 &lt;p>Aunque no uso mucho Windows, en ocasiones tengo que iniciarlo, y determinadas tareas de consola se hacen bastante pesadas. Con Windows Terminal, la verdad es que la sensación a la hora de trabajar es bastante cómoda. Por eso, he decidido crear este post para futuras referencias, así como con instrucciones para instalar utilidades útiles a la hora de usar Windows Terminal.&lt;/p>
 &lt;p>En primer lugar, para instalar Windows Terminal, simplemente ejecutaremos este comando desde una consola de Powershell estándar, con permisos de administrador (teniendo
@@ -100,47 +100,4 @@ pip install pipenv
 &lt;p>Instalar la
 &lt;a href="https://docs.aws.amazon.com/cli/latest/userguide/install-cliv1.html" target="_blank" rel="noopener">CLI de AWS v1&lt;/a>:&lt;/p>
 &lt;pre>&lt;code class="language-powershell">pip install awscli
-&lt;/code>&lt;/pre></description></item><item><title>Python es el lenguaje más popular hoy por hoy</title><link>https://blog.okelet.com/post/2019/06/python-es-el-lenguaje-mas-popular-hoy-por-hoy/</link><pubDate>Mon, 17 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/python-es-el-lenguaje-mas-popular-hoy-por-hoy/</guid><description>&lt;p>Existe una medida, llamada índice TIOBE, que valora qué lenguajes de programación son más populares. Los datos salen de los foros de discusión técnicos en donde se observan cuantos internautas cambian impresiones sobre los diferentes lenguajes de programación. Ahora, en junio, el índica TIOBE ha sido publicado y revela que Python es el lenguaje más popular.&lt;/p></description></item><item><title>Parsear MaintenanceWindow de RDS en Python</title><link>https://blog.okelet.com/post/2019/05/parsear-maintenancewindow-de-rds-en-python/</link><pubDate>Mon, 20 May 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/05/parsear-maintenancewindow-de-rds-en-python/</guid><description>&lt;p>Para una aplicación que estamos desarrollando, necesitábamos saber cuándo se van a aplicar los mantenimientos en nuestras instancias de RDS. El problema es que según
-&lt;a href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/rds.html#RDS.Client.describe_pending_maintenance_actions" target="_blank" rel="noopener">la documentación de Boto3&lt;/a>, el método &lt;code>describe_pending_maintenance_actions&lt;/code> devuelve la fecha de aplicación de la actualización en el campo &lt;code>CurrentApplyDate&lt;/code>, pero esto siempre viene vacío:&lt;/p>
-&lt;pre>&lt;code class="language-bash">$ aws rds describe-pending-maintenance-actions
-&lt;/code>&lt;/pre>
-&lt;p>El apaño que hemos hecho, es que cuando detectamos que una instancia de RDS tiene una operación de mantenimiento pendiente, obtenemos la fecha a partir del campo &lt;code>PreferredMaintenanceWindow&lt;/code> de la propia instancia.&lt;/p>
-&lt;pre>&lt;code class="language-python">from pprint import pprint
-from datetime import datetime, timedelta
-def parse_rds_maintenance(maintenance_str: str):
-if not maintenance_str:
-return None, None
-start_str, end_str = maintenance_str.split(&amp;quot;-&amp;quot;)
-start_day, start_hour, start_minute = start_str.split(&amp;quot;:&amp;quot;)
-end_day, end_hour, end_minute = end_str.split(&amp;quot;:&amp;quot;)
-start = get_next_date_for(start_day, start_hour, start_minute)
-end = get_next_date_for(end_day, end_hour, end_minute)
-return start, end
-def get_next_date_for(day, hour, minute):
-days_mappings = {
-&amp;quot;mon&amp;quot;: 1,
-&amp;quot;tue&amp;quot;: 2,
-&amp;quot;wed&amp;quot;: 3,
-&amp;quot;thu&amp;quot;: 4,
-&amp;quot;fri&amp;quot;: 5,
-&amp;quot;sat&amp;quot;: 6,
-&amp;quot;sun&amp;quot;: 7,
-}
-now = datetime.utcnow()
-day_int = days_mappings.get(day)
-add_days = 0
-if now.isoweekday() &amp;lt; day_int:
-add_days = day_int - now.isoweekday()
-elif now.isoweekday() &amp;gt; day_int:
-add_days = 7 + day_int - now.isoweekday()
-date = (now + timedelta(days=add_days)).replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
-if date &amp;lt; now:
-date = date + timedelta(days=7)
-return date
-if __name__ == '__main__':
-pprint(parse_rds_maintenance(&amp;quot;tue:07:00-tue:07:30&amp;quot;))
-&lt;/code>&lt;/pre>
-&lt;p>Y esto devuelve (depende de la fecha en la que se ejecute, claro&amp;hellip;):&lt;/p>
-&lt;pre>&lt;code>(datetime.datetime(2019, 5, 21, 7, 0), datetime.datetime(2019, 5, 21, 7, 30))
-&lt;/code>&lt;/pre>
-&lt;!--more--></description></item></channel></rss>
+&lt;/code>&lt;/pre></description></item></channel></rss>

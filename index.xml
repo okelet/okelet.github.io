@@ -1,4 +1,106 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Notas de Cloud y DevOps</title><link>https://blog.okelet.com/</link><atom:link href="https://blog.okelet.com/index.xml" rel="self" type="application/rss+xml"/><description>Notas de Cloud y DevOps</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-ES</language><copyright>[CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/) Juan A. S. 2020</copyright><lastBuildDate>Thu, 13 Feb 2020 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>Notas de Cloud y DevOps</title><link>https://blog.okelet.com/</link></image><item><title>Obtener la fecha de creación de las instancias de AWS EC2</title><link>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</link><pubDate>Thu, 13 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</guid><description>&lt;p>AWS, al listar las instancias de EC2, no devuelve ninguna propiedad que diga cuándo se creó una instancias; esto puede sernos útil en determinadas ocasiones. Podríamos pensar que nos podría valer la propiedad &amp;ldquo;LaunchTime&amp;rdquo;, pero eso en realidad nos indica cuándo se encendió por última vez la instancia, no cuándo se creó.&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Notas de Cloud y DevOps</title><link>https://blog.okelet.com/</link><atom:link href="https://blog.okelet.com/index.xml" rel="self" type="application/rss+xml"/><description>Notas de Cloud y DevOps</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-ES</language><copyright>[CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/) Juan A. S. 2020</copyright><lastBuildDate>Tue, 25 Feb 2020 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>Notas de Cloud y DevOps</title><link>https://blog.okelet.com/</link></image><item><title>Instalación y configuración de Windows Terminal y Powershell</title><link>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</link><pubDate>Tue, 25 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</guid><description>&lt;p>Microsoft se está poniendo un poco las pilas, y entre otros muchos proyectos, lanzó hace unos meses
+&lt;a href="https://github.com/microsoft/terminal" target="_blank" rel="noopener">Windows Terminal&lt;/a>, una nueva terminal en Windows con unas funcionalidades que eran necesarias desde hace mucho tiempo (pestañas, perfiles, integración con WSL, soporte Unicode y UTF-8, temas, estilos, etc.).&lt;/p>
+&lt;p>Aunque no uso mucho Windows, en ocasiones tengo que iniciarlo, y determinadas tareas de consola se hacen bastante pesadas. Con Windows Terminal, la verdad es que la sensación a la hora de trabajar es bastante cómoda. Por eso, he decidido crear este post para futuras referencias, así como con instrucciones para instalar utilidades útiles a la hora de usar Windows Terminal.&lt;/p>
+&lt;p>En primer lugar, para instalar Windows Terminal, simplemente ejecutaremos este comando desde una consola de Powershell estándar, con permisos de administrador (teniendo
+&lt;a href="https://chocolatey.org/" target="_blank" rel="noopener">el gestor de paquetes Chocolatey&lt;/a> instalado previamente):&lt;/p>
+&lt;pre>&lt;code class="language-powershell">choco install microsoft-windows-terminal
+&lt;/code>&lt;/pre>
+&lt;p>Como alternativa, si no podemos instalar Windows Terminal porque el sistema no cumple los requisitos (es necesaria una compilación de Windows Windows 10 1903, build 18362, o posterior), podemos optar por usar
+&lt;a href="https://conemu.github.io/" target="_blank" rel="noopener">ConEmu&lt;/a> o
+&lt;a href="https://cmder.net/" target="_blank" rel="noopener">Cmder&lt;/a>:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">choco install conemu
+choco install cmder
+&lt;/code>&lt;/pre>
+&lt;p>También instalaremos
+&lt;a href="https://github.com/gerardog/gsudo" target="_blank" rel="noopener">gsudo&lt;/a>, que será necesario en pasos posteriores:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">choco install gsudo
+&lt;/code>&lt;/pre>
+&lt;div class="alert alert-warning">
+&lt;div>
+Es posible que haya que cerrar y volver a abrir Windows Terminal después de cada instalación/configuración para que se recarguen variables de entorno o configuraciones que se van modificando.
+&lt;/div>
+&lt;/div>
+&lt;p>Tras instalar Windows Terminal, lo abriremos, y para añadir el perfil para abrir una consola de Powershell como administrador, modificaremos el fichero de opciones, abriéndolo desde la opción &amp;ldquo;Settings&amp;rdquo; de Windows Terminal, y añadiremos el siguiente bloque dentro de la sección &amp;ldquo;profile&amp;rdquo;:&lt;/p>
+&lt;pre>&lt;code class="language-json">{
+&amp;quot;icon&amp;quot; : &amp;quot;ms-appx:///ProfileIcons/{61c54bbd-c2c6-5271-96e7-009a87ff44bf}.png&amp;quot;,
+&amp;quot;name&amp;quot;: &amp;quot;Windows PowerShell (admin)&amp;quot;,
+&amp;quot;commandline&amp;quot;: &amp;quot;gsudo.exe powershell&amp;quot;,
+&amp;quot;fontFace&amp;quot; : &amp;quot;Consolas&amp;quot;,
+&amp;quot;fontSize&amp;quot; : 10,
+&amp;quot;historySize&amp;quot; : 9001,
+&amp;quot;startingDirectory&amp;quot; : &amp;quot;%USERPROFILE%&amp;quot;
+}
+&lt;/code>&lt;/pre>
+&lt;p>También podemos crear un perfil para conectarnos directamente a una máquina por SSH (ver cómo instalar el cliente nativo de SSH de Windows más abajo):&lt;/p>
+&lt;pre>&lt;code class="language-json">{
+&amp;quot;icon&amp;quot; : &amp;quot;ms-appx:///ProfileIcons/{9acb9455-ca41-5af7-950f-6bca1bc9722f}.png&amp;quot;,
+&amp;quot;name&amp;quot; : &amp;quot;Vagrant&amp;quot;,
+&amp;quot;commandline&amp;quot; : &amp;quot;ssh -i ... user@domain.com&amp;quot;,
+&amp;quot;fontFace&amp;quot; : &amp;quot;Consolas&amp;quot;,
+&amp;quot;fontSize&amp;quot; : 10,
+&amp;quot;closeOnExit&amp;quot; : true,
+&amp;quot;startingDirectory&amp;quot; : &amp;quot;%USERPROFILE%&amp;quot;
+}
+&lt;/code>&lt;/pre>
+&lt;p>En caso de ConEmu o Cmder, simplemente crearemos una nueva tarea, con el mismo comando especificado para Windows Terminal (&lt;code>ssh -i ... user@domain.com&lt;/code>).&lt;/p>
+&lt;p>Tras esto haremos unas configuraciones mínimas para poder usar Powershell decentemente:&lt;/p>
+&lt;ul>
+&lt;li>Crear el fichero de perfil si no existe&lt;/li>
+&lt;li>Instalar
+&lt;a href="https://docs.microsoft.com/es-es/powershell/scripting/gallery/installing-psget?view=powershell-7" target="_blank" rel="noopener">PowerShellGet&lt;/a>, necesario en otros comandos&lt;/li>
+&lt;/ul>
+&lt;pre>&lt;code class="language-powershell">if (!(Test-Path $profile)) { New-Item -Path $profile -ItemType &amp;quot;file&amp;quot; }
+gsudo Install-Module -Name PowerShellGet -Force
+&lt;/code>&lt;/pre>
+&lt;p>Podemos instalar una serie de utilidades en Windows, para intentar hacer más fácil el cambio entre Linux y Windows; por ejemplo, para instalar Git:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">gsudo choco install git.install --params &amp;quot;/GitAndUnixToolsOnPath /WindowsTerminal /NoShellIntegration /NoGitLfs /SChannel /NoAutoCrlf&amp;quot;
+&lt;/code>&lt;/pre>
+&lt;p>Instalar
+&lt;a href="https://github.com/PowerShell/PSReadLine" target="_blank" rel="noopener">PSReadLine&lt;/a>:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">Install-Module PSReadLine -AllowPrerelease -Force
+$line = &amp;quot;Import-Module PSReadLine&amp;quot;
+if (!(Select-String -Path $profile -Pattern $line -SimpleMatch)) { Add-Content -Path $profile -Value $line }
+Invoke-Expression &amp;quot;$line&amp;quot;
+$line = &amp;quot;Set-PSReadLineOption -EditMode Emacs&amp;quot;
+if (!(Select-String -Path $profile -Pattern $line -SimpleMatch)) { Add-Content -Path $profile -Value $line }
+Invoke-Expression &amp;quot;$line&amp;quot;
+&lt;/code>&lt;/pre>
+&lt;p>Instalar el
+&lt;a href="https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse" target="_blank" rel="noopener">cliente nativo de SSH de Windows&lt;/a>:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">gsudo Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
+gsudo Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+&lt;/code>&lt;/pre>
+&lt;p>Si no es posible usar el cliente nativo de SSH de Windows, podemos usar el cliente SSH que instala automáticamente Git (que ya hemos instalado en un paso anterior).&lt;/p>
+&lt;p>Añadir
+&lt;a href="https://github.com/dahlbyk/posh-sshell" target="_blank" rel="noopener">posh-sshell&lt;/a> y crear el archivo de configuración de SSH por defecto si no existe:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">Install-Module posh-sshell -Scope CurrentUser
+Import-Module posh-sshell
+Add-PoshSshellToProfile -AllHosts
+if (!(Test-Path $HOME/.ssh)) { md $HOME/.ssh }
+if (!(Test-Path $HOME/.ssh/config)) { New-Item -path $HOME/.ssh -name config -type &amp;quot;file&amp;quot; }
+&lt;/code>&lt;/pre>
+&lt;p>Añadir
+&lt;a href="https://github.com/dahlbyk/posh-git" target="_blank" rel="noopener">posh-git&lt;/a>:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">gsudo choco install poshgit
+&lt;/code>&lt;/pre>
+&lt;p>Instalar &lt;code>curl&lt;/code> y eliminar el alias:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">$line = &amp;quot;if (Test-Path Alias:\curl) { Remove-Item alias:\curl }&amp;quot;
+if (!(Select-String -Path $profile -Pattern $line -SimpleMatch)) { Add-Content -Path $profile -Value $line }
+Invoke-Expression &amp;quot;$line&amp;quot;
+&lt;/code>&lt;/pre>
+&lt;p>Instalar
+&lt;a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo&lt;/a> (para gestionar este blog):&lt;/p>
+&lt;pre>&lt;code class="language-powershell">gsudo choco install hugo-extended
+&lt;/code>&lt;/pre>
+&lt;p>Instalar Python y
+&lt;a href="https://pipenv.kennethreitz.org/en/latest/" target="_blank" rel="noopener">pipenv&lt;/a>:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">gsudo choco install python
+pip install pipenv
+&lt;/code>&lt;/pre>
+&lt;p>Instalar la
+&lt;a href="https://docs.aws.amazon.com/cli/latest/userguide/install-cliv1.html" target="_blank" rel="noopener">CLI de AWS v1&lt;/a>:&lt;/p>
+&lt;pre>&lt;code class="language-powershell">pip install awscli
+&lt;/code>&lt;/pre></description></item><item><title>Obtener la fecha de creación de las instancias de AWS EC2</title><link>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</link><pubDate>Thu, 13 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</guid><description>&lt;p>AWS, al listar las instancias de EC2, no devuelve ninguna propiedad que diga cuándo se creó una instancias; esto puede sernos útil en determinadas ocasiones. Podríamos pensar que nos podría valer la propiedad &amp;ldquo;LaunchTime&amp;rdquo;, pero eso en realidad nos indica cuándo se encendió por última vez la instancia, no cuándo se creó.&lt;/p>
 &lt;p>Aunque directamente este dato no lo proporciona directamente AWS, podemos deducirlo indirectamente a través de otros parámetros:&lt;/p>
 &lt;ul>
 &lt;li>La fecha más antigua de vinculación de las tarjetas de red&lt;/li>
