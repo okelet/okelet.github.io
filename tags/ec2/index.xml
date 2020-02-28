@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>EC2 | Notas de Cloud y DevOps</title><link>https://blog.okelet.com/tags/ec2/</link><atom:link href="https://blog.okelet.com/tags/ec2/index.xml" rel="self" type="application/rss+xml"/><description>EC2</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-ES</language><copyright>[CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/) Juan A. S. 2020</copyright><lastBuildDate>Thu, 13 Feb 2020 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>EC2</title><link>https://blog.okelet.com/tags/ec2/</link></image><item><title>Obtener la fecha de creación de las instancias de AWS EC2</title><link>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</link><pubDate>Thu, 13 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</guid><description>&lt;p>AWS, al listar las instancias de EC2, no devuelve ninguna propiedad que diga cuándo se creó una instancias; esto puede sernos útil en determinadas ocasiones. Podríamos pensar que nos podría valer la propiedad &amp;ldquo;LaunchTime&amp;rdquo;, pero eso en realidad nos indica cuándo se encendió por última vez la instancia, no cuándo se creó.&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>EC2 | Notas de Cloud y DevOps</title><link>https://blog.okelet.com/tags/ec2/</link><atom:link href="https://blog.okelet.com/tags/ec2/index.xml" rel="self" type="application/rss+xml"/><description>EC2</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-ES</language><copyright>[CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/) Juan A. S. 2020</copyright><lastBuildDate>Thu, 13 Feb 2020 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>EC2</title><link>https://blog.okelet.com/tags/ec2/</link></image><item><title>Obtener la fecha de creación de las instancias de AWS EC2</title><link>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</link><pubDate>Thu, 13 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</guid><description>
+&lt;p>AWS, al listar las instancias de EC2, no devuelve ninguna propiedad que diga cuándo se creó una instancias; esto puede sernos útil en determinadas ocasiones. Podríamos pensar que nos podría valer la propiedad &amp;ldquo;LaunchTime&amp;rdquo;, pero eso en realidad nos indica cuándo se encendió por última vez la instancia, no cuándo se creó.&lt;/p>
 &lt;p>Aunque directamente este dato no lo proporciona directamente AWS, podemos deducirlo indirectamente a través de otros parámetros:&lt;/p>
 &lt;ul>
 &lt;li>La fecha más antigua de vinculación de las tarjetas de red&lt;/li>
@@ -10,23 +11,4 @@
 &lt;a href="http://jmespath.org/" target="_blank" rel="noopener">JMESPath&lt;/a>), obtener dichos valores:&lt;/p>
 &lt;pre>&lt;code class="language-bash">aws ec2 describe-instances --output table --query 'sort_by(Reservations[].Instances[?State.Name!=`terminated`][].{Name: Tags[?Key==`Name`].Value | [0], InstanceId: InstanceId, CreationTime: min([min(NetworkInterfaces[].Attachment.AttachTime), min(BlockDeviceMappings[].Ebs.AttachTime)]), State: State.Name, InstanceType: InstanceType, PublicIpAddress: PublicIpAddress, PrivateIpAddress: PrivateIpAddress}, &amp;amp;CreationTime)'
 &lt;/code>&lt;/pre>
-&lt;p>Obtendremos una salida similar a la siguiente:&lt;/p>
-&lt;pre>&lt;code class="language-text">----------------------------------------------------------------------------------------------------------------------------------------------------------
-| DescribeInstances |
-+--------------------------+----------------------+---------------+----------------------------------+-------------------+-------------------+-----------+
-| CreationTime | InstanceId | InstanceType | Name | PrivateIpAddress | PublicIpAddress | State |
-+--------------------------+----------------------+---------------+----------------------------------+-------------------+-------------------+-----------+
-| 2019-05-16T10:33:52.000Z| i-xxxxxxxxxxxxxxxxx | t3a.2xlarge | yyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2019-06-03T15:16:31.000Z| i-xxxxxxxxxxxxxxxxx | c5.xlarge | yyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2019-07-18T12:05:46.000Z| i-xxxxxxxxxxxxxxxxx | t2.small | yyyyyyyyyyyy | 10.25.z.z | 1.2.3.4 | running |
-| 2020-01-13T11:08:03.000Z| i-xxxxxxxxxxxxxxxxx | t2.micro | yyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-11T15:43:12.000Z| i-xxxxxxxxxxxxxxxxx | c5.large | yyyy | 10.25.z.z | None | running |
-| 2020-02-11T16:46:14.000Z| i-xxxxxxxxxxxxxxxxx | c5.large | yyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-12T08:33:28.000Z| i-xxxxxxxxxxxxxxxxx | t2.micro | yyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-12T14:01:33.000Z| i-xxxxxxxxxxxxxxxxx | c5.large | yyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-13T05:30:34.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-13T05:30:34.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-13T05:30:56.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-13T05:30:56.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyy | 10.25.z.z | None | running |
-+--------------------------+----------------------+---------------+----------------------------------+-------------------+-------------------+-----------+
-&lt;/code>&lt;/pre></description></item></channel></rss>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/">Leer más...&lt;/a>&lt;/p></description></item></channel></rss>

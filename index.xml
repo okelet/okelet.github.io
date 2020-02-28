@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Notas de Cloud y DevOps</title><link>https://blog.okelet.com/</link><atom:link href="https://blog.okelet.com/index.xml" rel="self" type="application/rss+xml"/><description>Notas de Cloud y DevOps</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-ES</language><copyright>[CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/) Juan A. S. 2020</copyright><lastBuildDate>Tue, 01 Jan 2019 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>Notas de Cloud y DevOps</title><link>https://blog.okelet.com/</link></image><item><title>Instalación y configuración de Windows Terminal y Powershell</title><link>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</link><pubDate>Tue, 25 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</guid><description>&lt;p>Microsoft se está poniendo un poco las pilas, y entre otros muchos proyectos, lanzó hace unos meses
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Notas de Cloud y DevOps</title><link>https://blog.okelet.com/</link><atom:link href="https://blog.okelet.com/index.xml" rel="self" type="application/rss+xml"/><description>Notas de Cloud y DevOps</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>es-ES</language><copyright>[CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/) Juan A. S. 2020</copyright><lastBuildDate>Tue, 01 Jan 2019 00:00:00 +0000</lastBuildDate><image><url>img/map[gravatar:%!s(bool=false) shape:circle]</url><title>Notas de Cloud y DevOps</title><link>https://blog.okelet.com/</link></image><item><title>Instalación y configuración de Windows Terminal y Powershell</title><link>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</link><pubDate>Tue, 25 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/</guid><description>
+&lt;p>Microsoft se está poniendo un poco las pilas, y entre otros muchos proyectos, lanzó hace unos meses
 &lt;a href="https://github.com/microsoft/terminal" target="_blank" rel="noopener">Windows Terminal&lt;/a>, una nueva terminal en Windows con unas funcionalidades que eran necesarias desde hace mucho tiempo (pestañas, perfiles, integración con WSL, soporte Unicode y UTF-8, temas, estilos, etc.).&lt;/p>
 &lt;p>Aunque no uso mucho Windows, en ocasiones tengo que iniciarlo, y determinadas tareas de consola se hacen bastante pesadas. Con Windows Terminal, la verdad es que la sensación a la hora de trabajar es bastante cómoda. Por eso, he decidido crear este post para futuras referencias, así como con instrucciones para instalar utilidades útiles a la hora de usar Windows Terminal.&lt;/p>
 &lt;p>En primer lugar, para instalar Windows Terminal, simplemente ejecutaremos este comando desde una consola de Powershell estándar, con permisos de administrador (teniendo
@@ -15,92 +16,8 @@ choco install cmder
 &lt;a href="https://github.com/gerardog/gsudo" target="_blank" rel="noopener">gsudo&lt;/a>, que será necesario en pasos posteriores:&lt;/p>
 &lt;pre>&lt;code class="language-powershell">choco install gsudo
 &lt;/code>&lt;/pre>
-&lt;div class="alert alert-warning">
-&lt;div>
-Es posible que haya que cerrar y volver a abrir Windows Terminal después de cada instalación/configuración para que se recarguen variables de entorno o configuraciones que se van modificando.
-&lt;/div>
-&lt;/div>
-&lt;p>Tras instalar Windows Terminal, lo abriremos, y para añadir el perfil para abrir una consola de Powershell como administrador, modificaremos el fichero de opciones, abriéndolo desde la opción &amp;ldquo;Settings&amp;rdquo; de Windows Terminal, y añadiremos el siguiente bloque dentro de la sección &amp;ldquo;profile&amp;rdquo;:&lt;/p>
-&lt;pre>&lt;code class="language-json">{
-&amp;quot;icon&amp;quot; : &amp;quot;ms-appx:///ProfileIcons/{61c54bbd-c2c6-5271-96e7-009a87ff44bf}.png&amp;quot;,
-&amp;quot;name&amp;quot;: &amp;quot;Windows PowerShell (admin)&amp;quot;,
-&amp;quot;commandline&amp;quot;: &amp;quot;gsudo.exe powershell&amp;quot;,
-&amp;quot;fontFace&amp;quot; : &amp;quot;Consolas&amp;quot;,
-&amp;quot;fontSize&amp;quot; : 10,
-&amp;quot;historySize&amp;quot; : 9001,
-&amp;quot;startingDirectory&amp;quot; : &amp;quot;%USERPROFILE%&amp;quot;
-}
-&lt;/code>&lt;/pre>
-&lt;p>También podemos crear un perfil para conectarnos directamente a una máquina por SSH (ver cómo instalar el cliente nativo de SSH de Windows más abajo):&lt;/p>
-&lt;pre>&lt;code class="language-json">{
-&amp;quot;icon&amp;quot; : &amp;quot;ms-appx:///ProfileIcons/{9acb9455-ca41-5af7-950f-6bca1bc9722f}.png&amp;quot;,
-&amp;quot;name&amp;quot; : &amp;quot;Vagrant&amp;quot;,
-&amp;quot;commandline&amp;quot; : &amp;quot;ssh -i ... user@domain.com&amp;quot;,
-&amp;quot;fontFace&amp;quot; : &amp;quot;Consolas&amp;quot;,
-&amp;quot;fontSize&amp;quot; : 10,
-&amp;quot;closeOnExit&amp;quot; : true,
-&amp;quot;startingDirectory&amp;quot; : &amp;quot;%USERPROFILE%&amp;quot;
-}
-&lt;/code>&lt;/pre>
-&lt;p>En caso de ConEmu o Cmder, simplemente crearemos una nueva tarea, con el mismo comando especificado para Windows Terminal (&lt;code>ssh -i ... user@domain.com&lt;/code>).&lt;/p>
-&lt;p>Tras esto haremos unas configuraciones mínimas para poder usar Powershell decentemente:&lt;/p>
-&lt;ul>
-&lt;li>Crear el fichero de perfil si no existe&lt;/li>
-&lt;li>Instalar
-&lt;a href="https://docs.microsoft.com/es-es/powershell/scripting/gallery/installing-psget?view=powershell-7" target="_blank" rel="noopener">PowerShellGet&lt;/a>, necesario en otros comandos&lt;/li>
-&lt;/ul>
-&lt;pre>&lt;code class="language-powershell">if (!(Test-Path $profile)) { New-Item -Path $profile -ItemType &amp;quot;file&amp;quot; }
-gsudo Install-Module -Name PowerShellGet -Force
-&lt;/code>&lt;/pre>
-&lt;p>Podemos instalar una serie de utilidades en Windows, para intentar hacer más fácil el cambio entre Linux y Windows; por ejemplo, para instalar Git:&lt;/p>
-&lt;pre>&lt;code class="language-powershell">gsudo choco install git.install --params &amp;quot;/GitAndUnixToolsOnPath /WindowsTerminal /NoShellIntegration /NoGitLfs /SChannel /NoAutoCrlf&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>Instalar
-&lt;a href="https://github.com/PowerShell/PSReadLine" target="_blank" rel="noopener">PSReadLine&lt;/a>:&lt;/p>
-&lt;pre>&lt;code class="language-powershell">Install-Module PSReadLine -AllowPrerelease -Force
-$line = &amp;quot;Import-Module PSReadLine&amp;quot;
-if (!(Select-String -Path $profile -Pattern $line -SimpleMatch)) { Add-Content -Path $profile -Value $line }
-Invoke-Expression &amp;quot;$line&amp;quot;
-$line = &amp;quot;Set-PSReadLineOption -EditMode Emacs&amp;quot;
-if (!(Select-String -Path $profile -Pattern $line -SimpleMatch)) { Add-Content -Path $profile -Value $line }
-Invoke-Expression &amp;quot;$line&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>Instalar el
-&lt;a href="https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse" target="_blank" rel="noopener">cliente nativo de SSH de Windows&lt;/a>:&lt;/p>
-&lt;pre>&lt;code class="language-powershell">gsudo Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
-gsudo Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
-&lt;/code>&lt;/pre>
-&lt;p>Si no es posible usar el cliente nativo de SSH de Windows, podemos usar el cliente SSH que instala automáticamente Git (que ya hemos instalado en un paso anterior).&lt;/p>
-&lt;p>Añadir
-&lt;a href="https://github.com/dahlbyk/posh-sshell" target="_blank" rel="noopener">posh-sshell&lt;/a> y crear el archivo de configuración de SSH por defecto si no existe:&lt;/p>
-&lt;pre>&lt;code class="language-powershell">Install-Module posh-sshell -Scope CurrentUser
-Import-Module posh-sshell
-Add-PoshSshellToProfile -AllHosts
-if (!(Test-Path $HOME/.ssh)) { md $HOME/.ssh }
-if (!(Test-Path $HOME/.ssh/config)) { New-Item -path $HOME/.ssh -name config -type &amp;quot;file&amp;quot; }
-&lt;/code>&lt;/pre>
-&lt;p>Añadir
-&lt;a href="https://github.com/dahlbyk/posh-git" target="_blank" rel="noopener">posh-git&lt;/a>:&lt;/p>
-&lt;pre>&lt;code class="language-powershell">gsudo choco install poshgit
-&lt;/code>&lt;/pre>
-&lt;p>Instalar &lt;code>curl&lt;/code> y eliminar el alias:&lt;/p>
-&lt;pre>&lt;code class="language-powershell">$line = &amp;quot;if (Test-Path Alias:\curl) { Remove-Item alias:\curl }&amp;quot;
-if (!(Select-String -Path $profile -Pattern $line -SimpleMatch)) { Add-Content -Path $profile -Value $line }
-Invoke-Expression &amp;quot;$line&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>Instalar
-&lt;a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo&lt;/a> (para gestionar este blog):&lt;/p>
-&lt;pre>&lt;code class="language-powershell">gsudo choco install hugo-extended
-&lt;/code>&lt;/pre>
-&lt;p>Instalar Python y
-&lt;a href="https://pipenv.kennethreitz.org/en/latest/" target="_blank" rel="noopener">pipenv&lt;/a>:&lt;/p>
-&lt;pre>&lt;code class="language-powershell">gsudo choco install python
-pip install pipenv
-&lt;/code>&lt;/pre>
-&lt;p>Instalar la
-&lt;a href="https://docs.aws.amazon.com/cli/latest/userguide/install-cliv1.html" target="_blank" rel="noopener">CLI de AWS v1&lt;/a>:&lt;/p>
-&lt;pre>&lt;code class="language-powershell">pip install awscli
-&lt;/code>&lt;/pre></description></item><item><title>Obtener la fecha de creación de las instancias de AWS EC2</title><link>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</link><pubDate>Thu, 13 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</guid><description>&lt;p>AWS, al listar las instancias de EC2, no devuelve ninguna propiedad que diga cuándo se creó una instancias; esto puede sernos útil en determinadas ocasiones. Podríamos pensar que nos podría valer la propiedad &amp;ldquo;LaunchTime&amp;rdquo;, pero eso en realidad nos indica cuándo se encendió por última vez la instancia, no cuándo se creó.&lt;/p>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2020/02/instalacion-y-configuracion-de-windows-terminal-y-powershell/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Obtener la fecha de creación de las instancias de AWS EC2</title><link>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</link><pubDate>Thu, 13 Feb 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/</guid><description>
+&lt;p>AWS, al listar las instancias de EC2, no devuelve ninguna propiedad que diga cuándo se creó una instancias; esto puede sernos útil en determinadas ocasiones. Podríamos pensar que nos podría valer la propiedad &amp;ldquo;LaunchTime&amp;rdquo;, pero eso en realidad nos indica cuándo se encendió por última vez la instancia, no cuándo se creó.&lt;/p>
 &lt;p>Aunque directamente este dato no lo proporciona directamente AWS, podemos deducirlo indirectamente a través de otros parámetros:&lt;/p>
 &lt;ul>
 &lt;li>La fecha más antigua de vinculación de las tarjetas de red&lt;/li>
@@ -112,26 +29,8 @@ pip install pipenv
 &lt;a href="http://jmespath.org/" target="_blank" rel="noopener">JMESPath&lt;/a>), obtener dichos valores:&lt;/p>
 &lt;pre>&lt;code class="language-bash">aws ec2 describe-instances --output table --query 'sort_by(Reservations[].Instances[?State.Name!=`terminated`][].{Name: Tags[?Key==`Name`].Value | [0], InstanceId: InstanceId, CreationTime: min([min(NetworkInterfaces[].Attachment.AttachTime), min(BlockDeviceMappings[].Ebs.AttachTime)]), State: State.Name, InstanceType: InstanceType, PublicIpAddress: PublicIpAddress, PrivateIpAddress: PrivateIpAddress}, &amp;amp;CreationTime)'
 &lt;/code>&lt;/pre>
-&lt;p>Obtendremos una salida similar a la siguiente:&lt;/p>
-&lt;pre>&lt;code class="language-text">----------------------------------------------------------------------------------------------------------------------------------------------------------
-| DescribeInstances |
-+--------------------------+----------------------+---------------+----------------------------------+-------------------+-------------------+-----------+
-| CreationTime | InstanceId | InstanceType | Name | PrivateIpAddress | PublicIpAddress | State |
-+--------------------------+----------------------+---------------+----------------------------------+-------------------+-------------------+-----------+
-| 2019-05-16T10:33:52.000Z| i-xxxxxxxxxxxxxxxxx | t3a.2xlarge | yyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2019-06-03T15:16:31.000Z| i-xxxxxxxxxxxxxxxxx | c5.xlarge | yyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2019-07-18T12:05:46.000Z| i-xxxxxxxxxxxxxxxxx | t2.small | yyyyyyyyyyyy | 10.25.z.z | 1.2.3.4 | running |
-| 2020-01-13T11:08:03.000Z| i-xxxxxxxxxxxxxxxxx | t2.micro | yyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-11T15:43:12.000Z| i-xxxxxxxxxxxxxxxxx | c5.large | yyyy | 10.25.z.z | None | running |
-| 2020-02-11T16:46:14.000Z| i-xxxxxxxxxxxxxxxxx | c5.large | yyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-12T08:33:28.000Z| i-xxxxxxxxxxxxxxxxx | t2.micro | yyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-12T14:01:33.000Z| i-xxxxxxxxxxxxxxxxx | c5.large | yyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-13T05:30:34.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-13T05:30:34.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-13T05:30:56.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyyyyyyy | 10.25.z.z | None | running |
-| 2020-02-13T05:30:56.000Z| i-xxxxxxxxxxxxxxxxx | t3.medium | yyyyyyyyy | 10.25.z.z | None | running |
-+--------------------------+----------------------+---------------+----------------------------------+-------------------+-------------------+-----------+
-&lt;/code>&lt;/pre></description></item><item><title>Configurar Microk8s para usar repositorios de AWS ECR</title><link>https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</link><pubDate>Sat, 18 Jan 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</guid><description>&lt;p>Continuando con un post anterior de cómo
+&lt;p>&lt;a href="https://blog.okelet.com/post/2020/02/obtener-la-fecha-de-creacion-de-las-instancias-de-aws-ec2/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Configurar Microk8s para usar repositorios de AWS ECR</title><link>https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</link><pubDate>Sat, 18 Jan 2020 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/</guid><description>
+&lt;p>Continuando con un post anterior de cómo
 &lt;a href="https://blog.okelet.com/post/2019/06/probando-ansible-awx-con-microk8s/">probar Ansible AWX con Microk8s&lt;/a> (en AWS EC2). Bueno, pues resulta que me creé una imagen personalizada para el contener &lt;code>awx_task&lt;/code> para instalar una serie de librerías y comandos que necesitaba para lanzar unos playbooks; el fichero &lt;code>Dockerfile&lt;/code> es similar a éste:&lt;/p>
 &lt;pre>&lt;code class="language-text">FROM ansible/awx_task:9.1.1
 # Switch user to become root
@@ -151,106 +50,8 @@ deactivate
 # https://github.com/ansible/awx/blob/devel/installer/roles/image_build/templates/Dockerfile.task.j2
 USER 1000
 &lt;/code>&lt;/pre>
-&lt;p>Y me creé un repositorio en
-&lt;a href="https://aws.amazon.com/es/ecr/" target="_blank" rel="noopener">AWS ECR&lt;/a>. Después generé la imagen y la subí al repositorio (siendo &lt;code>xxxxxxxxxxx&lt;/code> el ID de la cuenta de AWS):&lt;/p>
-&lt;pre>&lt;code class="language-bash">$(aws ecr get-login --no-include-email)
-docker build --force-rm --pull --no-cache -t xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1 .
-docker push xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1
-&lt;/code>&lt;/pre>
-&lt;p>Tras esto modifiqué el fichero de inventario que usa el instalador de AWX para hacer referencia a la imagen que acabo de subir y crear.&lt;/p>
-&lt;pre>&lt;code class="language-yaml">kubernetes_task_image=xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task
-&lt;/code>&lt;/pre>
-&lt;p>Pero cuando el cluster de Kubernetes intenta obtener la imagen para crear el pod, se queda en estado &lt;code>ErrImagePull&lt;/code> con el mensaje:&lt;/p>
-&lt;pre>&lt;code class="language-text"> Normal Pulling 2s (x3 over 46s) kubelet, pcjuan Pulling image &amp;quot;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;quot;
-Warning Failed 2s (x3 over 45s) kubelet, pcjuan Failed to pull image &amp;quot;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;quot;: rpc error: code = Unknown desc = failed to resolve image &amp;quot;xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/ansible/awx_task:9.1.1&amp;quot;: no available registry endpoint: unexpected status code https://xxxxxxxxxxx.dkr.ecr.eu-west-1.amazonaws.com/v2/ansible/awx_task/manifests/9.1.1: 401 Unauthorized
-Warning Failed 2s (x3 over 45s) kubelet, pcjuan Error: ErrImagePull
-&lt;/code>&lt;/pre>
-&lt;p>Esto se debe a que Kubernetes no tiene las credenciales necesarias para acceder al repositorio. Pero después de investigar, es fácil solucionarlo. Lo primero que tenemos que hacer es crear un &lt;code>cronjob&lt;/code> en Kubernetes (lo haremos con un crojob porque realmente lo que usa Docker es un token, que tiene caducidad, y hay que renovarlo cada cierto tiempo), para que haga login en el repositorio, y cree una credencial para obtener de forma correcta la imagen; para esto, crearemos un fichero llamado &lt;code>ecr-cred-refresh.yml&lt;/code> con el siguiente contenido:&lt;/p>
-&lt;pre>&lt;code class="language-yaml">apiVersion: batch/v1beta1
-kind: CronJob
-metadata:
-name: ecr-cred-helper
-spec:
-concurrencyPolicy: Allow
-schedule: 0 */6 * * *
-failedJobsHistoryLimit: 1
-successfulJobsHistoryLimit: 3
-suspend: false
-jobTemplate:
-spec:
-template:
-spec:
-containers:
-- command:
-- /bin/sh
-- -c
-- |-
-NAMESPACE=awx
-SERVICE_ACCOUNT=awx
-ACCOUNT=$(aws sts get-caller-identity --query 'Account' --output text)
-REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | python -c &amp;quot;import json,sys; print(json.loads(sys.stdin.read())['region'])&amp;quot;)
-SECRET_NAME=${REGION}-ecr-registry
-EMAIL=anymail.doesnt.matter@email.com
-TOKEN=$(aws ecr get-login --region ${REGION} --registry-ids ${ACCOUNT} | cut -d' ' -f6)
-echo &amp;quot;ENV variables setup done.&amp;quot;
-kubectl -n ${NAMESPACE} delete secret --ignore-not-found $SECRET_NAME
-kubectl -n ${NAMESPACE} create secret docker-registry $SECRET_NAME \
---docker-server=https://${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com \
---docker-username=AWS \
---docker-password=&amp;quot;${TOKEN}&amp;quot; \
---docker-email=&amp;quot;${EMAIL}&amp;quot;
-echo &amp;quot;Secret created by name $SECRET_NAME&amp;quot;
-kubectl -n ${NAMESPACE} patch serviceaccount ${SERVICE_ACCOUNT} -p '{&amp;quot;imagePullSecrets&amp;quot;:[{&amp;quot;name&amp;quot;:&amp;quot;'$SECRET_NAME'&amp;quot;}]}'
-echo &amp;quot;All done.&amp;quot;
-image: odaniait/aws-kubectl:latest
-imagePullPolicy: IfNotPresent
-name: ecr-cred-helper
-resources: {}
-securityContext:
-capabilities: {}
-terminationMessagePath: /dev/termination-log
-terminationMessagePolicy: File
-dnsPolicy: Default
-hostNetwork: true
-restartPolicy: Never
-schedulerName: default-scheduler
-securityContext: {}
-terminationGracePeriodSeconds: 30
-&lt;/code>&lt;/pre>
-&lt;p>En el fichero anterior, dependiendo de nuestra configuración particular, podremos cambiar el valor de las variables &lt;code>NAMESPACE&lt;/code> y &lt;code>SERVICE_ACCOUNT&lt;/code>, y también especificar manualmente las variables &lt;code>ACCOUNT&lt;/code> y &lt;code>REGION&lt;/code> si no queremos que el script las auto-detecte porque usamos otras en concreto.&lt;/p>
-&lt;p>Básicamente, lo que hace esto, es crear un trabajo de cron, que lanza un contenedor y ejecuta el script en Bash definido en la especificación del pod. En resumen:&lt;/p>
-&lt;ul>
-&lt;li>Obtiene las credenciales de acceso a ECR utilizando la cli de AWS&lt;/li>
-&lt;li>Elimina, si existe, el secreto llamado &lt;code>${REGION}-ecr-registry&lt;/code>&lt;/li>
-&lt;li>Lo crea de nuevo, con el token obtenido de ECR&lt;/li>
-&lt;li>Actualiza la service account de AWX indicándole que para obtener las imágenes (&lt;code>imagePullSecrets&lt;/code>) tiene usar las credenciales del secreto recién creado&lt;/li>
-&lt;/ul>
-&lt;p>Tras esto, importamos la definición del job en Kubernetes:&lt;/p>
-&lt;pre>&lt;code class="language-bash">kubectl -n awx apply -f ecr-cred-refresh.yml
-&lt;/code>&lt;/pre>
-&lt;p>Este job se ejecuta cada 6 horas; si queremos forzar la ejecución, podemos hacerlo con los siguientes comandos:&lt;/p>
-&lt;pre>&lt;code class="language-bash">JOB_NAME=&amp;quot;manual-$(date --utc +%Y%m%d-%H%M%S)&amp;quot;
-kubectl -n awx create job --from=cronjob/ecr-cred-helper ${JOB_NAME}
-kubectl -n awx wait --for=condition=complete job.batch/${JOB_NAME}
-kubectl -n awx logs job.batch/${JOB_NAME}
-&lt;/code>&lt;/pre>
-&lt;p>Pero esto por sí solo no nos vale&amp;hellip; porque ¿dónde le decimos las crendenciales para acceder a AWS (es decir, para que desde dentro del cronjob se pueda hacer &lt;code>aws ecr get-login&lt;/code>)? Es decir, el access key y el secret. Para esto, no le pasaremos una key y un secret, sino que crearemos un rol y se lo asignaremos a la instancia EC2 de AWS donde estemos ejecutando Microk8s. El rol debe tener una policy que permita a la instancia acceder al repositorio; podemos usar la policy predefinida &lt;code>AmazonEC2ContainerRegistryReadOnly&lt;/code> o crear una manualmente.&lt;/p>
-&lt;p>Tras crear el rol y la policy, y asignar el rol a la instancia, podemos ejecutar manualmente el &lt;code>cronjob&lt;/code>, y ejecutar de nuevo el instalador de AWX, que ya debería obtener la imagen de Docker sin problemas.&lt;/p>
-&lt;p>Comandos útiles:&lt;/p>
-&lt;pre>&lt;code class="language-bash"># Ver información de la service account de awx
-kubectl -n awx describe serviceaccounts awx
-# Ver información de los secretos (cuándo se actualizó/obtuvo el token por última vez)
-kubectl -n awx get secrets
-&lt;/code>&lt;/pre>
-&lt;p>Probar manualmente el script:&lt;/p>
-&lt;pre>&lt;code class="language-bash">kubectl run -i --tty --rm debug --image=odaniait/aws-kubectl:latest --restart=Never -- sh
-kubectl run --generator=run-pod/v1 -n awx --rm -i --tty compass-tmp --image=odaniait/aws-kubectl:latest -- sh
-&lt;/code>&lt;/pre>
-&lt;p>Referencias:&lt;/p>
-&lt;ul>
-&lt;li>
-&lt;a href="https://medium.com/@damitj07/how-to-configure-and-use-aws-ecr-with-kubernetes-rancher2-0-6144c626d42c" target="_blank" rel="noopener">How to configure and use AWS ECR with kubernetes &amp;amp; Rancher2.0&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Monitorizar memoria y errores de funciones Lambda</title><link>https://blog.okelet.com/post/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</link><pubDate>Sun, 01 Sep 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</guid><description>&lt;p>A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas &lt;em>builtin&lt;/em> como:&lt;/p>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2020/01/configurar-microk8s-para-usar-repositorios-de-aws-ecr/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Monitorizar memoria y errores de funciones Lambda</title><link>https://blog.okelet.com/post/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</link><pubDate>Sun, 01 Sep 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/</guid><description>
+&lt;p>A la hora de monitorizar estadísticas sobre la ejecución de nuestras funciones Lambda, Cloudwatch ya nos ofrece algunas &lt;em>builtin&lt;/em> como:&lt;/p>
 &lt;ul>
 &lt;li>Cantidad de &lt;em>throttles&lt;/em>&lt;/li>
 &lt;li>Número de invocaciones&lt;/li>
@@ -258,161 +59,15 @@ kubectl run --generator=run-pod/v1 -n awx --rm -i --tty compass-tmp --image=odan
 &lt;li>Duración (media y total)&lt;/li>
 &lt;/ul>
 &lt;p>Pero si queremos ver estadísticas sobre memoria o errores según sean por consumo excesivo de memoria o por timeout, no los tenemos disponibles por defecto.&lt;/p>
-&lt;p>Para conseguir información de este tipo de errores, tendremos que recurrir a crear
-&lt;a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringPolicyExamples.html" target="_blank" rel="noopener">filtros de métricas (&lt;em>metric filters&lt;/em>)&lt;/a> de los LOGs que deja Lambda en Cloudwatch. Por ejemplo, con el siguiente script, recorremos todas los grupos de LOGs de Lambda (aquellos que empiezan por &lt;code>/aws/lambda/&lt;/code>) y creamos unas cuantas métricas en cada uno de ellos, para poder después obtener estadísticas:&lt;/p>
-&lt;pre>&lt;code class="language-bash">#!/bin/bash
-# Based on https://gist.github.com/sandfox/337129afa5555af6372d4eae536b20f0
-prefix=&amp;quot;/aws/lambda/&amp;quot;
-for log_group in $(aws logs describe-log-groups --log-group-name-prefix $prefix --query &amp;quot;logGroups[].logGroupName&amp;quot; --output text) ; do
-fn_name=${log_group#$prefix};
-aws logs put-metric-filter \
---log-group-name &amp;quot;$log_group&amp;quot; \
---filter-name lambda-memory-usage \
---filter-pattern '[ x=&amp;quot;REPORT&amp;quot;, x=&amp;quot;RequestId:&amp;quot;, request_id, x=&amp;quot;Duration:&amp;quot;, duration, x=&amp;quot;ms&amp;quot;, x=&amp;quot;Billed&amp;quot;, x=&amp;quot;Duration:&amp;quot;, billed_duration, x=&amp;quot;ms&amp;quot;, x=&amp;quot;Memory&amp;quot;, x=&amp;quot;Size:&amp;quot;, memory_size, x=&amp;quot;MB&amp;quot;, x=&amp;quot;Max&amp;quot;, x=&amp;quot;Memory&amp;quot;, x=&amp;quot;Used:&amp;quot;, memory_used, x=&amp;quot;MB&amp;quot;]' \
---metric-transformations &amp;quot;metricNamespace=Custom/Lambda,metricName=${fn_name}-MemoryUsed,metricValue=\$memory_used&amp;quot;
-aws logs put-metric-filter \
---log-group-name &amp;quot;$log_group&amp;quot; \
---filter-name lambda-memory-size \
---filter-pattern '[ x=&amp;quot;REPORT&amp;quot;, x=&amp;quot;RequestId:&amp;quot;, request_id, x=&amp;quot;Duration:&amp;quot;, duration, x=&amp;quot;ms&amp;quot;, x=&amp;quot;Billed&amp;quot;, x=&amp;quot;Duration:&amp;quot;, billed_duration, x=&amp;quot;ms&amp;quot;, x=&amp;quot;Memory&amp;quot;, x=&amp;quot;Size:&amp;quot;, memory_size, x=&amp;quot;MB&amp;quot;, x=&amp;quot;Max&amp;quot;, x=&amp;quot;Memory&amp;quot;, x=&amp;quot;Used:&amp;quot;, memory_used, x=&amp;quot;MB&amp;quot;]' \
---metric-transformations &amp;quot;metricNamespace=Custom/Lambda,metricName=${fn_name}-MemorySize,metricValue=\$memory_size&amp;quot;
-# Errores que se dan cuando la ejecución se pasa del máximo de memoria permitido
-aws logs put-metric-filter \
---log-group-name &amp;quot;${log_group}&amp;quot; \
---filter-name lambda-memory-errors \
---filter-pattern 'Process exited before completing request' \
---metric-transformations &amp;quot;metricNamespace=Custom/Lambda,metricName=${fn_name}-MemoryErrors,metricValue=1,defaultValue=0&amp;quot;
-# Errores que se dan cuando la ejecución se pasa del máximo de tiempo permitido
-aws logs put-metric-filter \
---log-group-name &amp;quot;${log_group}&amp;quot; \
---filter-name lambda-timeout-errors \
---filter-pattern 'Task timed out after' \
---metric-transformations &amp;quot;metricNamespace=Custom/Lambda,metricName=${fn_name}-TimeoutErrors,metricValue=1,defaultValue=0&amp;quot;
-done
-&lt;/code>&lt;/pre>
-&lt;p>Una vez creados, y pasados cierto tiempo para poder obtener datos, en la sección de métricas de Cloudwatch, tendremos una nueva categoría, &lt;code>Custom/Lambda&lt;/code>, donde tendremos el listado de nuevas métricas, por cada función Lambda:&lt;/p>
-&lt;p>&lt;img src="cloudwatch_lambda_custom_namespace.png" alt="">&lt;/p>
-&lt;p>Podremos seleccionar estas estadísticas para poder visualizar los datos en un gráfico:&lt;/p>
-&lt;p>&lt;img src="cloudwatch_lambda_memory_used_graph.png" alt="">&lt;/p>
-&lt;p>También podremos consultar estos datos desde la CLI:&lt;/p>
-&lt;pre>&lt;code class="language-bash">aws cloudwatch get-metric-statistics --namespace Custom/Lambda --metric-name my_function_name-MemoryUsed --start-time $(date --date &amp;quot;1 day ago&amp;quot; +%s) --end-time $(date +%s) --period 300 --statistics Average
-&lt;/code>&lt;/pre>
-&lt;pre>&lt;code class="language-json">{
-&amp;quot;Label&amp;quot;: &amp;quot;my_function_name-MemoryUsed&amp;quot;,
-&amp;quot;Datapoints&amp;quot;: [
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T04:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 84.32894736842105,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-28T18:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 82.94736842105263,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T08:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 83.72368421052632,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-28T22:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 84.63157894736842,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T12:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 83.59210526315789,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T02:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 83.17105263157895,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-28T16:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 84.35526315789474,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T06:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 83.85526315789474,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T10:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 84.48684210526316,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-28T20:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 85.0657894736842,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T00:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 84.97368421052632,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-},
-{
-&amp;quot;Timestamp&amp;quot;: &amp;quot;2019-08-29T14:10:00Z&amp;quot;,
-&amp;quot;Average&amp;quot;: 82.57894736842105,
-&amp;quot;Unit&amp;quot;: &amp;quot;None&amp;quot;
-}
-]
-}
-&lt;/code>&lt;/pre></description></item><item><title>Usando caddy para desarollo local en PHP</title><link>https://blog.okelet.com/post/2019/07/usando-caddy-para-desarollo-local-en-php/</link><pubDate>Mon, 15 Jul 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/07/usando-caddy-para-desarollo-local-en-php/</guid><description>&lt;p>Durante el desarrollo en local de nuestra aplicación en PHP (con el framework
+&lt;p>&lt;a href="https://blog.okelet.com/post/2019/09/monitorizar-memoria-y-errores-de-funciones-lambda/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Usando caddy para desarollo local en PHP</title><link>https://blog.okelet.com/post/2019/07/usando-caddy-para-desarollo-local-en-php/</link><pubDate>Mon, 15 Jul 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/07/usando-caddy-para-desarollo-local-en-php/</guid><description>
+&lt;p>Durante el desarrollo en local de nuestra aplicación en PHP (con el framework
 &lt;a href="https://cakephp.org/" target="_blank" rel="noopener">CakePHP&lt;/a>) solíamos usar el servidor que venía por defecto:&lt;/p>
 &lt;pre>&lt;code class="language-bash">bin/cake server
 &lt;/code>&lt;/pre>
 &lt;p>El problema de esto (que por debajo usa el
 &lt;a href="https://www.php.net/manual/en/features.commandline.webserver.php" target="_blank" rel="noopener">servidor &lt;em>embedido&lt;/em> de PHP&lt;/a>), es que es mono-hilo, es decir, que sirve sólo una petición a la vez, por lo que a veces la carga de la web se hacía bastante pesada.&lt;/p>
-&lt;p>Para evitar esto, podemos usar
-&lt;a href="https://caddyserver.com/" target="_blank" rel="noopener">Caddy&lt;/a>, que básicamente es un servidor web en un único ejecutable, sin necesidad de instalar un servidor web completo como Apache o nginx, ni tener que gestionar servidores con permisos de root.&lt;/p>
-&lt;p>Para poder utilizar Caddy con CakePHP, primero lo instalaremos:&lt;/p>
-&lt;pre>&lt;code class="language-bash">mkdir -p ~/bin
-curl -sSfL &amp;quot;https://caddyserver.com/download/linux/amd64?license=personal&amp;amp;telemetry=off&amp;quot; | tar -C ~/bin -zx caddy
-chmod +x ~/bin/caddy
-&lt;/code>&lt;/pre>
-&lt;p>A continuación, instalaremos el paquete &lt;code>php7.2-cgi&lt;/code>, de tal forma que Caddy, cuando arranque, inicie también un proceso PHP que gestionará las peticiones:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo apt install php7.2-cgi
-&lt;/code>&lt;/pre>
-&lt;p>Tras esto, generaremos un fichero de configuración &lt;code>Caddyfile&lt;/code> con los siguientes parámetros:&lt;/p>
-&lt;ul>
-&lt;li>Levantará el servidor web en http://127.0.0.1:8765&lt;/li>
-&lt;li>Levanta un servidor php-cgi que escucha en el puerto 9000&lt;/li>
-&lt;li>Redirigirá todas las peticiones al servidor php-cgi anterior, excepto las que empiecen por:
-&lt;ul>
-&lt;li>/static&lt;/li>
-&lt;li>/img&lt;/li>
-&lt;li>/js&lt;/li>
-&lt;li>/css&lt;/li>
-&lt;li>/favicon.ico&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;pre>&lt;code class="language-text">:8765
-bind 127.0.0.1
-root webroot
-index index.php index.html index.htm
-gzip
-fastcgi / 127.0.0.1:9000 php
-rewrite {
-if {uri} not_starts_with /static
-if {uri} not_starts_with /img
-if {uri} not_starts_with /js
-if {uri} not_starts_with /css
-if {uri} not_starts_with /favicon.ico
-to /index.php?{query}
-}
-log stdout
-errors stdout
-on startup php-cgi -b 127.0.0.1:9000
-&lt;/code>&lt;/pre>
-&lt;p>Ya sólo nos queda arrancar el entorno de desarrollo (a mi me gusta por limpieza eliminar temporales y cache), ejecutando este comando desde la raíz del proyecto de CakePHP (o similar para otros frameworks):&lt;/p>
-&lt;pre>&lt;code class="language-bash">rm -Rf tmp/* logs/* &amp;amp;&amp;amp; ~/bin/caddy
-&lt;/code>&lt;/pre>
-&lt;p>Y acceder a nuestra web usando la URL http://127.0.0.1:8765.&lt;/p></description></item><item><title>Crear usuario y base de datos en Postgres y dar permisos</title><link>https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-postgres-y-dar-permisos/</link><pubDate>Sun, 23 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-postgres-y-dar-permisos/</guid><description>&lt;p>Una cosa que siempre se me olvida y tengo que buscar (como con
+&lt;p>&lt;a href="https://blog.okelet.com/post/2019/07/usando-caddy-para-desarollo-local-en-php/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Crear usuario y base de datos en Postgres y dar permisos</title><link>https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-postgres-y-dar-permisos/</link><pubDate>Sun, 23 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-postgres-y-dar-permisos/</guid><description>
+&lt;p>Una cosa que siempre se me olvida y tengo que buscar (como con
 &lt;a href="https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/">MySQL&lt;/a>): cómo crear un usuario en Postgres, crear una base de datos, y dar permisos al usuario sobre esa base de datos:&lt;/p>
 &lt;pre>&lt;code class="language-bash">psql -U postgres
 &lt;/code>&lt;/pre>
@@ -420,25 +75,8 @@ on startup php-cgi -b 127.0.0.1:9000
 create user myuser with encrypted password 'mypass';
 grant all privileges on database mydb to myuser;
 &lt;/code>&lt;/pre>
-&lt;p>Nos conectaremos entonces:&lt;/p>
-&lt;pre>&lt;code class="language-bash">psql -U myuser -W mydb
-&lt;/code>&lt;/pre>
-&lt;p>Comandos rápidos:&lt;/p>
-&lt;ul>
-&lt;li>Listar bases de datos: &lt;code>\l&lt;/code>&lt;/li>
-&lt;li>Crear tabla de ejemplo: &lt;code>CREATE TABLE mytable (id INTEGER PRIMARY KEY, name VARCHAR);&lt;/code>&lt;/li>
-&lt;li>Listar tablas: &lt;code>\dt&lt;/code>&lt;/li>
-&lt;li>Listar usuarios: &lt;code>\du&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;p>Referencias:&lt;/p>
-&lt;ul>
-&lt;li>
-&lt;a href="https://medium.com/coding-blocks/creating-user-database-and-adding-access-on-postgresql-8bfcd2f4a91e" target="_blank" rel="noopener">Creating user, database and adding access on PostgreSQL&lt;/a>&lt;/li>
-&lt;li>
-&lt;a href="https://support.helpspot.com/index.php?pg=kb.page&amp;amp;id=467" target="_blank" rel="noopener">Creating a UTF-8 Database&lt;/a>&lt;/li>
-&lt;li>
-&lt;a href="https://www.postgresql.org/docs/current/app-psql.html" target="_blank" rel="noopener">PostgreSQL: Documentation: 11: psql&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Probando Ansible AWX con MicroK8s</title><link>https://blog.okelet.com/post/2019/06/probando-ansible-awx-con-microk8s/</link><pubDate>Wed, 19 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/probando-ansible-awx-con-microk8s/</guid><description>&lt;p>AVISO: Post largo (intro a Ansible, AWX, MicroK8s)&lt;/p>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-postgres-y-dar-permisos/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Probando Ansible AWX con MicroK8s</title><link>https://blog.okelet.com/post/2019/06/probando-ansible-awx-con-microk8s/</link><pubDate>Wed, 19 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/probando-ansible-awx-con-microk8s/</guid><description>
+&lt;p>AVISO: Post largo (intro a Ansible, AWX, MicroK8s)&lt;/p>
 &lt;p>Actualización 2020-01-14: Actualizado a
 &lt;a href="https://groups.google.com/forum/#!topic/awx-project/aYYtuAuHMzY" target="_blank" rel="noopener">Ansible AWX 9.1.1&lt;/a>&lt;/p>
 &lt;p>Ansible (&lt;em>/ánsibol/&lt;/em>) es el gestor de configuración de moda, y por méritos propios. Aunque no es perfecto (en determinadas ocasiones se puede preferir un modelo cliente/servidor en lugar de una conexión SSH &lt;em>ad-hoc&lt;/em>), ofrece una buena combinación entre funcionalidad y simplicidad. Siempre y cuando tengamos conectividad SSH con la máquina a gestionar (o no, a través de
@@ -446,112 +84,8 @@ grant all privileges on database mydb to myuser;
 &lt;p>Uno de los problemas de Ansible (hablando correctamente,
 &lt;a href="https://www.ansible.com/blog/red-hat-ansible-automation-engine-vs-tower" target="_blank" rel="noopener">Ansible Engine&lt;/a>) es que no tiene una forma de ejecutar de forma automatizada playbooks, para mantener la configuración sincronizada de forma periódica, ejecutar tareas planificadas o incluso auto-provisionar equipos. Aquí es donde entra Ansible Tower, que es la versión con soporte de
 &lt;a href="https://github.com/ansible/awx" target="_blank" rel="noopener">Ansible AWX&lt;/a>, al estilo de lo que Red Hat hace con Wildfly y JBoss. Ansible Tower/AWX en básicamente una API REST con una interfaz web que se comunica con ella. Utilizando esta API, se pueden definir inventarios, credenciales, equipos, plantillas de trabajo, flujos de trabajo, etc. así como asignar permisos por usarios/grupos mediante su sistema RBAC.&lt;/p>
-&lt;p>He de reconocer que al principio cuesta un poco, pero cuando se le pilla el truco, uno se da cuenta de lo potente que es. Pero lo que no me explico es la complejidad de instalación del software. Creo que Red Hat se está empeñando en poner las cosas difíciles a quienes usan sus productos sin suscripción (que al final son los que en gran medida depuran el software, contribuyen de forma gratuita, etc.); en este caso, se nos obliga a hacer una instalación mediante Docker, que aunque está de moda, que lo veo muy bien, creo que deberían dar alternativas (que sí que las dan con la versión con soporte, por lo que impedimentos técnicos no los hay, simplemente es intencionalidad). Para la versión libre (AWX) se soportan los siguientes
-&lt;a href="https://github.com/ansible/awx/blob/devel/INSTALL.md" target="_blank" rel="noopener">métodos de instalación&lt;/a>:&lt;/p>
-&lt;ul>
-&lt;li>Openshift (claramente enfocado a utilizar un stack completo de Red Hat)&lt;/li>
-&lt;li>Docker Compose&lt;/li>
-&lt;li>Kubernetes&lt;/li>
-&lt;/ul>
-&lt;p>En cambio, para Tower, la versión con soporte, es básicamente un script de instalación, que la verdad no he probado, aunque me imagino que lo que hace es provisionar los nodos con el software necesario, a la antigua usanza (no sé si por debajo creará un cluster de K8s u Openshift, o directamente lo hace sobre el sistema operativo).&lt;/p>
-&lt;p>Básicamente, la forma de instalación de AWX es crear una serie de contenedores en el orquestador en cuestión (AWX task, AWX web, RabbitMQ, Postgres, Memcached).&lt;/p>
-&lt;p>Con ideas de probar AWX para un proyecto interno, empecé a analizar las 3 opciones de instalación; la primera de ellas, Openshift, la descarté desde el principio por ser una tecnología no muy extendida, en favor, en todo caso, de Kubernetes. Ya que esto era una
-&lt;a href="https://es.wikipedia.org/wiki/Prueba_de_concepto" target="_blank" rel="noopener">PoC&lt;/a>, no quería complicarme mucho con Kubernetes, por lo que empecé a probar con Docker Compose, pero a la hora de escalar, lanzando la instalación en varios nodos, me di cuenta de que el modo de funcionar de AWX requiere un cluster de
-&lt;a href="https://www.rabbitmq.com/" target="_blank" rel="noopener">RabbitMQ&lt;/a>, que es difícil de configurar dinámicamente con Docker Compose. Con Kubernetes y su
-&lt;a href="https://github.com/ansible/awx/blob/devel/installer/roles/kubernetes/templates/deployment.yml.j2#L38" target="_blank" rel="noopener">&amp;ldquo;magia&amp;rdquo;&lt;/a> hace que el cluster de RabbitMQ se configure y escale automáticamente.&lt;/p>
-&lt;p>Siendo mi única opción Kubernetes, no quería montarme un cluster por mi cuenta, ni tener que montar un cluster de EKS, que
-&lt;a href="https://aws.amazon.com/es/eks/pricing/" target="_blank" rel="noopener">de base ya son 144$ al mes&lt;/a> más los nodos de computación, al final tuve que buscar alternativas más simples.&lt;/p>
-&lt;p>Mi primera intención fue probar
-&lt;a href="https://kubernetes.io/es/docs/tasks/tools/install-minikube/" target="_blank" rel="noopener">Minikube&lt;/a> en mi máquina local, pero cada pod de AWX consume 6 GB de RAM, por lo que mínimo a la MV de Minikube le tenía que dar 7 GB, y teniendo mi portátil 8 GB, murió varias veces en el intento&amp;hellip; Me planteé montar Minikube en una instancia EC2, pero esto sería montar Virtualbox, sobre un entorno ya virtualizado (EC2), y sobre el que correría Kubernetes&amp;hellip; Aunque factible, me parecía un poco engorroso. Así que gracias a mi compañero Roque, que me recordó la existencia de
-&lt;a href="https://microk8s.io/" target="_blank" rel="noopener">MicroK8s&lt;/a>, me decidí a probar.&lt;/p>
-&lt;p>Partiendo de una EC2 con Ubuntu 18.04 limpia, estos son los comandos a ejecutar para montar un entorno de Ansible AWX con MicroK8s (forzamos la versión 1.15, ya que AWX no es compatible con una versión mayor, por ahora):&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo snap refresh microk8s --channel 1.15/stable
-sudo snap install helm --channel=2.16/stable --classic
-(grep &amp;quot;^--allow-privileged$&amp;quot; /var/snap/microk8s/current/args/kube-apiserver &amp;gt; /dev/null) || (echo &amp;quot;--allow-privileged&amp;quot; | sudo tee -a /var/snap/microk8s/current/args/kube-apiserver)
-(grep &amp;quot;^--allow-privileged$&amp;quot; /var/snap/microk8s/current/args/kubelet &amp;gt; /dev/null) || (echo &amp;quot;--allow-privileged&amp;quot; | sudo tee -a /var/snap/microk8s/current/args/kubelet)
-sudo microk8s.stop
-sudo microk8s.start
-microk8s.enable ingress
-microk8s.enable dns
-microk8s.enable storage
-sudo snap alias microk8s.kubectl kubectl
-microk8s.config &amp;gt; $HOME/.kube/config
-helm init
-&lt;/code>&lt;/pre>
-&lt;p>
-&lt;a href="https://helm.sh/" target="_blank" rel="noopener">Helm&lt;/a> es necesario para instalación de Postgres; si vamos a utilizar una BBDD externa, no es necesario.&lt;/p>
-&lt;p>Tras esto, ya tenemos el entorno de MicroK8s disponible; ahora nos bajamos AWX y lo configuramos:&lt;/p>
-&lt;pre>&lt;code class="language-bash"># Actualizar e instalar dependencias mínimas
-sudo apt update
-sudo apt upgrade -y
-sudo apt install -y python3-pip vim
-pip3 install docker docker-compose --user
-# Instalar Ansible, necesario para instalar AWX
-sudo add-apt-repository ppa:ansible/ansible -y
-sudo apt update
-sudo apt install -y ansible
-# Nos bajamos la release 9.1.1 de AWX
-curl -sLO https://github.com/ansible/awx/archive/9.1.1.tar.gz
-tar zxf 9.1.1.tar.gz
-cd awx-9.1.1/installer
-cp -a inventory{,.original}
-# Configuramos el fichero de inventario para que use Kubernetes
-sed -i -e 's/#* *kubernetes_context.*/kubernetes_context=microk8s/' inventory
-sed -i -e 's/#* *kubernetes_namespace.*/kubernetes_namespace=awx/' inventory
-# Y lanzamos la instalación
-ansible-playbook -i inventory install.yml
-&lt;/code>&lt;/pre>
-&lt;p>Variables interesantes en el fichero &lt;code>inventory&lt;/code>:&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>kubernetes_context&lt;/code>: el contexto del cliente de Kubernetes que usaremos para conectarnos al cluster; para MicroK8s, en general será &lt;code>microk8s&lt;/code>.&lt;/li>
-&lt;li>&lt;code>kubernetes_namespace&lt;/code>: el &lt;em>namespace&lt;/em> del cluster de Kubernetes que se usará para crear todos los elementos de AWX; por defecto es &lt;code>awx&lt;/code>.&lt;/li>
-&lt;li>&lt;code>kubernetes_deployment_name&lt;/code>: es un prefijo que se usa para generar los nombres de los recursos dentro del &lt;em>namespace&lt;/em>; por defecto es &lt;code>awx&lt;/code>.&lt;/li>
-&lt;li>&lt;code>pg_hostname&lt;/code>: es el host remoto donde debemos tener instalado un servidor de Postgres; si esta variable está comentada, el instalador creará un servidor de Postgres en Kubernetes usando Helm; si está definida, se usará el servidor indicado (habrá que configurar adecuadamente el resto de parámetros de conexión a la BBDD: &lt;code>pg_username&lt;/code>, &lt;code>pg_password&lt;/code>, &lt;code>pg_database&lt;/code>, etc.).&lt;/li>
-&lt;/ul>
-&lt;p>También se pueden especificar las siguientes variables para indicar imágenes y versiones alternativas a las oficiales (por ejemplo, si hemos creado unas propias para añadir software, etc.):&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>kubernetes_task_version&lt;/code> (por defecto: &lt;code>9.1.1&lt;/code>)&lt;/li>
-&lt;li>&lt;code>kubernetes_task_image&lt;/code> (por defecto: &lt;code>ansible/awx_task&lt;/code>)&lt;/li>
-&lt;li>&lt;code>kubernetes_web_version&lt;/code> (por defecto: &lt;code>9.1.1&lt;/code>)&lt;/li>
-&lt;li>&lt;code>kubernetes_web_image&lt;/code> (por defecto: &lt;code>ansible/awx_web&lt;/code>)&lt;/li>
-&lt;/ul>
-&lt;p>Esto nos creará un namespace llamado &lt;code>awx&lt;/code> en MicroK8s, y desplegará en él 2 &lt;code>statefulsets&lt;/code>: 1 para Postgres y uno para AWX. Cada &lt;code>statefulset/pod&lt;/code> de AWX contiene los siguientes contenedores:&lt;/p>
-&lt;ul>
-&lt;li>memcached&lt;/li>
-&lt;li>rabbitmq&lt;/li>
-&lt;li>awx-celery (awx_task)&lt;/li>
-&lt;li>awx-web&lt;/li>
-&lt;/ul>
-&lt;p>Cada vez que se escala el &lt;code>statefulset&lt;/code> se crean estos 4 contenedores. Gracias al plugin
-&lt;a href="https://github.com/rabbitmq/rabbitmq-peer-discovery-k8s" target="_blank" rel="noopener">&lt;code>rabbitmq_peer_discovery_k8s&lt;/code>&lt;/a> (
-&lt;a href="https://github.com/ansible/awx/blob/devel/installer/roles/kubernetes/templates/deployment.yml.j2#L38" target="_blank" rel="noopener">aquí&lt;/a> se puede ver fichero YAML de configuración) los contenedores de rabbitmq forman un cluster de forma automática.&lt;/p>
-&lt;p>Para volver a empezar desde 0, tenemos 2 posibilidades; o bien borrar el &lt;em>namespace&lt;/em>:&lt;/p>
-&lt;pre>&lt;code class="language-bash">kubectl delete namespaces awx
-&lt;/code>&lt;/pre>
-&lt;p>O bien con el comando &lt;code>microk8s.reset&lt;/code>, aunque con este comando, frecuentemente se queda &amp;ldquo;colgado&amp;rdquo;:&lt;/p>
-&lt;pre>&lt;code class="language-bash">microk8s.reset
-&lt;/code>&lt;/pre>
-&lt;p>Después del reset, es necesario volver a configurar los complementos (dns, storage, ingress), y configurar el cliente:&lt;/p>
-&lt;pre>&lt;code class="language-bash">microk8s.enable ingress
-microk8s.enable dns
-microk8s.enable storage
-sudo snap alias microk8s.kubectl kubectl
-microk8s.config &amp;gt; $HOME/.kube/config
-helm init
-&lt;/code>&lt;/pre>
-&lt;p>Y podemos lanzar de nuevo la instalación:&lt;/p>
-&lt;pre>&lt;code class="language-bash">ansible-playbook -i inventory install.yml
-&lt;/code>&lt;/pre>
-&lt;p>Si por delante del servidor vamos a poner un balanceador (por ejemplo, un ELB o ALB), debemos configurar el &lt;code>ingress&lt;/code> de Nginx para que reenvíe las cabeceras &lt;code>X-Forwarded-*&lt;/code>:&lt;/p>
-&lt;pre>&lt;code class="language-bash">kubectl -n default edit configmaps nginx-load-balancer-microk8s-conf
-&lt;/code>&lt;/pre>
-&lt;p>Añadiendo/modificando la sección data con este valor:&lt;/p>
-&lt;pre>&lt;code class="language-yaml">data:
-use-forwarded-headers: &amp;quot;true&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>Esto es necesario, por ejemplo, si se usa un balanceador con HTTPS, y configuramos la autentificación de Azure, ya que sin el reenvío de estas cabeceras, AWX se cree que vamos por HTTP en lugar de HTTPS, y la URL de callback para el login de Azure se genera incorrectamente.&lt;/p>
-&lt;p>Una vez realizados los pasos de la instalación, lo único que nos queda es acceder a la aplicación, usando el puerto 80 de la máquina, por ejemplo,
-&lt;a href="http://localhost" target="_blank" rel="noopener">http://localhost&lt;/a>, que es donde publica los servicios el &lt;em>ingress controller&lt;/em> de nginx.&lt;/p></description></item><item><title>Crear un rol personalizado en Google Cloud para encendido y apagado de máquinas</title><link>https://blog.okelet.com/post/2019/06/crear-un-rol-personalizado-en-google-cloud-para-encendido-y-apagado-de-maquinas/</link><pubDate>Tue, 18 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/crear-un-rol-personalizado-en-google-cloud-para-encendido-y-apagado-de-maquinas/</guid><description>&lt;p>Es posible que queramos delegar ciertas tareas de administración sobre elementos de Google
+&lt;p>&lt;a href="https://blog.okelet.com/post/2019/06/probando-ansible-awx-con-microk8s/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Crear un rol personalizado en Google Cloud para encendido y apagado de máquinas</title><link>https://blog.okelet.com/post/2019/06/crear-un-rol-personalizado-en-google-cloud-para-encendido-y-apagado-de-maquinas/</link><pubDate>Tue, 18 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/crear-un-rol-personalizado-en-google-cloud-para-encendido-y-apagado-de-maquinas/</guid><description>
+&lt;p>Es posible que queramos delegar ciertas tareas de administración sobre elementos de Google
 Cloud a usuarios o departamentos, y que no existan roles predefinidos que hagan exactamente
 lo que necesitamos. Para eso están los roles personalizados, similar a las políticas de IAM
 de AWS.&lt;/p>
@@ -561,248 +95,37 @@ virtuales, podemos crear un rol como el siguiente:&lt;/p>
 --title StartStopVms --description &amp;quot;Can start, stop, suspend, resume and reset VMs&amp;quot; \
 --stage GA --permissions compute.instances.start,compute.instances.stop,compute.instances.suspend,compute.instances.resume,compute.instances.reset
 &lt;/code>&lt;/pre>
-&lt;p>Una vez creado el rol, se lo podemos asignar a un usuario con el siguiente comando:&lt;/p>
-&lt;pre>&lt;code class="language-bash">gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} \
---member user@domain.com \
---role projects/${GOOGLE_CLOUD_PROJECT}/roles/StartStopVms
-&lt;/code>&lt;/pre>
-&lt;p>En el caso que nos aplica, también sería conveniente dar permisos de sólo lectura (en este
-ejemplo damos permisos de visor sobre el proyecto completo, aunque se podría afinar más para sólo
-permitir al acceso a la parte de computación):&lt;/p>
-&lt;pre>&lt;code class="language-bash">gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} \
---member user@domain.com \
---role roles/viewer
-&lt;/code>&lt;/pre>
-&lt;p>NOTA: La variable &lt;code>GOOGLE_CLOUD_PROJECT&lt;/code> se establece automáticamente en la consola de Cloud Shell;
-si se ejecuta desde otro tipo de consola, se debe establecer manualmente esta variable, cuyo
-valor es el ID del proyecto sobre el que se están dando permisos.&lt;/p>
-&lt;p>Referencias:&lt;/p>
-&lt;ul>
-&lt;li>
-&lt;a href="https://cloud.google.com/iam/docs/understanding-custom-roles" target="_blank" rel="noopener">Understanding IAM custom roles&lt;/a>&lt;/li>
-&lt;li>
-&lt;a href="https://cloud.google.com/iam/docs/creating-custom-roles" target="_blank" rel="noopener">Creating and managing custom roles&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Python es el lenguaje más popular hoy por hoy</title><link>https://blog.okelet.com/post/2019/06/python-es-el-lenguaje-mas-popular-hoy-por-hoy/</link><pubDate>Mon, 17 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/python-es-el-lenguaje-mas-popular-hoy-por-hoy/</guid><description>&lt;p>Existe una medida, llamada índice TIOBE, que valora qué lenguajes de programación son más populares. Los datos salen de los foros de discusión técnicos en donde se observan cuantos internautas cambian impresiones sobre los diferentes lenguajes de programación. Ahora, en junio, el índica TIOBE ha sido publicado y revela que Python es el lenguaje más popular.&lt;/p></description></item><item><title>Crear custom runtime para PHP en AWS Lambda</title><link>https://blog.okelet.com/post/2019/06/crear-custom-runtime-para-php-en-aws-lambda/</link><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/crear-custom-runtime-para-php-en-aws-lambda/</guid><description>&lt;p>Actualización 2019-06-27: Añadida extensión para MongoDB.&lt;/p>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2019/06/crear-un-rol-personalizado-en-google-cloud-para-encendido-y-apagado-de-maquinas/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Python es el lenguaje más popular hoy por hoy</title><link>https://blog.okelet.com/post/2019/06/python-es-el-lenguaje-mas-popular-hoy-por-hoy/</link><pubDate>Mon, 17 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/python-es-el-lenguaje-mas-popular-hoy-por-hoy/</guid><description>
+Existe una medida, llamada índice TIOBE, que valora qué lenguajes de programación son más populares. Los datos salen de los foros de discusión técnicos en donde se observan cuantos internautas cambian impresiones sobre los diferentes lenguajes de programación. Ahora, en junio, el índica TIOBE ha sido publicado y revela que Python es el lenguaje más popular.
+&lt;p>&lt;a href="https://blog.okelet.com/post/2019/06/python-es-el-lenguaje-mas-popular-hoy-por-hoy/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Crear custom runtime para PHP en AWS Lambda</title><link>https://blog.okelet.com/post/2019/06/crear-custom-runtime-para-php-en-aws-lambda/</link><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/crear-custom-runtime-para-php-en-aws-lambda/</guid><description>
+&lt;p>Actualización 2019-06-27: Añadida extensión para MongoDB.&lt;/p>
 &lt;p>En el proyecto que estamos desarrollando, tenemos algunas funciones Lambda en Python, con las que no tenemos problemas (por ahora); las dependencias de estas funciones Python las gestionamos con
 &lt;a href="https://docs.pipenv.org/en/latest/" target="_blank" rel="noopener">pipenv&lt;/a>.&lt;/p>
 &lt;p>Pero dado que el frontend está desarrollado en PHP, hay veces que necesitamos acceder a determinadas propiedades y funciones desde las funciones Lambda, y nos planteamos migrar o desarrollar nuevas funciones Lambda en PHP. Esto no era posible hasta que hace unos meses, AWS anunció el soporte de
 &lt;a href="https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/" target="_blank" rel="noopener">&lt;em>custom runtimes&lt;/em>&lt;/a>, que básicamente consiste en subir el ejecutable con un determinado nombre.&lt;/p>
-&lt;p>En resumen, lo que el post anterior viene a decir es que:&lt;/p>
-&lt;ul>
-&lt;li>Tenemos que compilar PHP&lt;/li>
-&lt;li>Tenemos que crear un script llamado &lt;code>bootstrap&lt;/code> que será al que llame Lambda; este script será el encargado de conectarse a un endpoint &amp;ldquo;mágico&amp;rdquo; (&lt;code>http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next&lt;/code>), que nos devolverá un JSON con las propiedades de la petición a procesar. Este JSON se lo podemos pasar entonces a una función PHP de nuestra elección.&lt;/li>
-&lt;/ul>
-&lt;p>Un ejemplo de fichero &lt;code>bootstrap&lt;/code> se encuentra en
-&lt;a href="https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae" target="_blank" rel="noopener">este gist&lt;/a>:&lt;/p>
-&lt;script type="application/javascript" src="https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae.js">&lt;/script>
-&lt;p>El motivo de este post, es que
-&lt;a href="https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/" target="_blank" rel="noopener">AWS ha publicado una noticia&lt;/a> diciendo que va a cambiar la imagen base donde se ejecutan los &lt;em>custom runtimes&lt;/em>. Hasta ahora se basaba en una Amazon Linux 2017.03, pero a partir de ahora se van a ejecutar sobre una Amazon Linux 2018.03; esto puede causar que determinados &lt;em>runtimes&lt;/em> dejen de funcionar, si están compilados con versiones determinadas de librerías del sistema operativo.&lt;/p>
-&lt;p>Ya tenía hecho un scriptillo para la versión antigua del runtime, pero como tenía que revisarlo, he decidido &amp;ldquo;ponerlo bonito&amp;rdquo; y publicarlo en el blog. Manos a la obra.&lt;/p>
-&lt;p>Lo primero que tenemos que hacer es determinar una imagen de Docker válida para la imagen donde se ejecutaría el &lt;em>runtime&lt;/em>; en nuestro caso,
-&lt;a href="https://docs.aws.amazon.com/es_es/lambda/latest/dg/current-supported-versions.html" target="_blank" rel="noopener">según la documentación&lt;/a> sería una AMI Linux 2018.03, y yendo al Docker Hub, podemos ver la versión de la
-&lt;a href="https://hub.docker.com/_/amazonlinux" target="_blank" rel="noopener">imagen Docker equivalente&lt;/a>.&lt;/p>
-&lt;p>Una vez que sabemos la imagen Docker, lanzamos un contenedor:&lt;/p>
-&lt;pre>&lt;code class="language-bash">docker run -it --name php-lambda-layer --rm amazonlinux:2018.03.0.20190514 bash
-&lt;/code>&lt;/pre>
-&lt;p>Una vez lanzado, lo primero que haremos será actualizar el sistema e instalar una serie de librerías necesarias para compilar PHP y las dependencias que queremos:&lt;/p>
-&lt;pre>&lt;code class="language-bash">cd
-yum update -y
-yum install autoconf bison gcc gcc-c++ libcurl-devel libxml2-devel openssl-devel git tree zip vim python36 python36-pip libicu-devel unzip diff libpng-devel -y
-&lt;/code>&lt;/pre>
-&lt;p>A continuación, nos bajamos la última versión de PHP y la compilamos, indicando los módulos que queremos incluir:&lt;/p>
-&lt;pre>&lt;code class="language-bash">cd
-git clone https://github.com/mongodb/mongo-php-driver.git mongodb
-cd mongodb
-git checkout 1.5.5
-git submodule update --init
-cd
-mkdir ~/php-7-bin
-curl -sL https://github.com/php/php-src/archive/php-7.3.6.tar.gz | tar -xz
-cd ~/php-src-php-7.3.6
-mv ~/mongodb ext/mongodb
-./buildconf --force
-./configure --prefix=/root/php-7-bin/ --with-openssl --enable-intl --enable-mbstring --with-pdo-mysql --with-curl --with-zlib --with-gd --enable-bcmath --enable-mongodb --without-pear
-make
-make install
-~/php-7-bin/bin/php -v
-~/php-7-bin/bin/php -m
-rm -Rf ~/php-7-bin/{include,lib,php,var}
-rm -Rf ~/php-7-bin/bin/{php-cgi,phpdbg}
-&lt;/code>&lt;/pre>
-&lt;p>Con los parámetros anteriores al compilar, tendremos PHP con los siguientes módulos:&lt;/p>
-&lt;ul>
-&lt;li>openssl&lt;/li>
-&lt;li>curl&lt;/li>
-&lt;li>intl&lt;/li>
-&lt;li>mbstring&lt;/li>
-&lt;li>pdo/mysql&lt;/li>
-&lt;li>gd&lt;/li>
-&lt;li>bcmath&lt;/li>
-&lt;li>mongodb&lt;/li>
-&lt;li>&lt;del>zip&lt;/del> (&lt;a href="https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer">https://stackoverflow.com/questions/55394273/building-php-with-libzip-for-aws-lambda-layer&lt;/a>)&lt;/li>
-&lt;/ul>
-&lt;p>Tras esto, nos bajamos
-&lt;a href="https://getcomposer.org/" target="_blank" rel="noopener">composer&lt;/a>; lo utilizaremos para utilizar la librería
-&lt;a href="https://packagist.org/packages/guzzlehttp/guzzle" target="_blank" rel="noopener">guzzlehttp/guzzle&lt;/a> para facilitar la manera en la que obtenemos el evento y reportar el estado (y no estar peleando con llamadas a &lt;code>curl&lt;/code>):&lt;/p>
-&lt;pre>&lt;code class="language-bash">cd
-curl -sS https://getcomposer.org/installer | ~/php-7-bin/bin/php
-&lt;/code>&lt;/pre>
-&lt;p>Lo siguiente sería crear un proyecto de &lt;code>composer&lt;/code> e instalar la dependencia mencionada antes; al mismo tiempo, también nos bajamos el fichero &lt;code>bootstrap&lt;/code> que será el punto de entrada de nuestro &lt;em>runtime&lt;/em>.&lt;/p>
-&lt;pre>&lt;code class="language-bash">mkdir ~/php-runtime
-cd ~/php-runtime
-curl -qL https://gist.github.com/okelet/afe16efea9b89ce90e4690dd752cb4ae/raw &amp;gt; bootstrap
-chmod 755 bootstrap
-~/php-7-bin/bin/php ~/composer.phar require guzzlehttp/guzzle
-&lt;/code>&lt;/pre>
-&lt;p>Por último, lo metemos todo en un fichero ZIP comprimido&lt;/p>
-&lt;pre>&lt;code class="language-bash">rm -f ~/runtime.zip
-cd ~/php-7-bin
-zip -r ~/runtime.zip bin/php
-cd ~/php-runtime
-zip -r ~/runtime.zip .
-&lt;/code>&lt;/pre>
-&lt;p>La estructura final de este fichero ZIP es la siguiente:&lt;/p>
-&lt;pre>&lt;code>├── bin
-│   └── php
-├── bootstrap
-├── composer.json
-├── composer.lock
-└── vendor
-├── autoload.php
-├── composer
-├── guzzlehttp
-├── psr
-└── ralouphie
-&lt;/code>&lt;/pre>
-&lt;p>Antes de finalizar el contenedor, desde una shell externa, copiaremos el fichero generado:&lt;/p>
-&lt;pre>&lt;code class="language-bash">docker cp php-lambda-layer:/root/runtime.zip .
-&lt;/code>&lt;/pre>
-&lt;p>Ahora subimos la capa (&lt;code>layer&lt;/code>) a AWS:&lt;/p>
-&lt;pre>&lt;code class="language-bash">aws lambda publish-layer-version --layer-name php-cake-amzlx201803 --zip-file fileb://runtime.zip --compatible-runtimes provided --region eu-west-1
-&lt;/code>&lt;/pre>
-&lt;p>Lo único que nos quedaría sería subir la función en PHP, indicando que queremos usar un &lt;em>custom runtime&lt;/em> y añadirle este &lt;code>layer&lt;/code> que hemos subido.&lt;/p>
-&lt;p>Hay que tener en cuenta que el script &lt;code>bootstrap&lt;/code> hace un mapeo entre el directorio &lt;code>src&lt;/code> y el &lt;code>namespace&lt;/code> &lt;code>App&lt;/code>, de modo que si especificamos &lt;code>App\Lambda\MyFunction::handler&lt;/code> como &lt;code>handler&lt;/code> (en la configuración de la función Lambda), buscaría un fichero &lt;code>src/Lambda/MyFunction.php&lt;/code>, que debería contener una función estática &lt;code>handler&lt;/code>, que aceptaría un único parámetro, que sería el evento; algo así como:&lt;/p>
-&lt;pre>&lt;code class="language-php">&amp;lt;?php
-namespace App\Lambda;
-require dirname(__DIR__) . '/../vendor/autoload.php';
-class MyFunction
-{
-public static function handler($event)
-{
-return &amp;quot;Hello &amp;quot; . $event[&amp;quot;name&amp;quot;] . &amp;quot;!; full event is &amp;quot; . json_encode($event);
-}
-public static function runner() {
-return self::handler([
-&amp;quot;name&amp;quot; =&amp;gt; &amp;quot;Foo&amp;quot;,
-&amp;quot;email&amp;quot; =&amp;gt; &amp;quot;no@reply.com&amp;quot;,
-&amp;quot;groups&amp;quot; =&amp;gt; [
-[
-&amp;quot;id&amp;quot; =&amp;gt; 1,
-&amp;quot;name&amp;quot; =&amp;gt; &amp;quot;admin&amp;quot;
-],
-[
-&amp;quot;id&amp;quot; =&amp;gt; 8,
-&amp;quot;name&amp;quot; =&amp;gt; &amp;quot;bar&amp;quot;
-]
-]
-]);
-}
-}
-&lt;/code>&lt;/pre>
-&lt;p>La función &lt;code>runner&lt;/code> es una función de ayuda para desarrollar en local, de tal forma que podamos indicar dentro de ella el evento al llamar a la función &lt;code>handler&lt;/code>, ejecutándolo de la siguiente forma:&lt;/p>
-&lt;pre>&lt;code class="language-bash">php -r &amp;quot;require 'src/Lambda/MyFunction.php' ; print_r(call_user_func('App\Lambda\MyFunction::runner'));&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>Referencias:&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/">https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/">https://aws.amazon.com/blogs/compute/updated-timeframe-for-the-upcoming-aws-lambda-and-aws-lambdaedge-execution-environment-update/&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/">https://aws.amazon.com/es/blogs/apn/aws-lambda-custom-runtime-for-php-a-practical-example/&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://developpaper.com/aliyun-centos-7-6-install-php7-3/">https://developpaper.com/aliyun-centos-7-6-install-php7-3/&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Crear usuario y base de datos en MySQL y dar permisos</title><link>https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/</link><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/</guid><description>&lt;p>Una cosa que siempre se me olvida y tengo que buscar: cómo crear un usuario en MySQL (o MariaDB o Aurora MySQL), crear una base de datos, y dar permisos al usuario sobre esa base de datos:&lt;/p>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2019/06/crear-custom-runtime-para-php-en-aws-lambda/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Crear usuario y base de datos en MySQL y dar permisos</title><link>https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/</link><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/</guid><description>
+&lt;p>Una cosa que siempre se me olvida y tengo que buscar: cómo crear un usuario en MySQL (o MariaDB o Aurora MySQL), crear una base de datos, y dar permisos al usuario sobre esa base de datos:&lt;/p>
 &lt;pre>&lt;code class="language-sql">CREATE DATABASE wordpress CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'wpuser'@'localhost' IDENTIFIED BY 'pickApassword';
 GRANT ALL PRIVILEGES ON wordpress.* TO 'wpuser'@'localhost';
 FLUSH PRIVILEGES;
 exit
 &lt;/code>&lt;/pre>
-&lt;p>Referencias:&lt;/p>
-&lt;ul>
-&lt;li>
-&lt;a href="https://dba.stackexchange.com/questions/76788/create-a-mysql-database-with-charset-utf-8" target="_blank" rel="noopener">Stack Exchange DBA - Create a MySQL database with charset UTF-8&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Parsear MaintenanceWindow de RDS en Python</title><link>https://blog.okelet.com/post/2019/05/parsear-maintenancewindow-de-rds-en-python/</link><pubDate>Mon, 20 May 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/05/parsear-maintenancewindow-de-rds-en-python/</guid><description>&lt;p>Para una aplicación que estamos desarrollando, necesitábamos saber cuándo se van a aplicar los mantenimientos en nuestras instancias de RDS. El problema es que según
+&lt;p>&lt;a href="https://blog.okelet.com/post/2019/06/crear-usuario-y-base-de-datos-en-mysql-y-dar-permisos/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Parsear MaintenanceWindow de RDS en Python</title><link>https://blog.okelet.com/post/2019/05/parsear-maintenancewindow-de-rds-en-python/</link><pubDate>Mon, 20 May 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2019/05/parsear-maintenancewindow-de-rds-en-python/</guid><description>
+&lt;p>Para una aplicación que estamos desarrollando, necesitábamos saber cuándo se van a aplicar los mantenimientos en nuestras instancias de RDS. El problema es que según
 &lt;a href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/rds.html#RDS.Client.describe_pending_maintenance_actions" target="_blank" rel="noopener">la documentación de Boto3&lt;/a>, el método &lt;code>describe_pending_maintenance_actions&lt;/code> devuelve la fecha de aplicación de la actualización en el campo &lt;code>CurrentApplyDate&lt;/code>, pero esto siempre viene vacío:&lt;/p>
 &lt;pre>&lt;code class="language-bash">$ aws rds describe-pending-maintenance-actions
 &lt;/code>&lt;/pre>
-&lt;p>El apaño que hemos hecho, es que cuando detectamos que una instancia de RDS tiene una operación de mantenimiento pendiente, obtenemos la fecha a partir del campo &lt;code>PreferredMaintenanceWindow&lt;/code> de la propia instancia.&lt;/p>
-&lt;pre>&lt;code class="language-python">from pprint import pprint
-from datetime import datetime, timedelta
-def parse_rds_maintenance(maintenance_str: str):
-if not maintenance_str:
-return None, None
-start_str, end_str = maintenance_str.split(&amp;quot;-&amp;quot;)
-start_day, start_hour, start_minute = start_str.split(&amp;quot;:&amp;quot;)
-end_day, end_hour, end_minute = end_str.split(&amp;quot;:&amp;quot;)
-start = get_next_date_for(start_day, start_hour, start_minute)
-end = get_next_date_for(end_day, end_hour, end_minute)
-return start, end
-def get_next_date_for(day, hour, minute):
-days_mappings = {
-&amp;quot;mon&amp;quot;: 1,
-&amp;quot;tue&amp;quot;: 2,
-&amp;quot;wed&amp;quot;: 3,
-&amp;quot;thu&amp;quot;: 4,
-&amp;quot;fri&amp;quot;: 5,
-&amp;quot;sat&amp;quot;: 6,
-&amp;quot;sun&amp;quot;: 7,
-}
-now = datetime.utcnow()
-day_int = days_mappings.get(day)
-add_days = 0
-if now.isoweekday() &amp;lt; day_int:
-add_days = day_int - now.isoweekday()
-elif now.isoweekday() &amp;gt; day_int:
-add_days = 7 + day_int - now.isoweekday()
-date = (now + timedelta(days=add_days)).replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
-if date &amp;lt; now:
-date = date + timedelta(days=7)
-return date
-if __name__ == '__main__':
-pprint(parse_rds_maintenance(&amp;quot;tue:07:00-tue:07:30&amp;quot;))
-&lt;/code>&lt;/pre>
-&lt;p>Y esto devuelve (depende de la fecha en la que se ejecute, claro&amp;hellip;):&lt;/p>
-&lt;pre>&lt;code>(datetime.datetime(2019, 5, 21, 7, 0), datetime.datetime(2019, 5, 21, 7, 30))
-&lt;/code>&lt;/pre>
-&lt;!--more--></description></item><item><title>Contacto</title><link>https://blog.okelet.com/contact/</link><pubDate>Tue, 01 Jan 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/contact/</guid><description/></item><item><title>Proyectos...</title><link>https://blog.okelet.com/projects/</link><pubDate>Tue, 01 Jan 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/projects/</guid><description>&lt;ul>
-&lt;li>
-&lt;a href="https://github.com/okelet/proxychanger" target="_blank" rel="noopener">ProxyChanger&lt;/a>: Pequeña utilidad en Go para cambiar el proxy del sistema.&lt;/li>
-&lt;li>
-&lt;a href="https://github.com/okelet/minidlnaindicator" target="_blank" rel="noopener">MiniDLNA Indicator&lt;/a>: Indicador para usar MiniDLNA como un usuario normal (sin root).&lt;/li>
-&lt;li>[Abandonado] -
-&lt;a href="https://github.com/okelet/chphpass" target="_blank" rel="noopener">chphpass&lt;/a> (TBD): interfaz web para el cambio de contraseña en
-&lt;a href="https://www.samba.org/" target="_blank" rel="noopener">Samba4&lt;/a> y Active Directory.&lt;/li>
-&lt;li>[Abandonado] -
-&lt;a href="https://github.com/okelet/gcm" target="_blank" rel="noopener">GCM Connection Manager&lt;/a> (TBD): gestor de conexiones SSH (fork de
-&lt;a href="http://kuthulu.com/gcm/" target="_blank" rel="noopener">Gnome Connection Manager&lt;/a>)&lt;/li>
-&lt;/ul></description></item><item><title>Instalar Ansible en Cygwin</title><link>https://blog.okelet.com/post/2016/04/instalar-ansible-en-cygwin/</link><pubDate>Sat, 30 Apr 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/04/instalar-ansible-en-cygwin/</guid><description>&lt;p>Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete &lt;code>wget&lt;/code> en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando:&lt;/p>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2019/05/parsear-maintenancewindow-de-rds-en-python/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Contacto</title><link>https://blog.okelet.com/contact/</link><pubDate>Tue, 01 Jan 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/contact/</guid><description>
+Formulario de contacto
+&lt;p>&lt;a href="https://blog.okelet.com/contact/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Proyectos...</title><link>https://blog.okelet.com/projects/</link><pubDate>Tue, 01 Jan 2019 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/projects/</guid><description>
+ProxyChanger: Pequeña utilidad en Go para cambiar el proxy del sistema. MiniDLNA Indicator: Indicador para usar MiniDLNA como un usuario normal (sin root). [Abandonado] - chphpass (TBD): interfaz web para el cambio de contraseña en Samba4 y Active Directory. [Abandonado] - GCM Connection Manager (TBD): gestor de conexiones SSH (fork de Gnome Connection Manager)
+&lt;p>&lt;a href="https://blog.okelet.com/projects/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Instalar Ansible en Cygwin</title><link>https://blog.okelet.com/post/2016/04/instalar-ansible-en-cygwin/</link><pubDate>Sat, 30 Apr 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/04/instalar-ansible-en-cygwin/</guid><description>
+&lt;p>Instalaremos Cygwin de la forma habitual; simplemente nos aseguraremos de seleccionar el paquete &lt;code>wget&lt;/code> en la ventana de selección de paquetes, o bien lanzar el instalador con el siguiente comando:&lt;/p>
 &lt;pre>&lt;code class="language-bash">setup-x86_64.exe --download --site http://mirrors.fe.up.pt/pub/cygwin/ --upgrade-also --no-admin --root %LOCALAPPDATA%/cygwin64 --packages wget
 &lt;/code>&lt;/pre>
-&lt;p>Tras esto, instalamos
-&lt;a href="https://github.com/transcode-open/apt-cyg" target="_blank" rel="noopener">&lt;code>apt-cyg&lt;/code>&lt;/a>, que es un gestor de paquetes de Cygwin, y una serie de paquetes que considero imprescindibles:&lt;/p>
-&lt;pre>&lt;code class="language-bash">wget -q https://rawgit.com/transcode-open/apt-cyg/master/apt-cyg
-install apt-cyg /bin
-apt-cyg install curl gcc-core make nano vim git openssh python python-crypto python-paramiko python-setuptools python-jinja2 python-yaml
-&lt;/code>&lt;/pre>
-&lt;p>Por último, instalamos Ansible desde
-&lt;a href="https://pypi.python.org/pypi" target="_blank" rel="noopener">PyPi&lt;/a> (se podría instalar &lt;code>ansible&lt;/code> directamente con &lt;code>easy_install&lt;/code>, pero prefiero hacerlo con &lt;code>pip&lt;/code>, y así ya lo tengo para el futuro):&lt;/p>
-&lt;pre>&lt;code class="language-bash">easy_install-2.7 pip
-pip install ansible
-&lt;/code>&lt;/pre>
-&lt;p>Para probar el correcto funcionamiento:&lt;/p>
-&lt;pre>&lt;code class="language-bash">ansible --version
-ansible -i localhost, -c local all -m ping
-ansible -i localhost, -c local all -m setup
-&lt;/code>&lt;/pre>
-&lt;!-- PELICAN_END_SUMMARY --></description></item><item><title>Enviar salida éstandar y de error al mismo tiempo</title><link>https://blog.okelet.com/post/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/</link><pubDate>Wed, 20 Apr 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/</guid><description>&lt;p>Normalmente, en Bash, redirigimos la salida estándar a un fichero o la entrada de otro comando con la siguiente sintaxis:&lt;/p>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2016/04/instalar-ansible-en-cygwin/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Enviar salida éstandar y de error al mismo tiempo</title><link>https://blog.okelet.com/post/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/</link><pubDate>Wed, 20 Apr 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/</guid><description>
+&lt;p>Normalmente, en Bash, redirigimos la salida estándar a un fichero o la entrada de otro comando con la siguiente sintaxis:&lt;/p>
 &lt;pre>&lt;code class="language-bash">ls -l mifichero.txt noexiste &amp;gt; salida.txt
 ls -l mifichero.txt noexiste | tee salida.txt
 &lt;/code>&lt;/pre>
@@ -816,14 +139,18 @@ ls -l mifichero.txt noexiste 2&amp;gt;&amp;amp;1 | tee salida.txt
 &lt;/code>&lt;/pre>
 &lt;p>O de esta otra forma más simplificada (&lt;code>&amp;amp;|&lt;/code> no funciona):&lt;/p>
 &lt;pre>&lt;code class="language-bash">ls -l mifichero.txt noexiste &amp;amp;&amp;gt; salida.txt
-&lt;/code>&lt;/pre></description></item><item><title>La forma más corta y simple de crear o vaciar un archivo en Linux</title><link>https://blog.okelet.com/post/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</link><pubDate>Tue, 19 Apr 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</guid><description>&lt;p>Pues eso, la forma más corta y simple de crear o vaciar un archivo en Linux:&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2016/04/enviar-salida-estandar-y-de-error-al-mismo-tiempo/">Leer más...&lt;/a>&lt;/p></description></item><item><title>La forma más corta y simple de crear o vaciar un archivo en Linux</title><link>https://blog.okelet.com/post/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</link><pubDate>Tue, 19 Apr 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/</guid><description>
+&lt;p>Pues eso, la forma más corta y simple de crear o vaciar un archivo en Linux:&lt;/p>
 &lt;pre>&lt;code class="language-bash">&amp;gt; fichero
 &lt;/code>&lt;/pre>
 &lt;p>Otras formas:&lt;/p>
 &lt;pre>&lt;code class="language-bash">touch fichero
 echo &amp;quot;&amp;quot; &amp;gt; fichero
 cat /dev/null &amp;gt; fichero
-&lt;/code>&lt;/pre></description></item><item><title>Ansible sin root</title><link>https://blog.okelet.com/post/2016/04/ansible-sin-root/</link><pubDate>Tue, 05 Apr 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/04/ansible-sin-root/</guid><description>&lt;p>Cuando se instala Ansible, por defecto va a usar la configuración y fichero de hosts del directorio &lt;code>/etc/ansible&lt;/code>. Si queremos poder ejecutar Ansible sin necesidad de estar tocando continuamente ficheros de configuración con root, podemos crear un archivo de configuración y otro de hosts en nuestro directorio personal, que prevalecerán sobre los que hay en &lt;code>/etc/ansible&lt;/code>.&lt;/p>
+&lt;/code>&lt;/pre>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2016/04/la-forma-mas-corta-y-simple-de-crear-o-vaciar-un-archivo-en-linux/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Ansible sin root</title><link>https://blog.okelet.com/post/2016/04/ansible-sin-root/</link><pubDate>Tue, 05 Apr 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/04/ansible-sin-root/</guid><description>
+&lt;p>Cuando se instala Ansible, por defecto va a usar la configuración y fichero de hosts del directorio &lt;code>/etc/ansible&lt;/code>. Si queremos poder ejecutar Ansible sin necesidad de estar tocando continuamente ficheros de configuración con root, podemos crear un archivo de configuración y otro de hosts en nuestro directorio personal, que prevalecerán sobre los que hay en &lt;code>/etc/ansible&lt;/code>.&lt;/p>
 &lt;p>Para ello, crearemos el
 &lt;a href="http://docs.ansible.com/ansible/intro_configuration.html#configuration-file" target="_blank" rel="noopener">fichero de configuración&lt;/a> &lt;code>~/.ansible.cfg&lt;/code> con el siguiente contenido:&lt;/p>
 &lt;pre>&lt;code class="language-text">[defaults]
@@ -836,73 +163,29 @@ inventory = ~/.ansible_hosts
 &lt;p>Para probar que Ansible está cogiendo esta configuración, ejecutaremos el siguiente comando (muestra los
 &lt;a href="http://docs.ansible.com/ansible/intro_inventory.html" target="_blank" rel="noopener">&lt;code>facts&lt;/code> del servidor&lt;/a> que cumplan el filtro &lt;code>ansible_eth[0-2]&lt;/code>):&lt;/p>
 &lt;pre>&lt;code class="language-bash">ansible localhost -m setup -a 'filter=ansible_eth[0-2]'
-&lt;/code>&lt;/pre></description></item><item><title>Instalar OpenStack PackStack detrás de un proxy</title><link>https://blog.okelet.com/post/2016/02/instalar-openstack-packstack-detras-de-un-proxy/</link><pubDate>Thu, 18 Feb 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/02/instalar-openstack-packstack-detras-de-un-proxy/</guid><description>&lt;p>Trasteando con Openstack, con ganas desde hace tiempo, y después de la
+&lt;/code>&lt;/pre>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2016/04/ansible-sin-root/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Instalar OpenStack PackStack detrás de un proxy</title><link>https://blog.okelet.com/post/2016/02/instalar-openstack-packstack-detras-de-un-proxy/</link><pubDate>Thu, 18 Feb 2016 00:00:00 +0000</pubDate><guid>https://blog.okelet.com/post/2016/02/instalar-openstack-packstack-detras-de-un-proxy/</guid><description>
+&lt;p>Trasteando con Openstack, con ganas desde hace tiempo, y después de la
 &lt;a href="http://www.meetup.com/es-ES/MAD-for-OpenStack/events/227554166/" target="_blank" rel="noopener">Mini-Conf&lt;/a> del grupo
 &lt;a href="http://www.meetup.com/es-ES/MAD-for-OpenStack/" target="_blank" rel="noopener">MAD for OpenStack&lt;/a>, me animé a probarlo usando
 &lt;a href="https://wiki.openstack.org/wiki/Packstack" target="_blank" rel="noopener">PackStack&lt;/a>, que te lo configura todo en una única máquina (no tengo claro si se puede considerar una instalación productiva o sólo para pruebas), aunque luego puedes ir añadiendo nodos adicionales. Dado que no tengo acceso a ningún host físico, instalé un RH 7.2 (también vale
 &lt;a href="https://getfedora.org" target="_blank" rel="noopener">Fedora&lt;/a> o
 &lt;a href="https://www.centos.org" target="_blank" rel="noopener">CentOS&lt;/a>) en una máquina virtual de VMware (el rendimiento dependerá en gran medida si se tiene habilitado o no la &lt;em>
 &lt;a href="http://www.josemariagonzalez.es/2012/10/01/como-virtualizar-un-vmware-esxi-en-modo-nested.html" target="_blank" rel="noopener">nested virtualization&lt;/a>&lt;/em>). Empecé con una máquina con 2 procesadores y 2 GB de RAM, pero enseguida me di cuenta que se quedaba muy corta, incluso sin ninguna instancia arrancada. La versión final tiene 8 procesadores y 8 GB de RAM.&lt;/p>
-&lt;p>El siguiente problema que me surgió es que me daba un error al instalar el paquete de Cinder, ya que le faltaba una dependencia. Y no me lo explicaba, porque esa dependencia está en el repositorio de EPEL, que lo tenía configurado y habilitado. Después de varias pruebas, me di cuenta que el instalador deshabilita ese repositorio, y hay que forzar a que lo utilice con un parámetro adicional (&lt;code>--use-epel=y&lt;/code>).&lt;/p>
-&lt;p>Después, me daba fallo al descargar la imagen de
-&lt;a href="https://launchpad.net/cirros" target="_blank" rel="noopener">CirrOS&lt;/a> para ponerla como disponible para nuevas instancias, y es que esta imagen se la descarga de Internet, así que tenía que utilizar el proxy, por lo que me creé un &lt;code>/etc/profile.d/proxy.sh&lt;/code> donde se establecía, pero el proxy hacía que fallaran las peticiones REST que se realizan durante la instalación para registrar componentes, configuración, etc. Así que encontré una opción que lo que hace es utilizar una imagen descargada localmente, en lugar de descargársela de Internet. Por tanto, borré el profile.d del proxy, y me bajé la imagen a mano:&lt;/p>
-&lt;pre>&lt;code class="language-bash">export https_proxy=http://mi.proxy:8080
-wget --no-check-certificate https://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
-&lt;/code>&lt;/pre>
-&lt;p>Una vez hecho esto, hay que tener configurado el proxy en Yum, ya que se descarga bastantes paquetes de Internet. Una vez hechas todas estas comprobaciones, se puede lanzar la instalación de PackStack:&lt;/p>
-&lt;pre>&lt;code class="language-bash">packstack --use-epel=y --provision-image-url=/root/cirros-0.3.4-x86_64-disk.img --allinone
-&lt;/code>&lt;/pre></description></item><item><title>Red Hat, licencias y suscripciones (y una pequeña reflexión sobre el software libre)</title><link>https://blog.okelet.com/post/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/</link><pubDate>Tue, 23 Sep 2014 10:54:17 +0000</pubDate><guid>https://blog.okelet.com/post/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/</guid><description>&lt;p>&lt;em>Nota&lt;/em>: No soy un experto en licencias o suscripciones, así que todo lo que diga en este post, no se debe tomar al pie de la letra. Si algún concepto está mal, comentádmelo y lo corrijo.&lt;/p>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2016/02/instalar-openstack-packstack-detras-de-un-proxy/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Red Hat, licencias y suscripciones (y una pequeña reflexión sobre el software libre)</title><link>https://blog.okelet.com/post/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/</link><pubDate>Tue, 23 Sep 2014 10:54:17 +0000</pubDate><guid>https://blog.okelet.com/post/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/</guid><description>
+&lt;p>&lt;em>Nota&lt;/em>: No soy un experto en licencias o suscripciones, así que todo lo que diga en este post, no se debe tomar al pie de la letra. Si algún concepto está mal, comentádmelo y lo corrijo.&lt;/p>
 &lt;p>En un anterior cliente (de cuyo nombre no quiero acordarme), supongo que al igual que en muchos otros que os habréis encontrado, tienen la mala costumbre de instalar software sin licencia o suscripción. En este caso, voy a hablar de Red Hat, y su distribución Linux (Red Hat Enterprise Linux o RHEL). Aunque GNU/Linux siempre se ha caracterizado por sus licencias abiertas, quien modifique dicho software está obligado a publicar dicho fuente modificado (realmente depende de la licencia de cada pieza software que compone la distribución, pero aunque no se deba en general, en este post generalizaremos&amp;hellip;). Éste es, en parte, el negocio de Red Hat. Ellos hace una recopilación de software, le hacen una serie de modificacionesy mejoras si procede, publican ese código fuente (
 &lt;a href="http://ftp.redhat.com/pub/redhat/linux/enterprise/" target="_blank" rel="noopener">SRPMs&lt;/a>), y finalmente generar unos binarios que los meten en un CD, además de dar actualizaciones y soporte de ese software. ¿Y qué es lo que pasa? Pues esos CDs &amp;ldquo;no te los puedes bajar gratis&amp;rdquo; (dependiendo de la licencia se puede permitir cobrar por el trabajo realizado, o incluso no liberar las modificaciones hechas). Esos CDs sólo los puedes conseguir si tienes una suscripción con Red Hat (previo pago), o bien si te has registrado para una evaluación. Esta demo incluye lo siguiente:&lt;/p>
 &lt;ul>
 &lt;li>Actualizaciones durante 30 días&lt;/li>
 &lt;li>NO se incluye soporte técnico&lt;/li>
 &lt;/ul>
-&lt;p>De acuerdo con el
-&lt;a href="http://www.redhat.com/licenses/es/Enterprise_Agr_Spain.pdf" target="_blank" rel="noopener">acuerdo de licencia de Red Hat Enterprise Linux&lt;/a>:&lt;/p>
-&lt;blockquote>
-&lt;p>Beneficios de las Suscripciones de Software: Por cada Suscripción de Software que compra, Red Hat le proporciona uno o más de los siguientes beneficios:&lt;/p>
-&lt;/blockquote>
-&lt;blockquote>
-&lt;ul>
-&lt;li>Acceso al Software: Acceso al Software.&lt;/li>
-&lt;li>Mantenimiento del Software: Acceso a actualizaciones, nuevas versiones, correcciones, advertencias de seguridad y corrección de defectos para el Software, cuando y en caso de que estuvieran disponibles.&lt;/li>
-&lt;li>Asistencia: Acceso a la asistencia de Red Hat para cuestiones relacionadas con el Software usado para fines de desarrollo y/o fines de producción (cada uno de los cuales se define a continuación).&lt;/li>
-&lt;li>Open Source Assurance: Las compras en virtud de este Apéndice de las Suscripciones de Software pueden darle derecho a participar en el Programa de Open Source Assurance de Red Hat conforme a un contrato por separado, que se puede consultar (en inglés) en &lt;a href="http://www.redhat.com/legal/open_source_assurance_agreement.html">www.redhat.com/legal/open_source_assurance_agreement.html&lt;/a>.&lt;/li>
-&lt;/ul>
-&lt;/blockquote>
-&lt;p>Vale, me he registrado para una evaluación y me lo he bajado (o bien lo he conseguido por otros medios, ejem), me lo he instalado, y se han pasado los 30 días de evaluación, ¿ahora qué? Pues en principio podrías seguir usándolo. Y entonces, ¿por qué pagar una suscripción? Pues básicamente porque no tendrás acceso a las actualizaciones (algo muy peligroso), pero allá cada uno, y a mayores no tendrías el soporte que te daría una suscripción.&lt;/p>
-&lt;p>¿Y por qué no usar suscripciones de evaluación indefinidamente (siempre en caso de que sólo queramos actualizaciones y no soporte)? Básicamente porque es una chapuza y no puedes. Tras solicitar una suscripción de prueba, no puedes volver a solicitar otra del mismo producto hasta 90 días después, con la misma cuenta. Podrías usar cuentas de correo falsas para crear nuevas cuentas en Red Hat, y prolongar la agonía indefinidamente&amp;hellip;. Pero en resumen, chapuzas y ñapas, y aparte puede que te &amp;ldquo;pillen&amp;rdquo;.&lt;/p>
-&lt;p>Y entonces, ¿por qué no usa todo el mundo CentOS, si es igual que Red Hat? Bueno, si eres administrador de sistemas, y estos no son muy críticos, pues puedes pasar. Pero si eres un pinchaiconos, y no te quieres calentar mucho la cabeza, o eres una gran organización, y necesitas que haya una empresa por detrás que te resuelva los problemas o te aconseje en el despliegue de los sistemas, pues deberías plantearte la suscripción. Si bien es cierto que las suscripciones no son baratas para una pequeña o mediana empresa, en ciertos casos pueden salir rentables.&lt;/p>
-&lt;p>¿Y cuándo sí que es imprescindible una suscripción? Por ejemplo, si queremos instalar el servidor de base de datos Oracle, éste sólo está soportado oficialmente en Red Hat (y no en CentOS), y además, en muchos casos requieren unas versiones de paquetes que sólo están disponibles en los repositorios de actualizaciones. ¿Y no es posible instalar una versión mayor o menor? Pues sí que es posible, pero Oracle no daría soporte si no se cumplen sus requerimientos. ¿Y si instalo el paquete de actualizado pero de CentOS? Pues eso se ve fácil con un &lt;code>rpm -q&lt;/code>, y se vería que no es la versión compilada para Red Hat, sino la de CentOS. ¿Y no podría compilar yo mismo el SRPM? Podrías, pero volvemos a lo de antes: chapuza, ñapa.&lt;/p>
-&lt;p>Y volviendo a este cliente que os comentaba, la razón que alegaba para instalar Red Hat sin suscripciones es &amp;ldquo;por si algún día tenemos un problema, compramos una suscripción para esa máquina, y listo&amp;rdquo;. Qué queréis que os diga, me reservo la opinión. Así no. Así no se avanza con el software libre. Y &amp;ldquo;promover&amp;rdquo; el software libre no es simplemente usarlo, que también. Si no se contribuye, se colabora, se hacen donaciones, etc. al final esto no creo que salga bien. Por ejemplo, en las administraciones públicas, pongamos que sustituyen Microsoft Office (cuyo coste en licencias fuera, por ejemplo, de 600.000 euros) y lo cambian por
-&lt;a href="https://es.libreoffice.org/" target="_blank" rel="noopener">LibreOffice&lt;/a>. Qué les costaría, ya que se están ahorrando ese dineral, donar, yo qué sé, un 10% a la
-&lt;a href="http://www.documentfoundation.org/" target="_blank" rel="noopener">Document Foundation&lt;/a>, que se encarga del desarrollo; es algo nimio para la administración, pero un gran aporte para la fundación. Si todas las administraciones públicas hicieran esto, no habría, seguramente, tantas
-&lt;a href="http://lamiradadelreplicante.com/2014/09/16/el-alcalde-de-munich-advierte-de-debilidades-significativas-en-limux/" target="_blank" rel="noopener">quejas sobre la calidad del software&lt;/a> (no por LibreOffice, sino por muchas otras aplicaciones que, en mi opinión, se incluyen en muchas distribuciones y que no son alternativas válidas para otras aplicaciones ya consolidadas). Por ejemplo,
-&lt;a href="http://www.linuxmint.com/" target="_blank" rel="noopener">Linux Mint&lt;/a> (para mi la mejor distribución Linux actualmente, en cualquiera de sus entornos), tiene una
-&lt;a href="http://www.linuxmint.com/donors.php" target="_blank" rel="noopener">lista de donantes&lt;/a> (la mayoría son particulares), y casi todas son donaciones pequeñas. Pero muchas pequeñas donaciones hacen que se avance.&lt;/p>
-&lt;ul>
-&lt;li>
-&lt;a href="https://access.redhat.com/articles/1616" target="_blank" rel="noopener">What access and functionality do I lose when the support contract expires for a Red Hat Enterprise Linux product?&lt;/a>&lt;/li>
-&lt;li>
-&lt;a href="http://jehurst.wordpress.com/2011/01/14/rhel-6-and-trial-subscription-keeping-it-alive/" target="_blank" rel="noopener">RHEL 6 and Trial Subscription: Keeping It Alive&lt;/a>&lt;/li>
-&lt;li>
-&lt;a href="http://www.linuxforums.org/forum/red-hat-fedora-linux/139625-why-cant-i-find-free-download-red-hat.html" target="_blank" rel="noopener">Why can&amp;rsquo;t I find a free download of Red Hat?&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Compilar NXLOG en Red Hat/CentOS 5</title><link>https://blog.okelet.com/post/2014/09/compilar-nxlog-en-red-hatcentos-5/</link><pubDate>Mon, 15 Sep 2014 14:24:26 +0000</pubDate><guid>https://blog.okelet.com/post/2014/09/compilar-nxlog-en-red-hatcentos-5/</guid><description>&lt;p>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2014/09/red-hat-licencias-y-suscripciones-y-una-pequena-reflexion-sobre-el-software-libre/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Compilar NXLOG en Red Hat/CentOS 5</title><link>https://blog.okelet.com/post/2014/09/compilar-nxlog-en-red-hatcentos-5/</link><pubDate>Mon, 15 Sep 2014 14:24:26 +0000</pubDate><guid>https://blog.okelet.com/post/2014/09/compilar-nxlog-en-red-hatcentos-5/</guid><description>
+&lt;p>
 &lt;a href="http://nxlog-ce.sourceforge.net" target="_blank" rel="noopener">NXLOG&lt;/a> es un sustituto revitalizado para
 &lt;a href="http://es.wikipedia.org/wiki/Syslog" target="_blank" rel="noopener">Syslog&lt;/a>. Puede recoger los mensajes tanto desde Windows como de Linux, aplicar reglas, y luego enviarlo a distintos sitios (archivos, bases de datos, servicios web, etc.). El caso es que necesitaba instalar este paquete en un CentOS 5 para enviar los LOGs a un servicio web de indexación, pero no había paquetes precompilados para esta versión.&lt;/p>
-&lt;p>Tras leer la documentación, indicaban que lo único que hay que hacer es bajarse el código fuente y ejecutar el comando &lt;code>./make_rpm.sh&lt;/code>. El caso es que esto tampoco funcionaba, pero después de dar 20000 vueltas, y de pura casulalidad, vi que había 2 ficheros
-&lt;a href="http://www.rpm.org/max-rpm/ch-rpm-inside.html" target="_blank" rel="noopener">SPEC&lt;/a>: uno llamado &lt;code>nxlog.spec&lt;/code> y otro llamado &lt;code>nxlog.spec.RHEL5&lt;/code>. Mirando el código del script &lt;code>make_rpm.sh&lt;/code> he visto que si no se especifica ningún fichero mediante entorno de variable, automáticamente coge el &lt;code>nxlog.spec&lt;/code>, así que lo único que hay que hacer es indicarle mediante una variable de entorno el otro fichero SPEC. Fácil y sencillo (después de darle muchas vueltas)&amp;hellip;&lt;/p>
-&lt;p>Aquí el
-&lt;a href="http://es.wikipedia.org/wiki/Cortar,_copiar_y_pegar" target="_blank" rel="noopener">copy-paste&lt;/a>:&lt;/p>
-&lt;pre>&lt;code class="language-bash">NXLOG_VERSION=2.8.1248
-yum install rpm-build apr-devel pcre-devel openssl-devel libdbi-devel libcap-devel expat-devel libtool
-wget http://sourceforge.net/projects/nxlog-ce/files/nxlog-ce-${NXLOG_VERSION}.tar.gz
-tar zxvf nxlog-ce-${NXLOG_VERSION}.tar.gz
-cd nxlog-ce-${NXLOG_VERSION}/packaging/redhat
-SPEC_FILE=nxlog.spec.RHEL5 ./make_rpm.sh
-rpm -Uvh rpmbuild/RPMS/x86_64/nxlog-ce-${NXLOG_VERSION}-1.x86_64.rpm
-&lt;/code>&lt;/pre></description></item><item><title>Guía rápida de KVM</title><link>https://blog.okelet.com/post/2014/08/guia-rapida-de-kvm/</link><pubDate>Tue, 12 Aug 2014 13:12:48 +0200</pubDate><guid>https://blog.okelet.com/post/2014/08/guia-rapida-de-kvm/</guid><description>&lt;p>De la
+&lt;p>&lt;a href="https://blog.okelet.com/post/2014/09/compilar-nxlog-en-red-hatcentos-5/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Guía rápida de KVM</title><link>https://blog.okelet.com/post/2014/08/guia-rapida-de-kvm/</link><pubDate>Tue, 12 Aug 2014 13:12:48 +0200</pubDate><guid>https://blog.okelet.com/post/2014/08/guia-rapida-de-kvm/</guid><description>
+&lt;p>De la
 &lt;a href="http://es.wikipedia.org/wiki/Kernel-based_Virtual_Machine" target="_blank" rel="noopener">Wikipedia&lt;/a>:&lt;/p>
 &lt;blockquote>
 &lt;p>Kernel-based Virtual Machine o KVM, (en español, Máquina virtual basada en el núcleo) es una solución para implementar virtualización completa con Linux. Está formada por un módulo del núcleo (con el nombre kvm.ko) y herramientas en el espacio de usuario, siendo en su totalidad software libre. El componente KVM para el núcleo está incluido en Linux desde la versión 2.6.20.&lt;/p>
@@ -915,352 +198,14 @@ rpm -Uvh rpmbuild/RPMS/x86_64/nxlog-ce-${NXLOG_VERSION}-1.x86_64.rpm
 &lt;/code>&lt;/pre>
 &lt;p>Si la salida anterior muestra algo, podremos seguir adelante. Si no muestra nada, también podremos seguir, pero no se aprovecharán las capacidades de virtualización del equipo (se hará un
 &lt;a href="http://blog.vmsplice.net/2011/03/should-i-use-qemu-or-kvm.html" target="_blank" rel="noopener">&lt;em>fallback&lt;/em>&lt;/a> a emulación en lugar de virtualización).&lt;/p>
-&lt;h2 id="instalación-en-debianubuntu">Instalación en Debian/Ubuntu&lt;/h2>
-&lt;p>Para Debian/Ubuntu, deberemos instalar los siguientes paquetes:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo apt-get install cpu-checker qemu-kvm libvirt-bin bridge-utils virt-manager virt-viewer libguestfs-tools
-&lt;/code>&lt;/pre>
-&lt;p>También tendremos que añadir nuestro usuario al grupo &lt;code>libvirtd&lt;/code> para poder gestionar máquinas virtuales en el sistema con nuestro propio usuario (sin ser root):&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo adduser ${USER} libvirtd
-&lt;/code>&lt;/pre>
-&lt;p>Por último, deberemos reiniciar la sesión para que se recarguen nuestros permisos de usuario.&lt;/p>
-&lt;h2 id="instalación-en-red-hatcentos">Instalación en Red Hat/CentOS&lt;/h2>
-&lt;p>Para Red Hat/CentOS, deberemos instalar los siguientes paquetes:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo yum install kvm libvirt virt-viewer virt-manager virt-sysprep
-&lt;/code>&lt;/pre>
-&lt;p>Para poder gestionar máquinas virtuales sin necesidad de ser root, deberemos crear un grupo, agregar nuestro usuario a ese grupo, y configurar ese grupo en KVM para permitirle la gestión (básicamente, estamos simulando el comportamiento que Ubuntu ya hace por sí solo,
-&lt;a href="http://n40lab.wordpress.com/2012/10/03/installing-kvm-with-yum-and-compiling-libvirt-and-virtmanager/" target="_blank" rel="noopener">referencia 1&lt;/a> y
-&lt;a href="http://www.opennet.ru/openforum/vsluhforumID1/93974.html" target="_blank" rel="noopener">referencia 2&lt;/a>):&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo groupadd libvirtd
-sudo usermod -a -G libvirtd ${USER}
-sudo sed -r -i -e 's/^#?unix_sock_group = .*/unix_sock_group = &amp;quot;libvirtd&amp;quot;/' \
--e 's/^#?unix_sock_rw_perms = .*/unix_sock_rw_perms = &amp;quot;0770&amp;quot;/' \
--e 's/^#?auth_unix_rw = .*/auth_unix_rw = &amp;quot;none&amp;quot;/' \
-/etc/libvirt/libvirtd.conf
-sudo service libvirtd restart
-&lt;/code>&lt;/pre>
-&lt;p>Por último, deberemos reiniciar la sesión para que se recarguen nuestros permisos de usuario.&lt;/p>
-&lt;h2 id="herramientas-principales-de-gestión">Herramientas principales de gestión&lt;/h2>
-&lt;p>Con KVM disponemos de varias herramientas para gestionar tanto el sistema como las propias máquinas virtuales:&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>virsh&lt;/code>: nos permite gestionar el sistema y las máquinas virtuales a un nivel medio-bajo.&lt;/li>
-&lt;li>&lt;code>virt-install&lt;/code>: nos permite crear máquinas virtuales de una forma sencilla.&lt;/li>
-&lt;/ul>
-&lt;h2 id="tipos-de-conexión">Tipos de conexión&lt;/h2>
-&lt;p>En la instalación por defecto, tenemos dos tipos de conexión:&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>qemu:///system&lt;/code>: nos conectamos al servicio de virtualización del sistema. Las máquinas creadas aquí se pueden configurar para que arranquen automáticamente cuando se inicie el host.&lt;/li>
-&lt;li>&lt;code>quemu:///session&lt;/code>: nos conectamos a nuestra propia sesión. Estas máquinas sólo las podrá ver y gestionar el propio usuario, y además, los archivos de imagen (discos duros, etc.), deberán estar en una ubicación donde el usuario pueda leer y escribir (en la ruta por efecto &lt;code>/var/lib/libvirt/images&lt;/code> sólo puede escribir cuando nos conectamos a la URL de sistema).&lt;/li>
-&lt;/ul>
-&lt;p>Según las pruebas que he hecho, los comandos &lt;code>virsh&lt;/code> y &lt;code>virt-instal&lt;/code> (explicados en la siguiente sección) se comportan de manera distinta a la hora de conectarse. &lt;code>virsh&lt;/code> por defecto se conecta a &lt;code>quemu:///system&lt;/code>, mientras que &lt;code>virt-install&lt;/code> se conecta a &lt;code>quemu:///session&lt;/code>. Por esto, en los siguientes ejemplos, se especifica siempre como URL de conexión &lt;code>quemu:///system&lt;/code>, ya que las imágenes de disco se van a crear en &lt;code>/var/lib/libvirt/images&lt;/code>. Si no especificásemos URL de conexión, o pusiéramos la de sesión del usuario, deberíamos establecer una ruta de imagen de disco donde el propio usuario pueda escribir, como &lt;code>${HOME}&lt;/code>.&lt;/p>
-&lt;h2 id="instalación-de-virt-manager-actualizado">Instalación de virt-manager actualizado&lt;/h2>
-&lt;p>Uso Ubuntu 13.10 y la versión en los repositorios es la 0.9.5. La última versión de &lt;code>virt-manager&lt;/code> es la 1.0.1, pero no está en los repositorios para esta versión de Ubuntu (aunque sí a partir de la 14.04); esta última versión tiene bastantes mejoras, entre ellas, la
-&lt;a href="http://virt-manager.org/download/" target="_blank" rel="noopener">gestión de snapshots&lt;/a>. Para instalar la nueva versión no hay más que descargarse el fuente (está escrita en Python); no hay que compilar ni instalar como root (se pueden tener las 2 versiones de &lt;code>virt-manager&lt;/code>, la de los repositorios y la instalada a mano, pero hay que tener cuidado con cuál ejecutamos para no volverse uno loco).&lt;/p>
-&lt;p>En primer lugar, tenemos que descargar una serie de dependencias adicionales que necesitamos (referencias
-&lt;a href="http://www.gravitycomputing.co.nz/virt-manager-1-01-debian/" target="_blank" rel="noopener">uno&lt;/a> y
-&lt;a href="http://askubuntu.com/questions/340937/virtmanager-0-95-or-0-10-on-ubuntu-and-cannot-import-name-gtkvnc" target="_blank" rel="noopener">dos&lt;/a>):&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo apt-get install gir1.2-spice-client-gtk-3.0 python-gtk-vnc libglib2.0-bin python-ipaddr libvirt-glib-1.0-dev gir1.2-gtk-vnc-2.0
-&lt;/code>&lt;/pre>
-&lt;p>En principio esto también valdría para Red Hat/CentOS, pero no he encontrado el paquete necesario para la dependencia &lt;code>gi.repository&lt;/code> en CentOS 6, y no he podido hacerlo funcionar.&lt;/p>
-&lt;pre>&lt;code class="language-bash">yum install python-argparse ...
-&lt;/code>&lt;/pre>
-&lt;p>Después de instalar las dependencias, nos bajamos el paquete fuente, lo descomprimimos y lo ejecutamos:&lt;/p>
-&lt;pre>&lt;code class="language-bash">wget http://virt-manager.org/download/sources/virt-manager/virt-manager-1.0.1.tar.gz -O - | tar -xz
-cd virt-manager-1.0.1
-./virt-manager
-&lt;/code>&lt;/pre>
-&lt;h2 id="comandos-útiles">Comandos útiles&lt;/h2>
-&lt;p>Mostrar la lista de máquinas en ejecución en el sistema:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh -c qemu:///system list
-&lt;/code>&lt;/pre>
-&lt;p>Mostrar todas las máquinas configuradas en el sistema:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh -c qemu:///system list --all
-&lt;/code>&lt;/pre>
-&lt;p>En los comandos anteriores, podemos sustituir &lt;code>qemu:///system&lt;/code> por &lt;code>quemu:///session&lt;/code> para ver las máquinas asociadas a nuestro usuario (ver apartado anterior).&lt;/p>
-&lt;p>Mostrar lista de tipos de sistemas operativos; esto es necesario saberlo para cuando vayamos a instalar una máquina con &lt;code>virt-install&lt;/code>, ya que deberemos especificar el tipo en el momento de la creación:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virt-install --os-variant list
-&lt;/code>&lt;/pre>
-&lt;p>Parar &lt;em>a lo bruto&lt;/em> una máquina:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh destroy nombre_maquina
-&lt;/code>&lt;/pre>
-&lt;p>Eliminar una máquina y todos sus ficheros asociados (snapshots, ficheros de disco, etc.):&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh undefine --managed-save --snapshots-metadata --remove-all-storage nombre_maquina
-&lt;/code>&lt;/pre>
-&lt;h2 id="creación-rápida-de-máquinas-comunes">Creación rápida de máquinas comunes&lt;/h2>
-&lt;p>CentOS 5 32 bits:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virt-install --connect qemu:///system -n centos5x32 -r 512 --vcpus=1 --os-variant=rhel5.4 \
---graphics spice --disk path=/var/lib/libvirt/images/centos5x32.qcow2,format=qcow2,size=8 \
--l http://sunsite.rediris.es/mirror/CentOS/5/os/i386 \
--x &amp;quot;lang=es_ES keyboard=es&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>CentOS 5 64 bits:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virt-install --connect qemu:///system -n centos5x64 -r 512 --vcpus=1 --os-variant=rhel5.4 \
---graphics spice --disk path=/var/lib/libvirt/images/centos5x64.qcow2,format=qcow2,size=8 \
--l http://sunsite.rediris.es/mirror/CentOS/5/os/x86_64 \
--x &amp;quot;lang=es_ES keyboard=es&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>CentOS 6 32 bits:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virt-install --connect qemu:///system -n centos6x32 -r 1024 --vcpus=1 --os-variant=rhel6 \
---graphics spice --disk path=/var/lib/libvirt/images/centos6x32.qcow2,format=qcow2,size=8 \
--l http://sunsite.rediris.es/mirror/CentOS/6/os/i386 \
--x &amp;quot;lang=es_ES keyboard=es&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>CentOS 6 64 bits:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virt-install --connect qemu:///system -n centos6x64 -r 1024 --vcpus=1 --os-variant=rhel6 \
---graphics spice --disk path=/var/lib/libvirt/images/centos6x64.qcow2,format=qcow2,size=8 \
--l http://sunsite.rediris.es/mirror/CentOS/6/os/x86_64 \
--x &amp;quot;lang=es_ES keyboard=es&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>CentOS 7 64 bits (
-&lt;a href="https://access.redhat.com/solutions/509373" target="_blank" rel="noopener">no existe versión de 32 bits&lt;/a>):&lt;/p>
-&lt;pre>&lt;code class="language-bash">virt-install --connect qemu:///system -n centos7x64 -r 1024 --vcpus=1 --os-variant=rhel7 \
---graphics spice --disk path=/var/lib/libvirt/images/centos7x64.qcow2,format=qcow2,size=8 \
--l http://sunsite.rediris.es/mirror/CentOS/7/os/x86_64 \
--x &amp;quot;lang=es_ES keyboard=es&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>Debian 7 32 bits:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virt-install --connect qemu:///system -n debian7x32 -r 512 --vcpus 1 --os-variant debianwheezy \
---graphics spice --disk path=/var/lib/libvirt/images/debian7x32.qcow2,format=qcow2,size=8 \
--l http://ftp.debian.org/debian/dists/wheezy/main/installer-i386/ \
--x &amp;quot;language=es country=ES debian-installer/locale=es_ES.UTF-8 keyboard-configuration/xkb-keymap=es\
-time/zone=Europe/Madrid passwd/make-user=false&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>Debian 7 64 bits:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virt-install --connect qemu:///system -n debian7x64 -r 512 --vcpus 1 --os-variant debianwheezy \
---graphics spice --disk path=/var/lib/libvirt/images/debian7x64.qcow2,format=qcow2,size=8 \
--l http://ftp.debian.org/debian/dists/wheezy/main/installer-amd64/ \
--x &amp;quot;language=es country=ES debian-installer/locale=es_ES.UTF-8 keyboard-configuration/xkb-keymap=es \
-time/zone=Europe/Madrid passwd/make-user=false&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>Los comandos anteriores tienen el parámetro &lt;code>-x&lt;/code> (&lt;code>--extra-args&lt;/code>). Estos parámetros se pasan automáticamente al kernel de arranque de instalación del sistema operativo. Con ellos, podemos configurar automáticamente ciertos parámetros que se nos pide durante la instalación (los más usados en los ejemplos anteriores sirven para configurar el idioma, la localización, la distribución del teclado, la zona horaria, o incluso si crear o no un usuario regular en el sistema). También es posible pasar una ruta a un fichero KickStart (Red Hat/CentOS) o Preseed (Debian/Ubuntu) para automatizar completamente la instalación. Más información:&lt;/p>
-&lt;ul>
-&lt;li>Red Hat/CentOS: parámetros de arranque
-&lt;a href="https://www.centos.org/docs/5/html/Installation_Guide-en-US/ch-bootopts-x86.html" target="_blank" rel="noopener">uno&lt;/a> y
-&lt;a href="https://www.centos.org/docs/5/html/installation_Guide-en-US/s1-kickstart2-options.html" target="_blank" rel="noopener">dos&lt;/a>,
-&lt;a href="http://fedoraproject.org/wiki/Anaconda/Kickstart" target="_blank" rel="noopener">Kickstart&lt;/a>&lt;/li>
-&lt;li>Debian/Ubuntu:
-&lt;a href="https://www.debian.org/releases/stable/i386/ch05s03.html.en" target="_blank" rel="noopener">parámetros de arranque&lt;/a>,
-&lt;a href="https://wiki.debian.org/DebianInstaller/" target="_blank" rel="noopener">Preseed&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;p>Para especificar un proxy de instalación en los casos anteriores, se deben especificar las siguientes opciones:&lt;/p>
-&lt;ul>
-&lt;li>Para Debian/Ubuntu: &lt;code>mirror/http/proxy=http://[usuario:contraseña@]proxy.dominio.com:3128/&lt;/code>&lt;/li>
-&lt;li>Para CentOS/Red Hat: &lt;code>proxy=http://[usuario:contraseña@]proxy.dominio.com:3128/&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;p>La opción &lt;code>--graphics spice&lt;/code> especificada en los comandos anteriores permite una mejor calidad y mayor rendimiento de los gráficos en la máquina virtual, usando el driver &lt;code>qxl&lt;/code>, así como una mejor integración con el host a través del protocolo
-&lt;a href="http://spice-space.org" target="_blank" rel="noopener">Spice&lt;/a>, permitiendo el cambio de resolución de la máquina virtual según redimensionemos el visor, redirección del sonido, copiar y pegar, etc. En caso de que no se especifique esta opción se usaría una comunicación mediante VNC y un driver Cirrus. Para que el protocolo Spice funcion correctamente en la máquina virtual, deberemos asegurarnos que está instalado el driver gráfico adecuado y el agente de Spice, según lo indicado en el siguiente apartado.&lt;/p>
-&lt;h2 id="cambiar-cirrusvnc-por-qxlspice">Cambiar Cirrus/VNC por QXL/Spice&lt;/h2>
-&lt;p>Como he comentando antes, el protocolo Spice ofrece un rendimiento mayor y mejor integración con el huésped. Si tenemos alguna máquina virtual creada con las opciones por defecto, podemos actualizarla cambiando las opciones adecuadas. Para ello, con la máquina virtual parada, editaremos su configuración XML y mofificaremos los bloques especificados a continuación:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh edit nombre_maquina
-&lt;/code>&lt;/pre>
-&lt;pre>&lt;code class="language-xml"> &amp;lt;channel type='spicevmc'&amp;gt;
-&amp;lt;target type='virtio' name='com.redhat.spice.0'/&amp;gt;
-&amp;lt;address type='virtio-serial' controller='0' bus='0' port='1'/&amp;gt;
-&amp;lt;/channel&amp;gt;
-&amp;lt;graphics type='spice' autoport='yes'/&amp;gt;
-&amp;lt;video&amp;gt;
-&amp;lt;model type='qxl' ram='65536' vram='65536' heads='1'/&amp;gt;
-&amp;lt;address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/&amp;gt;
-&amp;lt;/video&amp;gt;
-&lt;/code>&lt;/pre>
-&lt;p>Tras esto, ya podemos arrancar la máquina virtual y debemos asegurarnos de tener instalado tanto el driver gráfico correspondiente, como el agente de Spice. Para ello, ejecutaremos los siguientes comandos en distribuciones Debian/Ubuntu:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo apt-get install xserver-xorg-video-qxl spice-vdagent
-sudo update-rc.d spice-vdagent defaults
-sudo service spice-vdagent start
-&lt;/code>&lt;/pre>
-&lt;p>Estos otros en distribuciones Red Hat/CentOS con SysV (versiones 6 y anteriores):&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo yum install xorg-x11-drv-qxl spice-vdagent
-sudo chkconfig spice-vdagentd on
-sudo service spice-vdagentd start
-&lt;/code>&lt;/pre>
-&lt;p>Y estos otros en distribuciones Red Hat/CentOS con Systemd (versiones 7 y posteriores):&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo yum install xorg-x11-drv-qxl spice-vdagent
-sudo systemctl enable spice-vdagentd
-sudo systemctl start spice-vdagentd
-&lt;/code>&lt;/pre>
-&lt;p>Para finalizar, deberemos reiniciar la máquina virtual para que se apliquen los cambios.&lt;/p>
-&lt;h2 id="intercambiar-entre-kvm-y-virtualbox">Intercambiar entre KVM y VirtualBox&lt;/h2>
-&lt;p>Si se tiene instalado VirtualBox, KVM no se ejecutará con todas las características de virtualización completas, sino que delegará en QEMU (que es mucho más lento), o bien VirtualBox no se ejecutará diciendo que no se han podido cargar sus módulos (
-&lt;a href="http://www.dedoimedo.com/computers/kvm-virtualbox.html" target="_blank" rel="noopener">dependiendo del orden de carga de los módulos de KVM o VirtualBox, será uno u otro el que no funcione&lt;/a>). Para solventar esto, o bien debemos desinstalar uno de los dos sistemas, o bien debemos desactivar los módulos del otro cuando vayamos a ejecutar un sistema de virtualización.&lt;/p>
-&lt;p>Para usar KVM:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo /etc/init.d/vboxdrv stop
-sudo modprobe kvm
-sudo modprobe kvm_intel
-&lt;/code>&lt;/pre>
-&lt;p>Para usar VirtualBox:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo modprobe -r kvm_intel
-sudo modprobe -r kvm
-sudo /etc/init.d/vboxdrv start
-&lt;/code>&lt;/pre>
-&lt;p>En mi caso, que tengo en el trabajo un Dell OptiPlex 755, hay que tocar algunas cosas en la BIOS para que funcione correctamente KVM, ya que cuando intentaba cargar el módulo &lt;code>kvm_intel&lt;/code> me daba un error de &lt;code>Operation not supported&lt;/code>. En esta
-&lt;a href="http://serverfault.com/questions/534934/vt-enabled-in-bios-but-kvm-failed-to-detect" target="_blank" rel="noopener">pregunta de serverfault&lt;/a>, que a su vez
-&lt;a href="http://reidablog.blogspot.com.es/2008/06/with-correct-bios-settings-enabled-on.html" target="_blank" rel="noopener">hace referencia a ésta&lt;/a>, indican las opciones de la BIOS que se deben poner para que funcione; en resumen:&lt;/p>
-&lt;ul>
-&lt;li>Security: Execute Disable should be On&lt;/li>
-&lt;li>Performance: Virtualization should be On&lt;/li>
-&lt;li>Performance: VT for Direct I/O Access should be On&lt;/li>
-&lt;li>Performance: Trusted Execution should be Off&lt;/li>
-&lt;/ul>
-&lt;h2 id="snapshots">Snapshots&lt;/h2>
-&lt;p>Para poder tomar snapshots, el formato de los discos debe ser alguno que sea compatible; si al crear la máquina, no se especifica uno, se crearán con el formato &lt;code>raw&lt;/code>, que no los permite; por eso, en todos los comandos anteriores se usa el formato &lt;code>qcow2&lt;/code>.&lt;/p>
-&lt;p>Mostrar los snapshots de una máquina:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh snapshot-list nombre_maquina
-&lt;/code>&lt;/pre>
-&lt;p>Tomar un snapshot de una máquina:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh snapshot-create-as nombre_maquina &amp;quot;Nombre del snapshot (opcional)&amp;quot; &amp;quot;Descripción del snapshot (opcional)&amp;quot;
-&lt;/code>&lt;/pre>
-&lt;p>Revertir a un snapshot anterior:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh snapshot-revert nombre_maquina [nombre_snapshot|--current]
-&lt;/code>&lt;/pre>
-&lt;p>Eliminar un snapshot:&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh snapshot-delete nombre_maquina [nombre_snapshot|--current] [{--children | --children-only}]
-&lt;/code>&lt;/pre>
-&lt;h2 id="convertir-imágenes-de-disco-a-qcow2">Convertir imágenes de disco a QCOW2&lt;/h2>
-&lt;p>En caso de que tengamos una máquina virtual con un disco en formato &lt;code>raw&lt;/code>, no podremos utilizar la funcionalidad de snapshots, como hemos comentado antes. Para solucionar esto, deberemos convertir el fichero de imagen de la máquina a formato &lt;code>qcow2&lt;/code>, y luego editar la configuración de la máquina virtual para decirle que hemos cambiado el formato del disco.&lt;/p>
-&lt;p>Para convertir el formato (se debe hacer con la máquina apagada, y con &lt;code>sudo&lt;/code> ya que necesita acceder directamente al disco para leerlo y luego poder crear el nuevo):&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo qemu-img convert -f raw -O qcow2 /var/lib/libvirt/images/centos7x64.{img,qcow2}
-&lt;/code>&lt;/pre>
-&lt;p>Tras esto, debemos reconfigurar la máquina virtual para indicar el nuevo nombre del fichero y formato del disco (al igual que antes, con la máquina apagada):&lt;/p>
-&lt;pre>&lt;code class="language-bash">virsh edit centos7x64
-&lt;/code>&lt;/pre>
-&lt;pre>&lt;code class="language-xml"> &amp;lt;disk type='file' device='disk'&amp;gt;
-&amp;lt;driver name='qemu' type='qcow2'/&amp;gt;
-&amp;lt;source file='/var/lib/libvirt/images/centos7x64.qcow2'/&amp;gt;
-&amp;lt;target dev='vda' bus='virtio'/&amp;gt;
-&amp;lt;address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/&amp;gt;
-&amp;lt;/disk&amp;gt;
-&lt;/code>&lt;/pre>
-&lt;h2 id="clonar-máquinas-virtuales">Clonar máquinas virtuales&lt;/h2>
-&lt;p>A la hora de clonar máquinas virtuales debemos tener en cuenta varias cosas:&lt;/p>
-&lt;ul>
-&lt;li>Se debe duplicar el disco&lt;/li>
-&lt;li>Se debe generar una nueva dirección MAC para cada una de las tarjetas de red&lt;/li>
-&lt;li>A nivel de sistema operativo:
-&lt;ul>
-&lt;li>Cambiar la dirección MAC con la nueva en los archivos de configuración (&lt;code>/etc/sysconfig/network-scripts/ifcfg-eth*&lt;/code> en Red Hat/CentOS)&lt;/li>
-&lt;li>Se deben eliminar y regerenerar las claves SSH antiguas&lt;/li>
-&lt;li>Se deberían eliminar los usuarios del sistema original&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>Y cualquier cosa más que se nos ocurra&lt;/li>
-&lt;/ul>
-&lt;p>Para realizar todas estas tareas, disponemos principalmente de 2 herramientas:&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>virt-clone&lt;/code>: realiza el clonado en sí de la máquina, copiando el disco, y cambiando las direcciones MAC de las tarjetas (a nivel de KVM sólo, no a nivel del sistema operativo virtual).&lt;/li>
-&lt;li>&lt;code>virt-sysprep&lt;/code>: permite realizar modificaciones en el sistema operativo para configurarlo correctamente con las nuevas especificaciones (MAC, SSH, etc.).&lt;/li>
-&lt;/ul>
-&lt;p>Desde la aplicación &lt;code>virt-manager&lt;/code> es bastante sencillo, pues se realiza en apenas 2 clicks por la interfaz gráfica. Para hacerlo por comandos, realizaremos los siguientes pasos. En primer lugar, clonaremos la máquina en sí (si no especificamos manualmente un disco de destino con la opción &lt;code>--file&lt;/code>, se nos creará uno automáticamente con el nombre de a nueva máquina; si no especificamos tampoco una MAC manualmente con el parámetro &lt;code>--mac&lt;/code>, se generará una aleatoria automáticamente):&lt;/p>
-&lt;pre>&lt;code class="language-bash">virt-clone --connect qemu:///system --original centos6x32 --auto-clone --name centos6x32-clone
-&lt;/code>&lt;/pre>
-&lt;p>Tras esto, ejecuataremos (&lt;code>virt-sysprep&lt;/code> se tiene que ejecutar con &lt;code>sudo&lt;/code> o dar permisos de lectura y escritura al usuario actual sobre el archivo de imagen de la máquina virtual, ya que tiene que realizar modificaciones directamente sobre él):&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo virt-sysprep --connect qemu:///system --domain centos6x32-clone
-&lt;/code>&lt;/pre>
-&lt;p>El comando anterior lanzará una serie de modificaciónes &lt;em>estándar&lt;/em>; estas modificaciones se pueden personalizar con los parámetros &lt;code>--enable&lt;/code> y &lt;code>--operations&lt;/code>; es posible ver la lista de operaciones posibles con el parámetro &lt;code>--list-operations&lt;/code>, y ver lo que se haría sobre la máquina sin realmente hacerlo con el parámetro &lt;code>--dry-run&lt;/code>.&lt;/p>
-&lt;p>NOTA: La versión de Ubuntu que utilizo es la 13.10, que tiene una versión bastante antigua del comando &lt;code>virt-sysprep&lt;/code>, y no reconoce varias de las opciones anteriores, y tiene
-&lt;a href="https://bugzilla.redhat.com/show_bug.cgi?id=1111662" target="_blank" rel="noopener">este bug&lt;/a>; para solventarlo, lo que hago es pasarle manualmente la lista de operaciones a realizar:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo virt-sysprep --connect qemu:///system -d centos6x32-clone --enable bash-history,logfiles,hostname,machine-id,net-hwaddr,ssh-hostkeys,ssh-userdir
-&lt;/code>&lt;/pre>
-&lt;p>Hay una herramienta adicional (&lt;code>virt-customize&lt;/code>) que permite realizar modificaciones sobre el sistema operativo (al estilo de
-&lt;a href="http://www.ansible.com/home" target="_blank" rel="noopener">Ansible&lt;/a>,
-&lt;a href="http://puppetlabs.com/" target="_blank" rel="noopener">Puppet&lt;/a>,
-&lt;a href="http://www.saltstack.com/" target="_blank" rel="noopener">Salt&lt;/a>,
-&lt;a href="http://www.getchef.com/chef/" target="_blank" rel="noopener">Chef&lt;/a>, etc. pero más básico), pudiendo establecer la contraseña de root y de usuarios, instalar paquetes, actualizar el sistema, establecer el nombre de host, etc. Lamentablemente, esta aplicación sólo está disponible a partir de la versión 1.26 de
-&lt;a href="http://libguestfs.org/" target="_blank" rel="noopener">libguestfs&lt;/a>, que es bastante posterior a la que hay en Ubuntu. Simplemente, a modo de referencia, el comando funcionaría de la siguiente forma:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo virt-customize --connect qemu:///system -d centos6x32-clone --hostname nuevonombre.pruebas.test
-&lt;/code>&lt;/pre>
-&lt;p>Referencias:&lt;/p>
-&lt;ul>
-&lt;li>
-&lt;a href="http://libguestfs.org/virt-customize.1.html" target="_blank" rel="noopener">man virt-customize&lt;/a>&lt;/li>
-&lt;li>
-&lt;a href="http://libguestfs.org/virt-sysprep.1.html" target="_blank" rel="noopener">man virt-sysprep&lt;/a>&lt;/li>
-&lt;li>
-&lt;a href="https://rwmj.wordpress.com/tag/virt-sysprep/" target="_blank" rel="noopener">Richard WM Jones: virt-sysprep&lt;/a>&lt;/li>
-&lt;/ul></description></item><item><title>Red NAT privada con salida al exterior en VirtualBox</title><link>https://blog.okelet.com/post/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/</link><pubDate>Thu, 07 Aug 2014 13:49:59 +0200</pubDate><guid>https://blog.okelet.com/post/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/</guid><description>&lt;p>Una de las cosas que más echo en falta en
+&lt;p>&lt;a href="https://blog.okelet.com/post/2014/08/guia-rapida-de-kvm/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Red NAT privada con salida al exterior en VirtualBox</title><link>https://blog.okelet.com/post/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/</link><pubDate>Thu, 07 Aug 2014 13:49:59 +0200</pubDate><guid>https://blog.okelet.com/post/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/</guid><description>
+&lt;p>Una de las cosas que más echo en falta en
 &lt;a href="https://www.virtualbox.org" target="_blank" rel="noopener">VirtualBox&lt;/a> con respecto a cuando trabajaba con
 &lt;a href="http://www.vmware.com/es/products/workstation" target="_blank" rel="noopener">VMware Workstation&lt;/a> o
 &lt;a href="http://www.vmware.com/es/products/player" target="_blank" rel="noopener">Player&lt;/a>, al trabajar una máquina local para hacer pruebas, es que estas últimas te creaban varios tipos de redes por defecto que VirtualBox no hace. La más útil para mi, sobre todo cuando estás en un cliente en el que es difícil solicitar IPs o cuando quieres crear una red interna de pruebas, es crear una
 &lt;a href="https://www.vmware.com/support/ws3/doc/ws32_network21.html" target="_blank" rel="noopener">red privada de la que formen parte tanto las máquinas virtuales como la propia máquina anfitriona, y que tenga salida al exterior mediante NAT&lt;/a>.&lt;/p>
-&lt;p>En las últimas versiones de VirtualBox (a partir de la 4.3, en modo experimental) existe el llamado
-&lt;a href="https://www.virtualbox.org/manual/ch06.html#network_nat_service" target="_blank" rel="noopener">NAT Service&lt;/a>, que simula el comportamiento anterior de VMware, pero que no permite la conexión desde la máquina anfitriona (ya que, al contrario que VMware, VirtualBox no crea una interfaz virtual para esta red) hacia las máquinas virtuales o a la inversa. Esto es muy cómodo cuando quieres hacer SSH hacia las máquinas virtuales, ya que no tienes que estar redirigiendo puertos, que es la única forma de hacerlo con VirtualBox en el modo NAT Service (y no digamos si tienes varias máquinas virtuales, el lío de redirección de puertos y parámetros al SSH para conectar a las diferentes máquinas virtuales).&lt;/p>
-&lt;p>Buscando una solución alternativa y lo más transparente y sencilla de gestionar, hace tiempo descubrí
-&lt;a href="http://www.tolaris.com/2012/05/16/using-host-networking-and-nat-with-virtualbox-v2-0" target="_blank" rel="noopener">esta página&lt;/a> que lo que hace es crear una interfaz virtual en la máquina anfitrión, configurando el reenvío TCP y un servidor
-&lt;a href="http://www.thekelleys.org.uk/dnsmasq/doc.html" target="_blank" rel="noopener">Dnsmasq&lt;/a> para servir direcciones por DHCP y la resolución DNS de esa red. De esta forma, si la red de las máquinas virtuales se configura en modo bridge, usando la interfaz creada, todas podrán comunicarse entre sí y con la máquina anfitrión, aparte de tener un servidor DHCP y DNS (por lo que podremos crear asignaciones de direcciones estáticas, entradas DNS para un dominio ficticio interno, etc.). Además, las máquinas virtuales tendrán salida al exterior, ya que la máquina anfitrión realizará NAT del tráfico saliente que se reciba desde esta red. Incluso podemos montar un servidor PXE para arrancar sistemas en red o la instalación automática mediante
-&lt;a href="http://fedoraproject.org/wiki/Anaconda/Kickstart" target="_blank" rel="noopener">Kickstart&lt;/a>,
-&lt;a href="http://www.cobblerd.org" target="_blank" rel="noopener">Clobber&lt;/a> o
-&lt;a href="https://wiki.debian.org/DebianInstaller/Preseed" target="_blank" rel="noopener">Preseed&lt;/a>.&lt;/p>
-&lt;p>Para rizar aún más el rizo, decidí simplificar la configuración. La anterior está bien, pero es necesario tener bastantes cosas en cuenta (la interfaz, el paquete bridge-utils, el reenvío TCP, la configuración de Dnsmasq, etc.), y se complica a mayores cuando quieres tener varias redes virtuales separadas y que se comuniquen entre sí. Buscando un poco más, descubrí
-&lt;a href="http://ballardini.com.ar/blog/red-portatil-v-interfaz-tap-en-anfitrion-y-en-huesped-kvm" target="_blank" rel="noopener">esta página&lt;/a> en la que se combinan todos los pasos anteriores en un único punto. En resumen, lo que se hace es crear una interfaz virtual, y en los precomandos y postcomandos al levantar y apagar la interfaz, se ejecutan todos los pasos necesarios. Para poner en marcha esto, lo primero será instalar Dnsmasq y los paquetes necesarios para crear la interfaz virtual:&lt;/p>
-&lt;pre>&lt;code class="language-bash">apt-get install dnsmasq vde2 bridge-utils
-update-rc.d dnsmasq disable
-&lt;/code>&lt;/pre>
-&lt;div class="alert alert-note">
-&lt;div>
-Es necesario deshabilitar &lt;code>dnsmasq&lt;/code> del arranque ya que la configuración por defecto escucha por todas las interfaces, y al levantar &lt;code>dnsmasq&lt;/code> por cada interfaz virtual, da un error diciendo que la dirección ya está en uso.
-&lt;/div>
-&lt;/div>
-&lt;p>Para no tener que tocar mucho el archivo &lt;code>/etc/network/interfaces&lt;/code>, y poder gestionar más fácilmente las interfaces virtuales que creemos, configuraremos el sistema para que
-&lt;a href="http://askubuntu.com/questions/323566/separate-etc-network-interfaces-file" target="_blank" rel="noopener">cargue dinámicamente todos los archivos de configuración desde el directorio /etc/network/interfaces.d&lt;/a>; para ello, tendremos que añadir, si no existe ya, esta línea:&lt;/p>
-&lt;pre>&lt;code class="language-text">auto lo
-iface lo inet loopback
-source /etc/network/interfaces.d/*.cfg
-&lt;/code>&lt;/pre>
-&lt;p>Y por supuesto, crear dicho directorio:&lt;/p>
-&lt;pre>&lt;code class="language-bash">mkdir -p /etc/network/interfaces.d
-&lt;/code>&lt;/pre>
-&lt;p>A continuación, ya podemos definir la interfaz (fichero &lt;code>/etc/network/interfaces.d/vnet0.cfg&lt;/code>):&lt;/p>
-&lt;pre>&lt;code>auto vnet0
-iface vnet0 inet static
-address 192.168.77.253
-netmask 255.255.255.0
-############################################################################################################
-# Arranque de la interfaz
-############################################################################################################
-# Crear la interfaz virtual
-pre-up /usr/bin/vde_switch --tap ${IFACE} --daemon --group vde2-net --sock /var/run/${IFACE}.ctl \
---mod 775 --mgmtmode 770 --mgmt /var/run/${IFACE}-manage --pidfile /var/run/${IFACE}_vde.pid
-# Comprobamos si existe un archivo de configuración de Dnsmasq, y si no existe, creamos uno vacío
-# para que no se queje el proceso de Dnsmasq al levantarlo
-up test -e /etc/dnsmasq_${IFACE}.conf || touch /etc/dnsmasq_${IFACE}.conf
-# Levantar el proceso de Dnsmasq, pasando como interfaz a la que asociarse la propia interfaz y el
-# rango DHCP para asignar direcciones (la dirección de la interfaz definida arriba debe estar en este
-# rango); se pueden especificar más parámetros añadiéndolos aquí o creando/modificando un archivo
-# de configuración según la instrucción anterior.
-up /usr/sbin/dnsmasq --interface=${IFACE} --except-interface=lo --bind-interfaces --user=nobody \
---dhcp-range=${IFACE},192.168.77.101,192.168.77.199,8h \
---local=/pruebas.intra/ --domain=pruebas.intra \
---pid-file=/var/run/${IFACE}_dnsmasq.pid --conf-file=/etc/dnsmasq_${IFACE}.conf
-# Añadir una regla a iptables para natear el tráfico saliente de esta red
-post-up iptables -t nat -I POSTROUTING -s 192.168.77.0/24 -j MASQUERADE
-############################################################################################################
-# Parada de la interfaz
-############################################################################################################
-# Eliminar el nateo del tráfico saliente asociada a la red
-pre-down iptables -t nat -D POSTROUTING -s 192.168.77.0/24 -j MASQUERADE
-# Parar el proceso de Dnsmasq
-down kill $(cat /var/run/${IFACE}_dnsmasq.pid) &amp;amp;amp;&amp;amp;amp; rm -f /var/run/${IFACE}_dnsmasq.pid
-# Borrar el archivo de configuración de Dnsmasq si está vacío (para mantener limpio el sistema)
-down test -s /etc/dnsmasq_${IFACE}.conf || rm -f /etc/dnsmasq_${IFACE}.conf
-# Eliminar la interfaz virtual
-post-down kill $(cat /var/run/${IFACE}_vde.pid) || kill -9 $(cat /var/run/${IFACE}_vde.pid)
-&lt;/code>&lt;/pre>
-&lt;div class="alert alert-note">
-&lt;div>
-&lt;p>En el post original de donde saqué esta configuración (el segundo referenciado), la regla de &lt;span class="lang:default highlight:0 decode:true crayon-inline ">iptables&lt;/span> hacía referencia a la interfaz de salida, y no a la red de origen como he puesto yo. Esto lo he tenido que hacer ya que Ubuntu usa NetworkManager, y parece que levanta esta interfaz antes que las demás (por ejemplo, con la que tengamos configurada como principal como &lt;span class="lang:default highlight:0 decode:true crayon-inline ">eth0&lt;/span> o &lt;span class="lang:default highlight:0 decode:true crayon-inline ">wlan0&lt;/span>), por lo que no es posible la interfaz de salida de la ruta por defecto (y que además esta interfaz puede cambiarse desde el escritorio). Por tanto, lo que he hecho, es que en la regla de &lt;span class="lang:default highlight:0 decode:true crayon-inline ">iptables&lt;/span>, en lugar de hacer NAT a todo lo que salga por la interfaz por defecto tras el enrutado, es hacer NAT a todo lo que venga de la red de la interfaz virtual tras el enrutado.&lt;/p>
-&lt;p>Esto tiene un problema, que no creo que sea difícil de solucionar, pero que no lo he hecho, y es que si hay varias interfaces virtuales y queremos comunicar máquinas de distintas redes, siempre se hará NAT, aunque no salgan del propio host anfitrión.&lt;/p>
-&lt;/div>
-&lt;/div>
-&lt;p>El único paso que he dejado fuera es la configuración del reenvío TCP, ya que no está ligado a una interfaz en concreto, sino que va a nivel de sistema.&lt;/p>
-&lt;pre>&lt;code class="language-text">net.ipv4.ip_forward=1
-&lt;/code>&lt;/pre>
-&lt;p>Recargamos la configuración para que se aplique el cambio anterior:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sysctl -p
-&lt;/code>&lt;/pre>
-&lt;p>Las ventajas de esta configuración sobre la primera es que:&lt;/p>
-&lt;ul>
-&lt;li>Se levanta un proceso Dnsmasq distinto para cada interfaz, con un archivo de configuración específico, por lo que se pueden agregar en el fichero datos que no se pasan directamente al programa por parámetros, como asignaciones de IPs estáticas, registros DNS, etc.&lt;/li>
-&lt;li>Se pueden tener varias interfaces virtuales, cada una con su propia configuración DNS, simplemente creando una nueva interfaz copiando y pegando tantas veces el bloque anterior y modificando los datos mínimos (sobre todo la dirección IP, el rango DHCP y las reglas de iptables), o creando un archivo distinto por cada interfaz en el directorio &lt;code>/etc/network/interfaces.d&lt;/code>.&lt;/li>
-&lt;/ul>
-&lt;p>Para finalizar, se puede modificar la configuración de Dnsmasq para personalizar las asignaciones DHCP, la resolución DNS, así como hacer que los sistemas arranquen desde la red con PXE; hay configuraciones de ejemplo en esta página.&lt;/p></description></item><item><title>Instalar, configurar y securizar MariaDB</title><link>https://blog.okelet.com/post/2014/08/instalar-configurar-y-securizar-mariadb/</link><pubDate>Thu, 07 Aug 2014 13:49:42 +0200</pubDate><guid>https://blog.okelet.com/post/2014/08/instalar-configurar-y-securizar-mariadb/</guid><description>&lt;p>La página de
+&lt;p>&lt;a href="https://blog.okelet.com/post/2014/08/red-nat-privada-con-salida-al-exterior-en-virtualbox/">Leer más...&lt;/a>&lt;/p></description></item><item><title>Instalar, configurar y securizar MariaDB</title><link>https://blog.okelet.com/post/2014/08/instalar-configurar-y-securizar-mariadb/</link><pubDate>Thu, 07 Aug 2014 13:49:42 +0200</pubDate><guid>https://blog.okelet.com/post/2014/08/instalar-configurar-y-securizar-mariadb/</guid><description>
+&lt;p>La página de
 &lt;a href="http://www.ibm.com/developerworks" target="_blank" rel="noopener">IBM developerWorks&lt;/a> no para de sorprenderme. Muchas de las veces que busco documentación técnica, cursos, tutoriales, etc. allí están ellos, y con un material gratuito y de muy alta calidad. La última, fue con la instalación de este blog. Tengo un VPS contratado con Ubuntu, que he ido actualizando poco a poco, y que lo tengo bastante pelado. Me decidí por instalar en él WordPress (tras mucho analizar otros sistemas para publicar artículos tipo
 &lt;a href="http://dokuwiki.org" target="_blank" rel="noopener">Dokuwiki&lt;/a>,
 &lt;a href="http://octopress.org" target="_blank" rel="noopener">Octopress&lt;/a>,
@@ -1270,54 +215,4 @@ post-down kill $(cat /var/run/${IFACE}_vde.pid) || kill -9 $(cat /var/run/${IFAC
 &lt;a href="http://techcrunch.com/2012/08/18/oracle-makes-more-moves-to-kill-open-source-mysql" target="_blank" rel="noopener">reticencias con MySQL&lt;/a>, pero más tarde de acordé del fork que se creó hace un tiempo, llamado
 &lt;a href="http://mariadb.org" target="_blank" rel="noopener">MariaDB&lt;/a>. Leyendo un poco, parece ser que MariaDB es &amp;ldquo;binariamente&amp;rdquo; (si es que eso existe en castellano)
 &lt;a href="https://mariadb.com/kb/en/mariadb/mariadb-vs-mysql-compatibility" target="_blank" rel="noopener">compatible con MySQL&lt;/a> (es decir, que el protocolo de comunicación, los ficheros de base de datos, etc. son totalmente compatibles, si no iguales).&lt;/p>
-&lt;p>Bueno, a lo que iba. Ya que con PostgreSQL no se puede (o por lo menos, no está oficialmente soportado), opté por instalar MariaDB. Desde su web tienen un
-&lt;a href="https://downloads.mariadb.org/mariadb/repositories" target="_blank" rel="noopener">asistente muy sencillo&lt;/a> para configurar los repositorios de las distribuciones Linux más comunes (openSUSE, Debian, Ubuntu, Red Hat, CentOS, etc.). Tienen paquetes precompilados para prácticamente todas las versiones y arquitecturas (la única que echo en falta es Red Hat 7, aunque se lo perdono porque acaba de salir hace nada&amp;hellip;).&lt;/p>
-&lt;p>Una vez configurados los repositorios, toca la parte de la instalación; sencillísima como siempre:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo apt-get update
-sudo apt-get install mariadb-server php5-mysql
-&lt;/code>&lt;/pre>
-&lt;p>Lo que más miedo me da de estas instalaciones tan &amp;ldquo;sencillísimas&amp;rdquo; es que muchas veces dejan el servidor o el servicio instalado bastante desprotegido. Durante la instalación, se nos pregunta que si queremos ponerle una contraseña al usuario root de MariaDB/MySQL&amp;hellip;. Pero qué cosas, nos permite dejarlo en blanco. MAL MAL MAL. Como decía, gracias a los tutoriales de developerWorks, descubrí que hay un comando muy sencillo que te &amp;ldquo;quita&amp;rdquo; todas esas inseguridades; a saber:&lt;/p>
-&lt;ul>
-&lt;li>Ponerle una contraseña al usuario root de MariaDB/MySQL en condiciones.&lt;/li>
-&lt;li>Eliminar el usuario anonymous&lt;/li>
-&lt;li>Deshabilitar el acceso remoto de root&lt;/li>
-&lt;li>Eliminar la base de datos test&lt;/li>
-&lt;li>Recargar los privilegios&lt;/li>
-&lt;/ul>
-&lt;p>El comando mágico es &lt;code>mysql_secure_installation&lt;/code>, aunque parece que no está muy afinado, ya que nada más lanzarlo da un error:&lt;/p>
-&lt;pre>&lt;code class="language-text">/usr/bin/mysql_secure_installation: 379: /usr/bin/mysql_secure_installation: find_mysql_client: not found
-&lt;/code>&lt;/pre>
-&lt;p>También da un error al intentar borrar la base de datos test:&lt;/p>
-&lt;pre>&lt;code class="language-text">Remove test database and access to it? [Y/n]
-- Dropping test database...
-ERROR 1008 (HY000) at line 1: Can't drop database 'test'; database doesn't exist
-... Failed! Not critical, keep moving...
-- Removing privileges on test database...
-... Success!
-&lt;/code>&lt;/pre>
-&lt;p>Puedes ver la salida completa del comando en este
-&lt;a href="https://gist.github.com/okelet/b416b13f85831afb98fe" target="_blank" rel="noopener">Gist&lt;/a>:&lt;/p>
-&lt;script type="application/javascript" src="https://gist.github.com/okelet/b416b13f85831afb98fe.js">&lt;/script>
-&lt;p>Una vez hecho esto, ya podemos decir que nuestra instalación está bastante adecentada. Lo que nos quedaría, si usamos un cortafuegos (que deberíamos), sería limitar el acceso. Si la regla por defecto es denegar las conexiones entrantes, no deberíamos tener problema; si no, deberíamos añadir una regla para denegar las conexiones remotas entrantes al puerto 3306. El siguiente listado muestra los comandos necesarios para configurar el cortafuegos de manera rápida con
-&lt;a href="https://help.ubuntu.com/community/UFW" target="_blank" rel="noopener">UFW&lt;/a>, permitiendo el acceso desde fuera por SSH, HTTP y HTTPS, denegando todo el resto de tráfico entrante, y permitiendo por defecto el tráfico saliente:&lt;/p>
-&lt;pre>&lt;code class="language-bash">sudo apt-get install ufw
-sudo ufw enable
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow ssh/tcp
-sudo ufw allow http/tcp
-sudo ufw allow https/tcp
-sudo ufw status
-&lt;/code>&lt;/pre>
-&lt;p>Por último, y como algo particular para WordPress, crearemos una base de datos, un usuario y le daremos permisos al usuario sobre esa base de datos, para lo que ejecutaremos el comando &lt;code>mysql -uroot -p&lt;/code>, introduciendo después la contraseña asignada antes al usuario root, y ejecutando los siguientes comandos desde el shell de MariaDB:&lt;/p>
-&lt;pre>&lt;code class="language-sql">CREATE DATABASE wordpress;
-CREATE USER 'wpuser'@'localhost' IDENTIFIED BY 'pickApassword';
-GRANT ALL PRIVILEGES ON wordpress .* TO 'wpuser'@'localhost';
-FLUSH PRIVILEGES;
-exit
-&lt;/code>&lt;/pre>
-&lt;h3 id="referencias">Referencias&lt;/h3>
-&lt;ul>
-&lt;li>
-&lt;a href="http://www.ibm.com/developerworks/cloud/library/cl-softlayer-secure-wordpressblog-trs" target="_blank" rel="noopener">IBM developerWorks: Create a secure WordPress blog using SoftLayer&lt;/a>&lt;/li>
-&lt;/ul></description></item></channel></rss>
+&lt;p>&lt;a href="https://blog.okelet.com/post/2014/08/instalar-configurar-y-securizar-mariadb/">Leer más...&lt;/a>&lt;/p></description></item></channel></rss>
